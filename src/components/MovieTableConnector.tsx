@@ -56,7 +56,7 @@ const MovieTableConnector = ({ searchTerm = '' }: { searchTerm?: string }) => {
   const movieData = movies?.map(movie => ({
     id: movie.id,
     title: movie.title,
-    poster: movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null,
+    poster: movie.poster_path ? (movie.poster_path.startsWith('http') ? movie.poster_path : `https://image.tmdb.org/t/p/w500${movie.poster_path}`) : null,
     year: movie.release_date ? new Date(movie.release_date).getFullYear() : 'N/A',
     rating: movie.rating || 'N/A',
     actions: {

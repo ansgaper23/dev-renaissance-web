@@ -11,11 +11,11 @@ import { toast } from '@/hooks/use-toast';
 import { Search, Plus, Upload } from 'lucide-react';
 import MovieTableConnector from '@/components/MovieTableConnector';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { addMovie } from '@/services/movieService';
+import { addMovie, MovieCreate } from '@/services/movieService';
 
 const Admin = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [newMovie, setNewMovie] = useState({
+  const [newMovie, setNewMovie] = useState<MovieCreate>({
     title: '',
     release_date: '',
     poster_path: '',

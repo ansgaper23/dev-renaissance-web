@@ -20,6 +20,11 @@ export interface Movie {
   updated_at?: string | null;
 }
 
+// For creating a new movie, title is required
+export interface MovieCreate extends Omit<Partial<Movie>, 'title'> {
+  title: string; // Title is required
+}
+
 export const fetchMovies = async (searchTerm: string = ''): Promise<Movie[]> => {
   let query = supabase
     .from('movies')
@@ -53,7 +58,7 @@ export const fetchMovieById = async (id: string): Promise<Movie> => {
   return data as Movie;
 };
 
-export const addMovie = async (movie: Partial<Movie>): Promise<Movie> => {
+export const addMovie = async (movie: MovieCreate): Promise<Movie> => {
   const { data, error } = await supabase
     .from('movies')
     .insert(movie)
