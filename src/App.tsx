@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import MovieDetail from "./pages/MovieDetail";
 import NotFound from "./pages/NotFound";
+import AdminLogin from "./components/AdminLogin";
+import AdminRoute from "./components/AdminRoute";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,7 +29,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminRoute element={<Admin />} />} />
           <Route path="/movie/:id" element={<MovieDetail />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -8,10 +8,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import ImportFromTMDB from '@/components/ImportFromTMDB';
 import { toast } from '@/hooks/use-toast';
-import { Search, Plus, Upload } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import MovieTableConnector from '@/components/MovieTableConnector';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addMovie, MovieCreate } from '@/services/movieService';
+import AdminHeader from '@/components/AdminHeader';
+import AdminDashboard from '@/components/AdminDashboard';
 
 const Admin = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -58,6 +60,7 @@ const Admin = () => {
         stream_url: ''
       });
       queryClient.invalidateQueries({ queryKey: ['movies'] });
+      queryClient.invalidateQueries({ queryKey: ['totalMovies'] });
     },
     onError: (error) => {
       toast({
@@ -95,20 +98,13 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-gray-950 text-white py-12">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold gradient-text">Panel de Administración</h1>
-            <p className="text-gray-400 mt-1">Gestiona el contenido de tu plataforma de películas</p>
-          </div>
-          <div className="mt-4 lg:mt-0">
-            <Button variant="outline" className="hover:bg-gray-800 border-gray-700">
-              Volver al sitio
-            </Button>
-          </div>
-        </div>
-
-        <Tabs defaultValue="movies" className="space-y-6">
+        <AdminHeader />
+        
+        <Tabs defaultValue="dashboard" className="space-y-6">
           <TabsList className="bg-gray-900 border border-gray-800">
+            <TabsTrigger value="dashboard" className="data-[state=active]:bg-gray-800">
+              Dashboard
+            </TabsTrigger>
             <TabsTrigger value="movies" className="data-[state=active]:bg-gray-800">
               Películas
             </TabsTrigger>
@@ -119,6 +115,11 @@ const Admin = () => {
               Importar de TMDB
             </TabsTrigger>
           </TabsList>
+          
+          {/* Dashboard Tab */}
+          <TabsContent value="dashboard">
+            <AdminDashboard />
+          </TabsContent>
           
           {/* Movies Tab */}
           <TabsContent value="movies" className="space-y-6">

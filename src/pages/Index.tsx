@@ -1,8 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import MovieGrid from '@/components/MovieGrid';
 import FeaturedMovie from '@/components/FeaturedMovie';
 import { Search } from 'lucide-react';
@@ -35,23 +33,6 @@ const Index = () => {
 
         {/* Movie Grid */}
         <MovieGrid />
-
-        {/* Admin Access */}
-        <Card className="mt-16 bg-gray-900 border-gray-800">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <div>
-                <h3 className="text-xl font-bold gradient-text">Panel de Administración</h3>
-                <p className="text-gray-400 mt-2">Gestiona el contenido de la plataforma</p>
-              </div>
-              <Link to="/admin">
-                <Button className="bg-gradient-to-r from-brand-purple to-brand-pink hover:opacity-90">
-                  Acceder al Panel
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

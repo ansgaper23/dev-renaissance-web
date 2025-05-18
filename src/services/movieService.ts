@@ -25,6 +25,17 @@ export interface MovieCreate extends Omit<Partial<Movie>, 'title'> {
   title: string; // Title is required
 }
 
+// Admin authentication interfaces
+export interface AdminCredentials {
+  email: string;
+  password: string;
+}
+
+export interface AdminSession {
+  email: string;
+  authenticated: boolean;
+}
+
 export const fetchMovies = async (searchTerm: string = ''): Promise<Movie[]> => {
   let query = supabase
     .from('movies')
@@ -96,4 +107,48 @@ export const deleteMovie = async (id: string): Promise<boolean> => {
   }
   
   return true;
+};
+
+// Admin authentication functions
+export const adminLogin = async (credentials: AdminCredentials): Promise<AdminSession> => {
+  const { data, error } = await supabase
+    .from('admins')
+    .select('email, password')
+    .eq('email', credentials.email)
+    .single();
+    
+  if (error) {
+    throw new Error('Credenciales inválidas');
+  }
+  
+  // Compare password (in a real app you'd use bcrypt or similar)
+  if (data && data.password === credentials.password) {
+    // Store admin session in localStorage
+    const adminSession = { email: data.email, authenticated: true };
+    localStorage.setItem('adminSession', JSON.stringify(adminSession));
+    return adminSession;
+  } else {
+    throw new Error('Credenciales inválidas');
+  }
+};
+
+export const adminLogout = (): void => {
+  localStorage.removeItem('adminSession');
+};
+
+export const getAdminSession = (): AdminSession | null => {
+  const session = localStorage.getItem('adminSession');
+  return session ? JSON.parse(session) : null;
+};
+
+export const getTotalMoviesCount = async (): Promise<number> => {
+  const { count, error } = await supabase
+    .from('movies')
+    .select('*', { count: 'exact', head: true });
+    
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  return count || 0;
 };
