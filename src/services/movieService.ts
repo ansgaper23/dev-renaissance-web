@@ -1,7 +1,26 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export const fetchMovies = async (searchTerm: string = '') => {
+export interface Movie {
+  id: string;
+  tmdb_id?: number | null;
+  title: string;
+  original_title?: string | null;
+  poster_path?: string | null;
+  backdrop_path?: string | null;
+  overview?: string | null;
+  release_date?: string | null;
+  genre_ids?: number[] | null;
+  genres?: string[] | null;
+  rating?: number | null;
+  runtime?: number | null;
+  trailer_url?: string | null;
+  stream_url?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export const fetchMovies = async (searchTerm: string = ''): Promise<Movie[]> => {
   let query = supabase
     .from('movies')
     .select('*')
@@ -17,10 +36,10 @@ export const fetchMovies = async (searchTerm: string = '') => {
     throw new Error(error.message);
   }
   
-  return data;
+  return data as Movie[];
 };
 
-export const fetchMovieById = async (id: string) => {
+export const fetchMovieById = async (id: string): Promise<Movie> => {
   const { data, error } = await supabase
     .from('movies')
     .select('*')
@@ -31,10 +50,10 @@ export const fetchMovieById = async (id: string) => {
     throw new Error(error.message);
   }
   
-  return data;
+  return data as Movie;
 };
 
-export const addMovie = async (movie: any) => {
+export const addMovie = async (movie: Partial<Movie>): Promise<Movie> => {
   const { data, error } = await supabase
     .from('movies')
     .insert(movie)
@@ -44,13 +63,13 @@ export const addMovie = async (movie: any) => {
     throw new Error(error.message);
   }
   
-  return data[0];
+  return data[0] as Movie;
 };
 
-export const updateMovie = async (id: string, updates: any) => {
+export const updateMovie = async (id: string, updates: Partial<Movie>): Promise<Movie> => {
   const { data, error } = await supabase
     .from('movies')
-    .update({ ...updates, updated_at: new Date() })
+    .update({ ...updates, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select();
     
@@ -58,10 +77,10 @@ export const updateMovie = async (id: string, updates: any) => {
     throw new Error(error.message);
   }
   
-  return data[0];
+  return data[0] as Movie;
 };
 
-export const deleteMovie = async (id: string) => {
+export const deleteMovie = async (id: string): Promise<boolean> => {
   const { error } = await supabase
     .from('movies')
     .delete()

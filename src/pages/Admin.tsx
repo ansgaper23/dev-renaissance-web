@@ -10,7 +10,7 @@ import ImportFromTMDB from '@/components/ImportFromTMDB';
 import { toast } from '@/hooks/use-toast';
 import { Search, Plus, Upload } from 'lucide-react';
 import MovieTableConnector from '@/components/MovieTableConnector';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addMovie } from '@/services/movieService';
 
 const Admin = () => {
@@ -27,6 +27,8 @@ const Admin = () => {
     trailer_url: '',
     stream_url: ''
   });
+  
+  const queryClient = useQueryClient();
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -55,6 +57,7 @@ const Admin = () => {
         trailer_url: '',
         stream_url: ''
       });
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
     },
     onError: (error) => {
       toast({
@@ -267,9 +270,9 @@ const Admin = () => {
                   <Button 
                     type="submit" 
                     className="w-full bg-gradient-to-r from-brand-purple to-brand-pink hover:opacity-90"
-                    disabled={addMovieMutation.isLoading}
+                    disabled={addMovieMutation.isPending}
                   >
-                    {addMovieMutation.isLoading ? 'Guardando...' : 'Guardar película'}
+                    {addMovieMutation.isPending ? 'Guardando...' : 'Guardar película'}
                   </Button>
                 </form>
               </CardContent>
