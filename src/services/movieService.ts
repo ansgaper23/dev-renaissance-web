@@ -111,23 +111,45 @@ export const deleteMovie = async (id: string): Promise<boolean> => {
 
 // Admin authentication functions
 export const adminLogin = async (credentials: AdminCredentials): Promise<AdminSession> => {
-  const { data, error } = await supabase
-    .from('admins')
-    .select('email, password')
-    .eq('email', credentials.email)
-    .single();
-    
-  if (error) {
-    throw new Error('Credenciales inválidas');
-  }
+  console.log("Attempting login with:", credentials.email);
   
-  // Compare password (in a real app you'd use bcrypt or similar)
-  if (data && data.password === credentials.password) {
-    // Store admin session in localStorage
-    const adminSession = { email: data.email, authenticated: true };
+  // Fixed credentials for development
+  const hardcodedAdmin = {
+    email: "jorge968122@gmail.com",
+    password: "123456"
+  };
+  
+  // Validate against fixed credentials
+  if (credentials.email === hardcodedAdmin.email && credentials.password === hardcodedAdmin.password) {
+    const adminSession = { email: credentials.email, authenticated: true };
     localStorage.setItem('adminSession', JSON.stringify(adminSession));
     return adminSession;
-  } else {
+  }
+  
+  // Try supabase auth as fallback (for production)
+  try {
+    const { data, error } = await supabase
+      .from('admins')
+      .select('email, password')
+      .eq('email', credentials.email)
+      .single();
+      
+    if (error) {
+      console.error("Supabase auth error:", error);
+      throw new Error('Credenciales inválidas');
+    }
+    
+    // Compare password (in a real app you'd use bcrypt or similar)
+    if (data && data.password === credentials.password) {
+      // Store admin session in localStorage
+      const adminSession = { email: data.email, authenticated: true };
+      localStorage.setItem('adminSession', JSON.stringify(adminSession));
+      return adminSession;
+    } else {
+      throw new Error('Credenciales inválidas');
+    }
+  } catch (error) {
+    console.error("Login error:", error);
     throw new Error('Credenciales inválidas');
   }
 };

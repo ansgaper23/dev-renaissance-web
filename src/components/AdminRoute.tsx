@@ -14,9 +14,16 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ element }) => {
 
   useEffect(() => {
     const checkAuth = () => {
-      const adminSession = getAdminSession();
-      setIsAuthenticated(!!adminSession?.authenticated);
-      setIsChecking(false);
+      try {
+        const adminSession = getAdminSession();
+        console.log("Admin session check:", adminSession);
+        setIsAuthenticated(!!adminSession?.authenticated);
+      } catch (error) {
+        console.error("Auth check error:", error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsChecking(false);
+      }
     };
 
     checkAuth();
@@ -30,6 +37,7 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ element }) => {
     );
   }
 
+  console.log("Is authenticated:", isAuthenticated);
   return isAuthenticated ? element : <Navigate to="/admin/login" />;
 };
 

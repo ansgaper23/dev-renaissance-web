@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { adminLogin, AdminCredentials } from '@/services/movieService';
+import { adminLogin, AdminCredentials, getAdminSession } from '@/services/movieService';
 import { useNavigate } from 'react-router-dom';
 
 const AdminLogin = () => {
@@ -14,18 +14,30 @@ const AdminLogin = () => {
     password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Check if already logged in
+  useEffect(() => {
+    const session = getAdminSession();
+    if (session?.authenticated) {
+      navigate('/admin');
+    }
+  }, [navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setCredentials(prev => ({ ...prev, [name]: value }));
+    setError(null); // Clear error when user changes input
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
     try {
+      console.log("Attempting login with:", credentials.email);
       await adminLogin(credentials);
       toast({
         title: "Inicio de sesión exitoso",
@@ -33,6 +45,8 @@ const AdminLogin = () => {
       });
       navigate('/admin');
     } catch (error) {
+      console.error("Login error:", error);
+      setError('Credenciales inválidas. Intente nuevamente.');
       toast({
         title: "Error de inicio de sesión",
         description: "Credenciales inválidas. Intente nuevamente.",
@@ -51,6 +65,12 @@ const AdminLogin = () => {
         </CardHeader>
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="p-3 bg-red-900/30 border border-red-900 rounded-md text-red-200 text-sm mb-4">
+                {error}
+              </div>
+            )}
+            
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-gray-300">
                 Correo Electrónico
@@ -101,6 +121,12 @@ const AdminLogin = () => {
           Acceso exclusivo para administradores
         </CardFooter>
       </Card>
+      
+      <div className="mt-4 text-gray-400 text-sm">
+        <p>Credenciales de prueba:</p>
+        <p>Email: jorge968122@gmail.com</p>
+        <p>Contraseña: 123456</p>
+      </div>
     </div>
   );
 };
