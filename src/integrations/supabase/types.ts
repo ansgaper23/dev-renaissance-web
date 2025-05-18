@@ -9,7 +9,129 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      admins: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          password: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          password: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          password?: string
+        }
+        Relationships: []
+      }
+      movies: {
+        Row: {
+          backdrop_path: string | null
+          created_at: string | null
+          genre_ids: number[] | null
+          genres: string[] | null
+          id: string
+          original_title: string | null
+          overview: string | null
+          poster_path: string | null
+          rating: number | null
+          release_date: string | null
+          runtime: number | null
+          stream_url: string | null
+          title: string
+          tmdb_id: number | null
+          trailer_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          backdrop_path?: string | null
+          created_at?: string | null
+          genre_ids?: number[] | null
+          genres?: string[] | null
+          id?: string
+          original_title?: string | null
+          overview?: string | null
+          poster_path?: string | null
+          rating?: number | null
+          release_date?: string | null
+          runtime?: number | null
+          stream_url?: string | null
+          title: string
+          tmdb_id?: number | null
+          trailer_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          backdrop_path?: string | null
+          created_at?: string | null
+          genre_ids?: number[] | null
+          genres?: string[] | null
+          id?: string
+          original_title?: string | null
+          overview?: string | null
+          poster_path?: string | null
+          rating?: number | null
+          release_date?: string | null
+          runtime?: number | null
+          stream_url?: string | null
+          title?: string
+          tmdb_id?: number | null
+          trailer_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      secrets: {
+        Row: {
+          id: number
+          tmdb_api_key: string
+          updated_at: string | null
+        }
+        Insert: {
+          id?: number
+          tmdb_api_key: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: number
+          tmdb_api_key?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          ads_code: string | null
+          id: number
+          logo_url: string | null
+          site_description: string | null
+          site_name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ads_code?: string | null
+          id?: number
+          logo_url?: string | null
+          site_description?: string | null
+          site_name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ads_code?: string | null
+          id?: number
+          logo_url?: string | null
+          site_description?: string | null
+          site_name?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

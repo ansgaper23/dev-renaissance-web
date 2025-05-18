@@ -12,52 +12,44 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
-import { Search, Download, Plus } from 'lucide-react';
+import { Search, Download, Plus, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useMutation } from '@tanstack/react-query';
 
 const ImportFromTMDB = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [selectedMovies, setSelectedMovies] = useState<Set<number>>(new Set());
+  const [isImporting, setIsImporting] = useState(false);
   
-  // Simulate a search on TMDB
-  const handleSearch = (e: React.FormEvent) => {
+  // Search TMDB
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!searchQuery.trim()) return;
+    
     setIsSearching(true);
     
-    // Simulate API delay
-    setTimeout(() => {
-      // Mock API response for demonstration
-      const results = [
-        {
-          id: 123,
-          title: "Inception",
-          poster_path: "/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
-          release_date: "2010-07-16",
-          vote_average: 8.3,
-          overview: "Dom Cobb es un ladrón con una extraña habilidad para entrar a los sueños de la gente y robarles los secretos de sus subconscientes."
-        },
-        {
-          id: 124,
-          title: "Interstellar",
-          poster_path: "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
-          release_date: "2014-11-05",
-          vote_average: 8.4,
-          overview: "Un grupo de exploradores emprenden un viaje interestelar para encontrar un nuevo hogar para la humanidad."
-        },
-        {
-          id: 125,
-          title: "The Dark Knight",
-          poster_path: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-          release_date: "2008-07-18",
-          vote_average: 8.5,
-          overview: "Batman se enfrenta al Joker, un criminal psicópata que busca sumir Gotham City en el caos."
-        }
-      ];
+    try {
+      const { data, error } = await supabase.functions.invoke('tmdb-search', {
+        body: { query: searchQuery }
+      });
       
-      setSearchResults(results);
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      setSearchResults(data.results || []);
+    } catch (error) {
+      console.error('Error searching TMDB:', error);
+      toast({
+        title: "Error de búsqueda",
+        description: "No se pudo conectar a la API de TMDB. Intente más tarde.",
+        variant: "destructive"
+      });
+    } finally {
       setIsSearching(false);
-    }, 1000);
+    }
   };
   
   // Handle movie selection
@@ -71,7 +63,43 @@ const ImportFromTMDB = () => {
     setSelectedMovies(newSelection);
   };
   
-  // Handle import selected movies
+  // Import selected movies
+  const importMoviesMutation = useMutation({
+    mutationFn: async (movieIds: number[]) => {
+      setIsImporting(true);
+      const { data, error } = await supabase.functions.invoke('tmdb-import', {
+        body: { movieIds }
+      });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Importación exitosa",
+        description: `${data.total.success} películas importadas correctamente. ${data.total.failed} fallaron.`,
+      });
+      
+      setSelectedMovies(new Set());
+      if (data.total.failed > 0) {
+        console.error("Failed imports:", data.errors);
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Error de importación",
+        description: error.message,
+        variant: "destructive"
+      });
+    },
+    onSettled: () => {
+      setIsImporting(false);
+    }
+  });
+  
   const handleImport = () => {
     if (selectedMovies.size === 0) {
       toast({
@@ -82,15 +110,8 @@ const ImportFromTMDB = () => {
       return;
     }
     
-    toast({
-      title: "Importación exitosa",
-      description: `${selectedMovies.size} películas importadas correctamente`,
-    });
-    
-    // Reset state after import
-    setSelectedMovies(new Set());
-    setSearchResults([]);
-    setSearchQuery('');
+    const movieIds = Array.from(selectedMovies);
+    importMoviesMutation.mutate(movieIds);
   };
   
   return (
@@ -117,7 +138,12 @@ const ImportFromTMDB = () => {
               className="bg-brand-blue hover:bg-brand-blue/90"
               disabled={!searchQuery.trim() || isSearching}
             >
-              {isSearching ? "Buscando..." : "Buscar"}
+              {isSearching ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Buscando...
+                </>
+              ) : "Buscar"}
             </Button>
           </div>
         </form>
@@ -130,10 +156,19 @@ const ImportFromTMDB = () => {
               </div>
               <Button 
                 onClick={handleImport}
-                disabled={selectedMovies.size === 0}
+                disabled={selectedMovies.size === 0 || isImporting}
                 className="bg-brand-purple hover:bg-brand-purple/90 flex items-center gap-2"
               >
-                <Download size={16} /> Importar seleccionadas
+                {isImporting ? (
+                  <>
+                    <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    Importando...
+                  </>
+                ) : (
+                  <>
+                    <Download size={16} /> Importar seleccionadas
+                  </>
+                )}
               </Button>
             </div>
             
@@ -160,23 +195,29 @@ const ImportFromTMDB = () => {
                         />
                       </TableCell>
                       <TableCell className="font-medium flex items-center gap-3">
-                        <img 
-                          src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`} 
-                          alt={movie.title} 
-                          className="h-12 w-8 rounded object-cover hidden sm:block" 
-                        />
+                        {movie.poster_path ? (
+                          <img 
+                            src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`} 
+                            alt={movie.title} 
+                            className="h-12 w-8 rounded object-cover hidden sm:block" 
+                          />
+                        ) : (
+                          <div className="h-12 w-8 rounded bg-gray-700 flex items-center justify-center hidden sm:flex">
+                            <span className="text-xs text-gray-500">N/A</span>
+                          </div>
+                        )}
                         <div>
                           <div>{movie.title}</div>
                           <div className="text-xs text-gray-400 truncate max-w-[180px] md:max-w-[300px] lg:max-w-[400px]">
-                            {movie.overview}
+                            {movie.overview || "Sin descripción disponible"}
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {movie.release_date?.split('-')[0]}
+                        {movie.release_date ? movie.release_date.split('-')[0] : "N/A"}
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {movie.vote_average} ★
+                        {movie.vote_average ? `${movie.vote_average} ★` : "N/A"}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button 
@@ -186,8 +227,10 @@ const ImportFromTMDB = () => {
                           onClick={() => {
                             handleToggleSelect(movie.id);
                             toast({
-                              title: "Película agregada",
-                              description: `${movie.title} se ha agregado a la selección`,
+                              title: selectedMovies.has(movie.id) 
+                                ? "Película eliminada" 
+                                : "Película agregada",
+                              description: `${movie.title} se ha ${selectedMovies.has(movie.id) ? "eliminado de" : "agregado a"} la selección`,
                             });
                           }}
                         >
