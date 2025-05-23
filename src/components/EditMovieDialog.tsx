@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +8,7 @@ import { Edit, Plus, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateMovie, Movie } from '@/services/movieService';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EditMovieDialogProps {
   movie: {
@@ -48,6 +48,48 @@ const EditMovieDialog = ({ movie }: EditMovieDialogProps) => {
 
   const queryClient = useQueryClient();
 
+  // Load movie data when dialog opens
+  useEffect(() => {
+    if (open) {
+      // Fetch full movie data to populate form
+      const loadMovieData = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('movies')
+            .select('*')
+            .eq('id', movie.id)
+            .single();
+            
+          if (!error && data) {
+            setFormData({
+              title: data.title || '',
+              release_date: data.release_date || '',
+              poster_path: data.poster_path || '',
+              backdrop_path: data.backdrop_path || '',
+              overview: data.overview || '',
+              rating: data.rating?.toString() || '',
+              runtime: data.runtime?.toString() || '',
+              trailer_url: data.trailer_url || '',
+              stream_url: data.stream_url || '',
+              genres: data.genres || []
+            });
+            
+            // Load existing servers
+            if (data.stream_servers && Array.isArray(data.stream_servers)) {
+              setServers(data.stream_servers.length > 0 ? data.stream_servers : [
+                { name: 'Servidor 1', url: '', quality: 'HD', language: 'Latino' }
+              ]);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading movie data:', error);
+        }
+      };
+      
+      loadMovieData();
+    }
+  }, [open, movie.id]);
+
   const updateMovieMutation = useMutation({
     mutationFn: (data: Partial<Movie>) => updateMovie(movie.id, data),
     onSuccess: () => {
@@ -57,6 +99,7 @@ const EditMovieDialog = ({ movie }: EditMovieDialogProps) => {
       });
       setOpen(false);
       queryClient.invalidateQueries({ queryKey: ['movies'] });
+      queryClient.invalidateQueries({ queryKey: ['movie', movie.id] });
     },
     onError: (error) => {
       toast({
@@ -70,12 +113,15 @@ const EditMovieDialog = ({ movie }: EditMovieDialogProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    const validServers = servers.filter(server => server.url.trim() !== '');
+    console.log("Updating movie with servers:", validServers);
+    
     const updateData = {
       ...formData,
       rating: formData.rating ? parseFloat(formData.rating) : null,
       runtime: formData.runtime ? parseInt(formData.runtime) : null,
       release_date: formData.release_date || null,
-      stream_servers: servers.filter(server => server.url.trim() !== ''),
+      stream_servers: validServers,
     };
     
     updateMovieMutation.mutate(updateData);
@@ -87,7 +133,12 @@ const EditMovieDialog = ({ movie }: EditMovieDialogProps) => {
   };
 
   const addServer = () => {
-    setServers(prev => [...prev, { name: `Servidor ${prev.length + 1}`, url: '', quality: 'HD', language: 'Latino' }]);
+    setServers(prev => [...prev, { 
+      name: `Servidor ${prev.length + 1}`, 
+      url: '', 
+      quality: 'HD', 
+      language: 'Latino' 
+    }]);
   };
 
   const removeServer = (index: number) => {

@@ -23,11 +23,15 @@ const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps)
   const languageOptions = ['Latino', 'Subtitulado', 'Español'];
 
   // Use stream servers if available, otherwise fallback to single stream URL or default
-  const availableServers = streamServers.length > 0 ? streamServers : [
+  const availableServers = streamServers && streamServers.length > 0 ? streamServers : [
     { name: 'Servidor Principal', url: streamUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" }
   ];
   
+  console.log("VideoPlayer - Available servers:", availableServers);
+  console.log("VideoPlayer - Selected server index:", selectedServer);
+  
   const currentStreamUrl = availableServers[selectedServer]?.url || availableServers[0]?.url;
+  console.log("VideoPlayer - Current stream URL:", currentStreamUrl);
 
   return (
     <div className="w-full">
@@ -95,7 +99,10 @@ const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps)
           {availableServers.map((server, index) => (
             <Button
               key={index}
-              onClick={() => setSelectedServer(index)}
+              onClick={() => {
+                console.log("Selecting server:", index, server);
+                setSelectedServer(index);
+              }}
               variant={selectedServer === index ? "default" : "outline"}
               size="sm"
               className={selectedServer === index
@@ -104,9 +111,18 @@ const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps)
               }
             >
               {server.name}
+              {server.quality && (
+                <span className="ml-1 text-xs opacity-75">({server.quality})</span>
+              )}
             </Button>
           ))}
         </div>
+        
+        {availableServers.length === 1 && availableServers[0].url.includes('sample') && (
+          <p className="text-yellow-400 text-sm mt-2">
+            ⚠️ No hay servidores configurados para esta película. Se muestra un video de ejemplo.
+          </p>
+        )}
       </div>
 
       {/* Download Options */}

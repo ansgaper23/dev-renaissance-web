@@ -5,10 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { importMovieFromTMDB } from '@/services/movieService';
 import { toast } from '@/hooks/use-toast';
-import { Search, Download, Plus, Trash2 } from 'lucide-react';
+import { Search, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ServerEntry {
@@ -18,37 +16,14 @@ interface ServerEntry {
   language?: string;
 }
 
-const QuickAddMovie = () => {
+const QuickAddSeries = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [selectedMovie, setSelectedMovie] = useState<any>(null);
+  const [selectedSeries, setSelectedSeries] = useState<any>(null);
   const [servers, setServers] = useState<ServerEntry[]>([
     { name: 'Servidor 1', url: '', quality: 'HD', language: 'Latino' }
   ]);
-
-  const queryClient = useQueryClient();
-
-  const addMovieMutation = useMutation({
-    mutationFn: ({ movie, streamServers }: { movie: any, streamServers: ServerEntry[] }) => 
-      importMovieFromTMDB(movie, streamServers),
-    onSuccess: () => {
-      toast({
-        title: "Película agregada",
-        description: "La película se ha agregado correctamente",
-      });
-      setSelectedMovie(null);
-      setServers([{ name: 'Servidor 1', url: '', quality: 'HD', language: 'Latino' }]);
-      queryClient.invalidateQueries({ queryKey: ['movies'] });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: `No se pudo agregar la película: ${error.message}`,
-        variant: "destructive"
-      });
-    }
-  });
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,17 +33,17 @@ const QuickAddMovie = () => {
     
     try {
       const { data, error } = await supabase.functions.invoke('tmdb-search', {
-        body: { query: searchQuery }
+        body: { query: searchQuery, type: 'tv' }
       });
       
       if (error) {
         throw new Error(error.message);
       }
       
-      console.log("TMDB Search results:", data);
+      console.log("TMDB Series Search results:", data);
       setSearchResults(data.results || []);
     } catch (error) {
-      console.error('Error searching TMDB:', error);
+      console.error('Error searching TMDB for series:', error);
       toast({
         title: "Error de búsqueda",
         description: "No se pudo conectar a la API de TMDB. Intente más tarde.",
@@ -79,40 +54,24 @@ const QuickAddMovie = () => {
     }
   };
 
-  const handleSelectMovie = async (movie: any) => {
-    console.log("Selected movie from TMDB:", movie);
-    
-    // Get detailed movie info including runtime
-    try {
-      const { data: detailedMovie, error } = await supabase.functions.invoke('tmdb-import', {
-        body: { tmdb_id: movie.id }
-      });
-      
-      if (error) {
-        console.error("Error getting detailed movie:", error);
-        setSelectedMovie(movie);
-      } else {
-        console.log("Detailed movie data:", detailedMovie);
-        setSelectedMovie(detailedMovie);
-      }
-    } catch (error) {
-      console.error("Error getting detailed movie:", error);
-      setSelectedMovie(movie);
-    }
-    
+  const handleSelectSeries = (series: any) => {
+    console.log("Selected series from TMDB:", series);
+    setSelectedSeries(series);
     setSearchResults([]);
     setSearchQuery('');
   };
 
-  const handleAddMovie = () => {
-    if (!selectedMovie) return;
+  const handleAddSeries = () => {
+    if (!selectedSeries) return;
 
     const validServers = servers.filter(server => server.url.trim() !== '');
-    console.log("Adding movie with servers:", validServers);
+    console.log("Adding series with servers:", validServers);
 
-    addMovieMutation.mutate({ 
-      movie: selectedMovie, 
-      streamServers: validServers 
+    // For now, just show a toast as series functionality is being developed
+    toast({
+      title: "Funcionalidad en desarrollo",
+      description: "La funcionalidad de series estará disponible próximamente.",
+      variant: "default"
     });
   };
 
@@ -138,9 +97,9 @@ const QuickAddMovie = () => {
   return (
     <Card className="bg-gray-900 border-gray-800">
       <CardContent className="p-6">
-        <h3 className="text-xl font-medium mb-4 text-white">Agregar Película Rápido</h3>
+        <h3 className="text-xl font-medium mb-4 text-white">Agregar Serie Rápido</h3>
         
-        {!selectedMovie ? (
+        {!selectedSeries ? (
           <>
             <form onSubmit={handleSearch} className="mb-6">
               <div className="flex gap-3">
@@ -149,7 +108,7 @@ const QuickAddMovie = () => {
                   <Input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Buscar película en TMDB..."
+                    placeholder="Buscar serie en TMDB..."
                     className="pl-10 bg-gray-800 border-gray-700 text-white"
                   />
                 </div>
@@ -166,16 +125,16 @@ const QuickAddMovie = () => {
             {searchResults.length > 0 && (
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 <h4 className="text-white font-medium">Resultados:</h4>
-                {searchResults.slice(0, 5).map((movie) => (
+                {searchResults.slice(0, 5).map((series) => (
                   <div 
-                    key={movie.id}
+                    key={series.id}
                     className="flex items-center gap-3 p-3 bg-gray-800 rounded cursor-pointer hover:bg-gray-700 transition-colors"
-                    onClick={() => handleSelectMovie(movie)}
+                    onClick={() => handleSelectSeries(series)}
                   >
-                    {movie.poster_path ? (
+                    {series.poster_path ? (
                       <img 
-                        src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`} 
-                        alt={movie.title} 
+                        src={`https://image.tmdb.org/t/p/w92${series.poster_path}`} 
+                        alt={series.name} 
                         className="w-12 h-18 rounded object-cover" 
                       />
                     ) : (
@@ -184,13 +143,13 @@ const QuickAddMovie = () => {
                       </div>
                     )}
                     <div className="flex-1">
-                      <h5 className="text-white font-medium">{movie.title}</h5>
+                      <h5 className="text-white font-medium">{series.name}</h5>
                       <p className="text-gray-400 text-sm">
-                        {movie.release_date ? movie.release_date.split('-')[0] : 'Sin fecha'} • 
-                        {movie.vote_average ? ` ${movie.vote_average} ★` : ' Sin calificación'}
+                        {series.first_air_date ? series.first_air_date.split('-')[0] : 'Sin fecha'} • 
+                        {series.vote_average ? ` ${series.vote_average} ★` : ' Sin calificación'}
                       </p>
                       <p className="text-gray-500 text-xs line-clamp-2">
-                        {movie.overview || "Sin descripción disponible"}
+                        {series.overview || "Sin descripción disponible"}
                       </p>
                     </div>
                   </div>
@@ -201,33 +160,27 @@ const QuickAddMovie = () => {
         ) : (
           <div className="space-y-4">
             <div className="flex items-start gap-4 p-4 bg-gray-800 rounded">
-              {selectedMovie.poster_path && (
+              {selectedSeries.poster_path && (
                 <img 
-                  src={`https://image.tmdb.org/t/p/w154${selectedMovie.poster_path}`} 
-                  alt={selectedMovie.title} 
+                  src={`https://image.tmdb.org/t/p/w154${selectedSeries.poster_path}`} 
+                  alt={selectedSeries.name} 
                   className="w-20 h-30 rounded object-cover" 
                 />
               )}
               <div className="flex-1">
-                <h4 className="text-white font-bold text-lg">{selectedMovie.title}</h4>
+                <h4 className="text-white font-bold text-lg">{selectedSeries.name}</h4>
                 <p className="text-gray-400">
-                  {selectedMovie.release_date ? selectedMovie.release_date.split('-')[0] : 'Sin fecha'} • 
-                  {selectedMovie.vote_average ? ` ${selectedMovie.vote_average} ★` : ' Sin calificación'}
-                  {selectedMovie.runtime && ` • ${selectedMovie.runtime} min`}
+                  {selectedSeries.first_air_date ? selectedSeries.first_air_date.split('-')[0] : 'Sin fecha'} • 
+                  {selectedSeries.vote_average ? ` ${selectedSeries.vote_average} ★` : ' Sin calificación'}
                 </p>
-                {selectedMovie.genres && selectedMovie.genres.length > 0 && (
-                  <p className="text-gray-300 text-sm">
-                    {selectedMovie.genres.map((g: any) => g.name).join(', ')}
-                  </p>
-                )}
                 <p className="text-gray-300 text-sm mt-2 line-clamp-3">
-                  {selectedMovie.overview || "Sin descripción disponible"}
+                  {selectedSeries.overview || "Sin descripción disponible"}
                 </p>
               </div>
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => setSelectedMovie(null)}
+                onClick={() => setSelectedSeries(null)}
                 className="border-gray-600 text-gray-300"
               >
                 Cambiar
@@ -309,20 +262,16 @@ const QuickAddMovie = () => {
               ))}
 
               <Button 
-                onClick={handleAddMovie}
-                disabled={addMovieMutation.isPending || !servers.some(s => s.url.trim() !== '')}
+                onClick={handleAddSeries}
+                disabled={!servers.some(s => s.url.trim() !== '')}
                 className="w-full bg-cuevana-blue hover:bg-cuevana-blue/90"
               >
-                {addMovieMutation.isPending ? 'Agregando...' : (
-                  <>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Agregar Película
-                  </>
-                )}
+                <Plus className="mr-2 h-4 w-4" />
+                Agregar Serie (Próximamente)
               </Button>
               
               <p className="text-gray-400 text-xs text-center">
-                Agrega al menos un enlace de servidor para continuar
+                La funcionalidad de series estará disponible próximamente
               </p>
             </div>
           </div>
@@ -332,4 +281,4 @@ const QuickAddMovie = () => {
   );
 };
 
-export default QuickAddMovie;
+export default QuickAddSeries;

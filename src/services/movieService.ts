@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -178,4 +179,58 @@ export const getTotalMoviesCount = async (): Promise<number> => {
   }
   
   return count || 0;
+};
+
+// TMDB Genre mapping
+const TMDB_GENRES: { [key: number]: string } = {
+  28: "Acción",
+  12: "Aventura", 
+  16: "Animación",
+  35: "Comedia",
+  80: "Crimen",
+  99: "Documental",
+  18: "Drama",
+  10751: "Familia",
+  14: "Fantasía",
+  36: "Historia",
+  27: "Horror",
+  10402: "Música",
+  9648: "Misterio",
+  10749: "Romance",
+  878: "Ciencia Ficción",
+  10770: "Película de TV",
+  53: "Suspenso",
+  10752: "Bélica",
+  37: "Western"
+};
+
+export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
+  name: string;
+  url: string;
+  quality?: string;
+  language?: string;
+}>): Promise<Movie> => {
+  console.log("Importing movie from TMDB:", tmdbMovie);
+  console.log("Stream servers:", streamServers);
+  
+  // Map genre IDs to genre names
+  const genreNames = tmdbMovie.genre_ids ? 
+    tmdbMovie.genre_ids.map((id: number) => TMDB_GENRES[id]).filter(Boolean) : [];
+
+  const movieData: MovieCreate = {
+    title: tmdbMovie.title,
+    original_title: tmdbMovie.original_title,
+    tmdb_id: tmdbMovie.id,
+    poster_path: tmdbMovie.poster_path,
+    backdrop_path: tmdbMovie.backdrop_path,
+    overview: tmdbMovie.overview,
+    release_date: tmdbMovie.release_date,
+    rating: tmdbMovie.vote_average,
+    runtime: tmdbMovie.runtime || null,
+    genre_ids: tmdbMovie.genre_ids || [],
+    genres: genreNames,
+    stream_servers: streamServers.filter(server => server.url.trim() !== ''),
+  };
+
+  return addMovie(movieData);
 };

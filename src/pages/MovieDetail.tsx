@@ -63,6 +63,8 @@ const MovieDetail = () => {
     enabled: !!id,
   });
 
+  console.log("Movie data:", movie);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
@@ -249,6 +251,13 @@ const MovieDetail = () => {
                   <div>
                     <h4 className="text-cuevana-blue mb-2 font-medium">Calificación</h4>
                     <p className="text-cuevana-white">{movie.rating}/10</p>
+                  </div>
+                )}
+                
+                {movie.stream_servers && movie.stream_servers.length > 0 && (
+                  <div>
+                    <h4 className="text-cuevana-blue mb-2 font-medium">Servidores</h4>
+                    <p className="text-cuevana-white">{movie.stream_servers.length} servidor(es) disponible(s)</p>
                   </div>
                 )}
               </div>
