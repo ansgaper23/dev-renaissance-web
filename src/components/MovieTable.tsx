@@ -9,17 +9,9 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogFooter,
-  DialogClose
-} from '@/components/ui/dialog';
-import { toast } from '@/hooks/use-toast';
-import { Edit, Trash2, Eye } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import EditMovieDialog from './EditMovieDialog';
 
 export interface MovieTableProps {
   movies: {
@@ -78,9 +70,7 @@ const MovieTable: React.FC<MovieTableProps> = ({ movies }) => {
                       <Eye className="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button variant="ghost" size="icon">
-                    <Edit className="h-4 w-4" />
-                  </Button>
+                  <EditMovieDialog movie={movie} />
                   <div>{movie.actions.onDelete}</div>
                 </div>
               </TableCell>
