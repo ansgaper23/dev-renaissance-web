@@ -1,28 +1,13 @@
 
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Star, Calendar, Clock, Play, Download, Heart, Share2 } from 'lucide-react';
+import { Star, Calendar, Clock, Play, Download, Heart, Share2, Loader2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import VideoPlayer from '@/components/VideoPlayer';
 import RelatedMovies from '@/components/RelatedMovies';
-
-// Mock movie data (en una app real, esto vendría de una API)
-const movieData = {
-  id: "123",
-  title: "Dune",
-  tagline: "El destino te espera más allá del miedo.",
-  description: "Paul Atreides, un joven brillante y talentoso nacido en un gran destino más allá de su entendimiento, debe viajar al planeta más peligroso del universo para asegurar el futuro de su familia y de su pueblo. A medida que fuerzas malévolas estallan en conflicto por el suministro exclusivo del recurso más preciado que existe en el planeta, solo sobrevivirán aquellos que puedan conquistar su miedo.",
-  posterUrl: "https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94XAgMIckC.jpg",
-  backdropUrl: "https://image.tmdb.org/t/p/original/jYEW5xZkZk2WTrdbMGAPFuBqbDc.jpg",
-  genre: "Ciencia ficción, Aventura, Drama",
-  year: 2021,
-  duration: "2h 35m",
-  rating: 4.5,
-  director: "Denis Villeneuve",
-  cast: ["Timothée Chalamet", "Rebecca Ferguson", "Oscar Isaac", "Josh Brolin", "Stellan Skarsgård", "Zendaya"],
-  trailerUrl: "https://www.youtube.com/embed/8g18jFHCLXk"
-};
+import { fetchMovieById } from '@/services/movieService';
 
 const relatedMovies = [
   {
@@ -71,7 +56,57 @@ const relatedMovies = [
 
 const MovieDetail = () => {
   const { id } = useParams();
-  const movie = movieData;
+  
+  const { data: movie, isLoading, error } = useQuery({
+    queryKey: ['movie', id],
+    queryFn: () => fetchMovieById(id!),
+    enabled: !!id,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
+        <Navbar />
+        <div className="flex justify-center items-center h-96">
+          <Loader2 className="h-8 w-8 animate-spin text-cuevana-blue" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !movie) {
+    return (
+      <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
+        <Navbar />
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Película no encontrada</h1>
+            <Link to="/">
+              <Button className="bg-cuevana-blue hover:bg-cuevana-blue/90">
+                Volver al inicio
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const posterUrl = movie.poster_path?.startsWith('http') 
+    ? movie.poster_path 
+    : movie.poster_path 
+      ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+      : '/placeholder.svg';
+
+  const backdropUrl = movie.backdrop_path?.startsWith('http')
+    ? movie.backdrop_path
+    : movie.backdrop_path
+      ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}`
+      : posterUrl;
+
+  const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : 'N/A';
+  const duration = movie.runtime ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m` : 'N/A';
+  const genres = Array.isArray(movie.genres) ? movie.genres.join(', ') : 'Sin género';
   
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
@@ -82,7 +117,7 @@ const MovieDetail = () => {
         {/* Backdrop */}
         <div className="absolute inset-0 h-[50vh]">
           <img 
-            src={movie.backdropUrl} 
+            src={backdropUrl} 
             alt={movie.title} 
             className="w-full h-full object-cover"
           />
@@ -95,7 +130,7 @@ const MovieDetail = () => {
             {/* Poster */}
             <div className="flex-shrink-0">
               <img 
-                src={movie.posterUrl} 
+                src={posterUrl} 
                 alt={movie.title} 
                 className="w-64 mx-auto lg:mx-0 rounded-lg shadow-2xl border border-cuevana-gray-200"
               />
@@ -104,31 +139,35 @@ const MovieDetail = () => {
             {/* Info */}
             <div className="flex-1 pt-16">
               <h1 className="text-3xl md:text-5xl font-bold mb-2 text-cuevana-white">{movie.title}</h1>
-              {movie.tagline && (
-                <p className="text-xl text-cuevana-blue mb-4 italic">{movie.tagline}</p>
+              {movie.original_title && movie.original_title !== movie.title && (
+                <p className="text-xl text-cuevana-blue mb-4 italic">{movie.original_title}</p>
               )}
               
               <div className="flex flex-wrap gap-4 mb-6">
-                <div className="flex items-center bg-cuevana-blue px-3 py-1 rounded">
-                  <Star className="h-4 w-4 text-cuevana-gold mr-1 fill-current" />
-                  <span className="font-semibold">{movie.rating}/5</span>
-                </div>
+                {movie.rating && (
+                  <div className="flex items-center bg-cuevana-blue px-3 py-1 rounded">
+                    <Star className="h-4 w-4 text-cuevana-gold mr-1 fill-current" />
+                    <span className="font-semibold">{movie.rating}/10</span>
+                  </div>
+                )}
                 <div className="flex items-center text-cuevana-white/80">
                   <Calendar className="h-4 w-4 mr-1" />
-                  <span>{movie.year}</span>
+                  <span>{releaseYear}</span>
                 </div>
                 <div className="flex items-center text-cuevana-white/80">
                   <Clock className="h-4 w-4 mr-1" />
-                  <span>{movie.duration}</span>
+                  <span>{duration}</span>
                 </div>
                 <span className="bg-cuevana-gray-100 text-cuevana-white px-3 py-1 rounded text-sm">
-                  {movie.genre}
+                  {genres}
                 </span>
               </div>
               
-              <p className="text-cuevana-white/90 mb-6 text-lg leading-relaxed">
-                {movie.description}
-              </p>
+              {movie.overview && (
+                <p className="text-cuevana-white/90 mb-6 text-lg leading-relaxed">
+                  {movie.overview}
+                </p>
+              )}
               
               <div className="flex flex-wrap gap-3">
                 <Button className="bg-cuevana-blue hover:bg-cuevana-blue/90 text-white flex items-center gap-2 px-6 py-3">
@@ -157,21 +196,27 @@ const MovieDetail = () => {
             {/* Video Player */}
             <section>
               <h2 className="text-2xl font-semibold mb-4 text-cuevana-white">Reproducir</h2>
-              <VideoPlayer title={movie.title} />
+              <VideoPlayer 
+                title={movie.title} 
+                streamServers={movie.stream_servers || []}
+                streamUrl={movie.stream_url || undefined}
+              />
             </section>
             
             {/* Trailer */}
-            <section>
-              <h2 className="text-2xl font-semibold mb-4 text-cuevana-white">Trailer</h2>
-              <div className="aspect-video rounded-lg overflow-hidden">
-                <iframe 
-                  src={movie.trailerUrl} 
-                  title={`${movie.title} trailer`}
-                  className="w-full h-full"
-                  allowFullScreen
-                ></iframe>
-              </div>
-            </section>
+            {movie.trailer_url && (
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 text-cuevana-white">Trailer</h2>
+                <div className="aspect-video rounded-lg overflow-hidden">
+                  <iframe 
+                    src={movie.trailer_url} 
+                    title={`${movie.title} trailer`}
+                    className="w-full h-full"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              </section>
+            )}
           </div>
           
           {/* Sidebar */}
@@ -181,33 +226,31 @@ const MovieDetail = () => {
               
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-cuevana-blue mb-2 font-medium">Director</h4>
-                  <p className="text-cuevana-white">{movie.director}</p>
-                </div>
-                
-                <div>
-                  <h4 className="text-cuevana-blue mb-2 font-medium">Reparto</h4>
-                  <div className="space-y-1">
-                    {movie.cast.map((actor, index) => (
-                      <p key={index} className="text-cuevana-white text-sm">{actor}</p>
-                    ))}
-                  </div>
+                  <h4 className="text-cuevana-blue mb-2 font-medium">Título Original</h4>
+                  <p className="text-cuevana-white">{movie.original_title || movie.title}</p>
                 </div>
                 
                 <div>
                   <h4 className="text-cuevana-blue mb-2 font-medium">Género</h4>
-                  <p className="text-cuevana-white">{movie.genre}</p>
+                  <p className="text-cuevana-white">{genres}</p>
                 </div>
                 
                 <div>
                   <h4 className="text-cuevana-blue mb-2 font-medium">Año</h4>
-                  <p className="text-cuevana-white">{movie.year}</p>
+                  <p className="text-cuevana-white">{releaseYear}</p>
                 </div>
                 
                 <div>
                   <h4 className="text-cuevana-blue mb-2 font-medium">Duración</h4>
-                  <p className="text-cuevana-white">{movie.duration}</p>
+                  <p className="text-cuevana-white">{duration}</p>
                 </div>
+                
+                {movie.rating && (
+                  <div>
+                    <h4 className="text-cuevana-blue mb-2 font-medium">Calificación</h4>
+                    <p className="text-cuevana-white">{movie.rating}/10</p>
+                  </div>
+                )}
               </div>
             </div>
             

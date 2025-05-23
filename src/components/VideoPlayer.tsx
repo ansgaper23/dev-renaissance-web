@@ -5,20 +5,29 @@ import { Play, Pause, Volume2, VolumeX, Maximize, Settings } from 'lucide-react'
 
 interface VideoPlayerProps {
   title: string;
-  streamUrls?: {
-    [key: string]: string;
-  };
+  streamServers?: Array<{
+    name: string;
+    url: string;
+    quality?: string;
+    language?: string;
+  }>;
+  streamUrl?: string;
 }
 
-const VideoPlayer = ({ title, streamUrls }: VideoPlayerProps) => {
+const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps) => {
+  const [selectedServer, setSelectedServer] = useState(0);
   const [selectedQuality, setSelectedQuality] = useState('HD');
   const [selectedLanguage, setSelectedLanguage] = useState('Latino');
 
   const qualityOptions = ['HD', '720p', '480p'];
   const languageOptions = ['Latino', 'Subtitulado', 'Español'];
 
-  // Mock stream URL - en producción esto vendría de tu base de datos
-  const currentStreamUrl = streamUrls?.hd || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+  // Use stream servers if available, otherwise fallback to single stream URL or default
+  const availableServers = streamServers.length > 0 ? streamServers : [
+    { name: 'Servidor Principal', url: streamUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" }
+  ];
+  
+  const currentStreamUrl = availableServers[selectedServer]?.url || availableServers[0]?.url;
 
   return (
     <div className="w-full">
@@ -64,6 +73,7 @@ const VideoPlayer = ({ title, streamUrls }: VideoPlayerProps) => {
       {/* Video Player */}
       <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
         <video
+          key={currentStreamUrl}
           controls
           className="w-full h-full"
           poster="https://image.tmdb.org/t/p/original/jYEW5xZkZk2WTrdbMGAPFuBqbDc.jpg"
@@ -82,14 +92,18 @@ const VideoPlayer = ({ title, streamUrls }: VideoPlayerProps) => {
       <div className="mt-4 p-4 bg-cuevana-gray-100 rounded-lg">
         <h4 className="text-cuevana-white font-medium mb-3">Servidores Disponibles:</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {['Servidor 1', 'Servidor 2', 'Servidor 3', 'Fembed'].map((server, index) => (
+          {availableServers.map((server, index) => (
             <Button
-              key={server}
-              variant="outline"
+              key={index}
+              onClick={() => setSelectedServer(index)}
+              variant={selectedServer === index ? "default" : "outline"}
               size="sm"
-              className="border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue"
+              className={selectedServer === index
+                ? "bg-cuevana-blue text-white"
+                : "border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue"
+              }
             >
-              {server}
+              {server.name}
             </Button>
           ))}
         </div>

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -16,6 +15,12 @@ export interface Movie {
   runtime?: number | null;
   trailer_url?: string | null;
   stream_url?: string | null;
+  stream_servers?: Array<{
+    name: string;
+    url: string;
+    quality?: string;
+    language?: string;
+  }> | null;
   created_at?: string | null;
   updated_at?: string | null;
 }
