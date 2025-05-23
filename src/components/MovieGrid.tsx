@@ -90,30 +90,32 @@ const MovieCard = ({ movie }: { movie: any }) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <Link to={`/movie/${movie.id}`}>
-        <Card className="overflow-hidden bg-transparent border-0">
-          <div className="relative aspect-[2/3] overflow-hidden rounded-lg">
+        <Card className="overflow-hidden bg-cuevana-gray-100 border-cuevana-gray-200 transition-all duration-300 hover:scale-105">
+          <div className="relative aspect-[2/3] overflow-hidden">
             <img
               src={movie.posterUrl}
               alt={movie.title}
-              className="w-full h-full object-cover transition-transform duration-300 ease-in-out"
+              className="w-full h-full object-cover transition-transform duration-300"
               style={{ transform: isHovered ? 'scale(1.05)' : 'scale(1)' }}
             />
             {isHovered && (
-              <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
-                <div className="bg-brand-purple bg-opacity-80 rounded-full p-3 text-white">
-                  <Play className="h-8 w-8" />
+              <div className="absolute inset-0 bg-cuevana-bg/70 flex items-center justify-center">
+                <div className="bg-cuevana-blue rounded-full p-3 text-white">
+                  <Play className="h-6 w-6" />
                 </div>
               </div>
             )}
+            
+            {/* Rating badge */}
+            <div className="absolute top-2 left-2 bg-cuevana-bg/80 text-cuevana-gold text-xs font-bold px-2 py-1 rounded flex items-center">
+              <Star className="h-3 w-3 mr-1 fill-current" />
+              {movie.rating}
+            </div>
           </div>
           <CardContent className="p-2 pt-3 px-0">
-            <h3 className="text-sm font-medium text-white truncate">{movie.title}</h3>
+            <h3 className="text-sm font-medium text-cuevana-white truncate">{movie.title}</h3>
             <div className="flex justify-between items-center mt-1">
-              <div className="flex items-center">
-                <Star className="h-3 w-3 text-yellow-400 mr-1" />
-                <span className="text-xs text-gray-400">{movie.rating}</span>
-              </div>
-              <span className="text-xs text-gray-500">{movie.year}</span>
+              <span className="text-xs text-cuevana-white/70">{movie.year}</span>
             </div>
           </CardContent>
         </Card>

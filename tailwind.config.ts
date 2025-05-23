@@ -61,6 +61,26 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Cuevana3 color palette
+				cuevana: {
+					bg: '#0D0F1B',
+					blue: '#1E90FF',
+					gold: '#FFC107',
+					white: '#FFFFFF',
+					gray: {
+						100: '#1A1D29',
+						200: '#252A3A',
+						300: '#2F3649',
+						400: '#3A4258',
+						500: '#454E67'
+					}
+				},
+				// Keep existing brand colors for compatibility
+				brand: {
+					purple: '#8B5CF6',
+					pink: '#EC4899',
+					blue: '#1E90FF'
 				}
 			},
 			borderRadius: {
