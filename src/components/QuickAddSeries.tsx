@@ -1,35 +1,21 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { Search, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { Json } from '@/integrations/supabase/types';
 
 interface ServerEntry {
   name: string;
   url: string;
   quality?: string;
   language?: string;
-}
-
-interface SeriesData {
-  title: string;
-  original_title?: string;
-  tmdb_id?: number;
-  poster_path?: string;
-  backdrop_path?: string;
-  overview?: string;
-  first_air_date?: string;
-  rating?: number;
-  genres?: string[];
-  number_of_seasons?: number;
-  number_of_episodes?: number;
-  status?: string;
-  stream_servers: ServerEntry[];
+  [key: string]: string | undefined;
 }
 
 const QuickAddSeries = () => {
@@ -44,7 +30,7 @@ const QuickAddSeries = () => {
   const queryClient = useQueryClient();
 
   const addSeriesMutation = useMutation({
-    mutationFn: async (seriesData: SeriesData) => {
+    mutationFn: async (seriesData: any) => {
       const { data, error } = await supabase
         .from('series')
         .insert(seriesData)
@@ -139,7 +125,7 @@ const QuickAddSeries = () => {
         return genres[id];
       }).filter(Boolean) : [];
 
-    const seriesData: SeriesData = {
+    const seriesData = {
       title: selectedSeries.name,
       original_title: selectedSeries.original_name,
       tmdb_id: selectedSeries.id,
@@ -149,7 +135,7 @@ const QuickAddSeries = () => {
       first_air_date: selectedSeries.first_air_date,
       rating: selectedSeries.vote_average,
       genres: genreNames,
-      stream_servers: validServers,
+      stream_servers: validServers as Json,
     };
 
     addSeriesMutation.mutate(seriesData);
