@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -74,11 +75,12 @@ const EditMovieDialog = ({ movie }: EditMovieDialogProps) => {
               genres: data.genres || []
             });
             
-            // Load existing servers
-            if (data.stream_servers && Array.isArray(data.stream_servers)) {
-              setServers(data.stream_servers.length > 0 ? data.stream_servers : [
-                { name: 'Servidor 1', url: '', quality: 'HD', language: 'Latino' }
-              ]);
+            // Load existing servers - safely handle the stream_servers property
+            const streamServers = data.stream_servers as ServerEntry[] | null;
+            if (streamServers && Array.isArray(streamServers) && streamServers.length > 0) {
+              setServers(streamServers);
+            } else {
+              setServers([{ name: 'Servidor 1', url: '', quality: 'HD', language: 'Latino' }]);
             }
           }
         } catch (error) {
@@ -95,7 +97,7 @@ const EditMovieDialog = ({ movie }: EditMovieDialogProps) => {
     onSuccess: () => {
       toast({
         title: "Película actualizada",
-        description: "La película se ha actualizado correctamente",
+        description: "La película se ha actualizada correctamente",
       });
       setOpen(false);
       queryClient.invalidateQueries({ queryKey: ['movies'] });

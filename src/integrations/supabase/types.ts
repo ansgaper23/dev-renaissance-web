@@ -43,6 +43,7 @@ export type Database = {
           rating: number | null
           release_date: string | null
           runtime: number | null
+          stream_servers: Json | null
           stream_url: string | null
           title: string
           tmdb_id: number | null
@@ -61,6 +62,7 @@ export type Database = {
           rating?: number | null
           release_date?: string | null
           runtime?: number | null
+          stream_servers?: Json | null
           stream_url?: string | null
           title: string
           tmdb_id?: number | null
@@ -79,6 +81,7 @@ export type Database = {
           rating?: number | null
           release_date?: string | null
           runtime?: number | null
+          stream_servers?: Json | null
           stream_url?: string | null
           title?: string
           tmdb_id?: number | null
