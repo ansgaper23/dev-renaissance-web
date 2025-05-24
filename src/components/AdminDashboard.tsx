@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { getTotalMoviesCount } from '@/services/movieService';
-import { supabase } from '@/integrations/supabase/client';
+import { getTotalSeriesCount } from '@/services/seriesService';
 import { Loader2 } from 'lucide-react';
 import FeaturedMoviesManager from './FeaturedMoviesManager';
 
@@ -15,14 +15,7 @@ const AdminDashboard = () => {
 
   const { data: totalSeries, isLoading: loadingSeries } = useQuery({
     queryKey: ['totalSeries'],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('series')
-        .select('*', { count: 'exact', head: true });
-        
-      if (error) throw new Error(error.message);
-      return count || 0;
-    }
+    queryFn: getTotalSeriesCount
   });
 
   return (

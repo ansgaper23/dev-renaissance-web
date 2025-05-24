@@ -45,8 +45,9 @@ const MovieSectionConnector = ({ title, viewAllLink, limit = 6, sortBy = 'create
   }
 
   // Transformar los datos para que coincidan con la interfaz del MovieSection
+  // CORREGIDO: Usar el ID real de la base de datos (UUID) en lugar de convertir a número
   const transformedMovies = movies.slice(0, limit).map(movie => ({
-    id: parseInt(movie.id),
+    id: movie.id, // Usar el ID UUID real
     title: movie.title,
     posterUrl: movie.poster_path ? 
       (movie.poster_path.startsWith('http') ? movie.poster_path : `https://image.tmdb.org/t/p/w500${movie.poster_path}`) : 

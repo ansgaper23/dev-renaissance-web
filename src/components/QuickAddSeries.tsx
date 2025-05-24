@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import { Search, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Json } from '@/integrations/supabase/types';
+import { addSeries, type SeriesCreate } from '@/services/seriesService';
 
 interface ServerEntry {
   name: string;
@@ -30,15 +29,9 @@ const QuickAddSeries = () => {
   const queryClient = useQueryClient();
 
   const addSeriesMutation = useMutation({
-    mutationFn: async (seriesData: any) => {
-      const { data, error } = await supabase
-        .from('series')
-        .insert(seriesData)
-        .select()
-        .single();
-        
-      if (error) throw new Error(error.message);
-      return data;
+    mutationFn: async (seriesData: SeriesCreate) => {
+      console.log("Mutation function called with:", seriesData);
+      return await addSeries(seriesData);
     },
     onSuccess: () => {
       toast({
@@ -50,6 +43,7 @@ const QuickAddSeries = () => {
       queryClient.invalidateQueries({ queryKey: ['series'] });
     },
     onError: (error: any) => {
+      console.error("Mutation error:", error);
       toast({
         title: "Error",
         description: `No se pudo agregar la serie: ${error.message}`,
@@ -125,7 +119,7 @@ const QuickAddSeries = () => {
         return genres[id];
       }).filter(Boolean) : [];
 
-    const seriesData = {
+    const seriesData: SeriesCreate = {
       title: selectedSeries.name,
       original_title: selectedSeries.original_name,
       tmdb_id: selectedSeries.id,
@@ -135,9 +129,10 @@ const QuickAddSeries = () => {
       first_air_date: selectedSeries.first_air_date,
       rating: selectedSeries.vote_average,
       genres: genreNames,
-      stream_servers: validServers as Json,
+      stream_servers: validServers,
     };
 
+    console.log("Final series data to send:", seriesData);
     addSeriesMutation.mutate(seriesData);
   };
 
