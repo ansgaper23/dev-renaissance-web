@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,12 +7,26 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { Search, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface ServerEntry {
   name: string;
   url: string;
   quality?: string;
   language?: string;
+}
+
+interface SeriesData {
+  title: string;
+  original_title?: string;
+  tmdb_id?: number;
+  poster_path?: string;
+  backdrop_path?: string;
+  overview?: string;
+  first_air_date?: string;
+  rating?: number;
+  genres?: string[];
+  stream_servers: ServerEntry[];
 }
 
 const QuickAddSeries = () => {
@@ -24,6 +37,37 @@ const QuickAddSeries = () => {
   const [servers, setServers] = useState<ServerEntry[]>([
     { name: 'Servidor 1', url: '', quality: 'HD', language: 'Latino' }
   ]);
+
+  const queryClient = useQueryClient();
+
+  const addSeriesMutation = useMutation({
+    mutationFn: async (seriesData: SeriesData) => {
+      const { data, error } = await supabase
+        .from('series')
+        .insert(seriesData)
+        .select()
+        .single();
+        
+      if (error) throw new Error(error.message);
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Serie agregada",
+        description: "La serie se ha agregado correctamente",
+      });
+      setSelectedSeries(null);
+      setServers([{ name: 'Servidor 1', url: '', quality: 'HD', language: 'Latino' }]);
+      queryClient.invalidateQueries({ queryKey: ['series'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: `No se pudo agregar la serie: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  });
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,12 +111,45 @@ const QuickAddSeries = () => {
     const validServers = servers.filter(server => server.url.trim() !== '');
     console.log("Adding series with servers:", validServers);
 
-    // For now, just show a toast as series functionality is being developed
-    toast({
-      title: "Funcionalidad en desarrollo",
-      description: "La funcionalidad de series estará disponible próximamente.",
-      variant: "default"
-    });
+    // Map genre IDs to genre names
+    const genreNames = selectedSeries.genre_ids ? 
+      selectedSeries.genre_ids.map((id: number) => {
+        const genres: { [key: number]: string } = {
+          10759: "Acción y Aventura",
+          16: "Animación",
+          35: "Comedia",
+          80: "Crimen",
+          99: "Documental",
+          18: "Drama",
+          10751: "Familia",
+          14: "Fantasía",
+          10762: "Infantil",
+          9648: "Misterio",
+          10763: "Noticias",
+          10764: "Reality",
+          10765: "Ciencia Ficción y Fantasía",
+          10766: "Telenovela",
+          10767: "Talk Show",
+          10768: "Bélica y Política",
+          37: "Western"
+        };
+        return genres[id];
+      }).filter(Boolean) : [];
+
+    const seriesData: SeriesData = {
+      title: selectedSeries.name,
+      original_title: selectedSeries.original_name,
+      tmdb_id: selectedSeries.id,
+      poster_path: selectedSeries.poster_path,
+      backdrop_path: selectedSeries.backdrop_path,
+      overview: selectedSeries.overview,
+      first_air_date: selectedSeries.first_air_date,
+      rating: selectedSeries.vote_average,
+      genres: genreNames,
+      stream_servers: validServers,
+    };
+
+    addSeriesMutation.mutate(seriesData);
   };
 
   const addServer = () => {
@@ -97,7 +174,7 @@ const QuickAddSeries = () => {
   return (
     <Card className="bg-gray-900 border-gray-800">
       <CardContent className="p-6">
-        <h3 className="text-xl font-medium mb-4 text-white">Agregar Serie Rápido</h3>
+        <h3 className="text-xl font-medium mb-4 text-white">Agregar Serie</h3>
         
         {!selectedSeries ? (
           <>
@@ -263,16 +340,12 @@ const QuickAddSeries = () => {
 
               <Button 
                 onClick={handleAddSeries}
-                disabled={!servers.some(s => s.url.trim() !== '')}
+                disabled={!servers.some(s => s.url.trim() !== '') || addSeriesMutation.isPending}
                 className="w-full bg-cuevana-blue hover:bg-cuevana-blue/90"
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Agregar Serie (Próximamente)
+                {addSeriesMutation.isPending ? 'Agregando...' : 'Agregar Serie'}
               </Button>
-              
-              <p className="text-gray-400 text-xs text-center">
-                La funcionalidad de series estará disponible próximamente
-              </p>
             </div>
           </div>
         )}

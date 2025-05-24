@@ -23,15 +23,20 @@ const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps)
   const languageOptions = ['Latino', 'Subtitulado', 'Español'];
 
   // Use stream servers if available, otherwise fallback to single stream URL or default
-  const availableServers = streamServers && streamServers.length > 0 ? streamServers : [
-    { name: 'Servidor Principal', url: streamUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" }
-  ];
+  const availableServers = streamServers && streamServers.length > 0 ? streamServers : 
+    streamUrl ? [{ name: 'Servidor Principal', url: streamUrl }] : [
+      { name: 'Servidor Demo', url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" }
+    ];
   
+  console.log("VideoPlayer - Stream servers received:", streamServers);
+  console.log("VideoPlayer - Stream URL received:", streamUrl);
   console.log("VideoPlayer - Available servers:", availableServers);
   console.log("VideoPlayer - Selected server index:", selectedServer);
   
   const currentStreamUrl = availableServers[selectedServer]?.url || availableServers[0]?.url;
   console.log("VideoPlayer - Current stream URL:", currentStreamUrl);
+
+  const hasValidServers = streamServers && streamServers.length > 0 && streamServers.some(server => server.url && server.url.trim() !== '');
 
   return (
     <div className="w-full">
@@ -118,9 +123,15 @@ const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps)
           ))}
         </div>
         
-        {availableServers.length === 1 && availableServers[0].url.includes('sample') && (
+        {!hasValidServers && (
           <p className="text-yellow-400 text-sm mt-2">
             ⚠️ No hay servidores configurados para esta película. Se muestra un video de ejemplo.
+          </p>
+        )}
+        
+        {hasValidServers && (
+          <p className="text-green-400 text-sm mt-2">
+            ✅ {availableServers.length} servidor(es) configurado(s)
           </p>
         )}
       </div>

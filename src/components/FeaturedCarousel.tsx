@@ -3,8 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Info, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
-const featuredMovies = [
+// Fallback movies if no featured movies are configured
+const fallbackMovies = [
   {
     id: 1,
     title: "Avengers: Endgame",
@@ -37,13 +40,60 @@ const featuredMovies = [
 const FeaturedCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  // Fetch featured movies from database
+  const { data: featuredMoviesData = [] } = useQuery({
+    queryKey: ['featuredMovies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('featured_movies')
+        .select(`
+          *,
+          movies (
+            id,
+            title,
+            overview,
+            backdrop_path,
+            poster_path,
+            rating,
+            release_date,
+            genres
+          )
+        `)
+        .order('display_order');
+        
+      if (error) {
+        console.error('Error fetching featured movies:', error);
+        return [];
+      }
+      
+      return data.map((featured: any) => ({
+        id: featured.movies.id,
+        title: featured.movies.title,
+        description: featured.movies.overview || "Sin descripción disponible",
+        backdropUrl: featured.movies.backdrop_path?.startsWith('http') 
+          ? featured.movies.backdrop_path 
+          : featured.movies.backdrop_path 
+            ? `https://image.tmdb.org/t/p/original${featured.movies.backdrop_path}`
+            : featured.movies.poster_path?.startsWith('http')
+              ? featured.movies.poster_path
+              : `https://image.tmdb.org/t/p/original${featured.movies.poster_path}`,
+        rating: featured.movies.rating || 0,
+        year: featured.movies.release_date ? new Date(featured.movies.release_date).getFullYear() : 'Sin fecha',
+        genre: Array.isArray(featured.movies.genres) ? featured.movies.genres.join(', ') : 'Sin género'
+      }));
+    }
+  });
+
+  // Use featured movies from database, or fallback to static movies
+  const featuredMovies = featuredMoviesData.length > 0 ? featuredMoviesData : fallbackMovies;
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % featuredMovies.length);
     }, 6000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [featuredMovies.length]);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % featuredMovies.length);
@@ -52,6 +102,14 @@ const FeaturedCarousel = () => {
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + featuredMovies.length) % featuredMovies.length);
   };
+
+  if (featuredMovies.length === 0) {
+    return (
+      <div className="h-[70vh] bg-cuevana-gray-100 flex items-center justify-center">
+        <p className="text-cuevana-white text-lg">No hay películas destacadas configuradas</p>
+      </div>
+    );
+  }
 
   const currentMovie = featuredMovies[currentSlide];
 
@@ -132,6 +190,13 @@ const FeaturedCarousel = () => {
           />
         ))}
       </div>
+
+      {/* Admin Notice */}
+      {featuredMoviesData.length === 0 && (
+        <div className="absolute top-4 right-4 bg-yellow-600/80 text-white text-xs px-3 py-1 rounded">
+          Usando películas por defecto - Configura en Admin
+        </div>
+      )}
     </div>
   );
 };
