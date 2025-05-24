@@ -30,6 +30,35 @@ export type Database = {
         }
         Relationships: []
       }
+      featured_movies: {
+        Row: {
+          created_at: string | null
+          display_order: number
+          id: string
+          movie_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_order: number
+          id?: string
+          movie_id: string
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number
+          id?: string
+          movie_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_movies_movie_id_fkey"
+            columns: ["movie_id"]
+            isOneToOne: true
+            referencedRelation: "movies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       movies: {
         Row: {
           backdrop_path: string | null
@@ -104,6 +133,63 @@ export type Database = {
         Update: {
           id?: number
           tmdb_api_key?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      series: {
+        Row: {
+          backdrop_path: string | null
+          created_at: string | null
+          first_air_date: string | null
+          genres: string[] | null
+          id: string
+          number_of_episodes: number | null
+          number_of_seasons: number | null
+          original_title: string | null
+          overview: string | null
+          poster_path: string | null
+          rating: number | null
+          status: string | null
+          stream_servers: Json | null
+          title: string
+          tmdb_id: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          backdrop_path?: string | null
+          created_at?: string | null
+          first_air_date?: string | null
+          genres?: string[] | null
+          id?: string
+          number_of_episodes?: number | null
+          number_of_seasons?: number | null
+          original_title?: string | null
+          overview?: string | null
+          poster_path?: string | null
+          rating?: number | null
+          status?: string | null
+          stream_servers?: Json | null
+          title: string
+          tmdb_id?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          backdrop_path?: string | null
+          created_at?: string | null
+          first_air_date?: string | null
+          genres?: string[] | null
+          id?: string
+          number_of_episodes?: number | null
+          number_of_seasons?: number | null
+          original_title?: string | null
+          overview?: string | null
+          poster_path?: string | null
+          rating?: number | null
+          status?: string | null
+          stream_servers?: Json | null
+          title?: string
+          tmdb_id?: number | null
           updated_at?: string | null
         }
         Relationships: []

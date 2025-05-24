@@ -26,6 +26,9 @@ interface SeriesData {
   first_air_date?: string;
   rating?: number;
   genres?: string[];
+  number_of_seasons?: number;
+  number_of_episodes?: number;
+  status?: string;
   stream_servers: ServerEntry[];
 }
 

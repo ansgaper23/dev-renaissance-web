@@ -10,9 +10,11 @@ import AdminDashboard from '@/components/AdminDashboard';
 import ImportFromTMDB from '@/components/ImportFromTMDB';
 import QuickAddMovie from '@/components/QuickAddMovie';
 import QuickAddSeries from '@/components/QuickAddSeries';
+import SeriesTable from '@/components/SeriesTable';
 
 const Admin = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [seriesSearchTerm, setSeriesSearchTerm] = useState('');
 
   return (
     <div className="min-h-screen bg-gray-950 text-white py-12">
@@ -73,6 +75,8 @@ const Admin = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
                 <Input 
                   placeholder="Buscar series..." 
+                  value={seriesSearchTerm}
+                  onChange={(e) => setSeriesSearchTerm(e.target.value)}
                   className="pl-10 bg-gray-900 border-gray-800 w-full md:w-80"
                 />
               </div>
@@ -81,15 +85,7 @@ const Admin = () => {
               </Button>
             </div>
             
-            <div className="bg-gray-900 rounded-lg p-8 border border-gray-800 text-center">
-              <h3 className="text-xl font-semibold mb-4">Funcionalidad de Series</h3>
-              <p className="text-gray-400 mb-6">
-                La gestión de series estará disponible próximamente. Por ahora puedes usar la función de "Agregar Serie" para preparar contenido.
-              </p>
-              <Button className="bg-cuevana-blue hover:bg-cuevana-blue/90">
-                Próximamente
-              </Button>
-            </div>
+            <SeriesTable searchTerm={seriesSearchTerm} />
           </TabsContent>
           
           {/* Quick Add Movie Tab */}
