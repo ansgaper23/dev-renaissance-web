@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { User, Settings, Menu, X } from 'lucide-react';
+import { Settings, Menu, X } from 'lucide-react';
 import { getAdminSession, adminLogout } from '@/services/movieService';
 import MovieSearch from './MovieSearch';
 
@@ -82,9 +82,9 @@ const Navbar = () => {
             <MovieSearch />
           </div>
 
-          {/* User Menu - Desktop */}
+          {/* User Menu - Desktop - Only show if admin is authenticated */}
           <div className="hidden md:flex items-center space-x-4">
-            {adminSession?.authenticated ? (
+            {adminSession?.authenticated && (
               <div className="flex items-center space-x-2">
                 <Link to="/admin">
                   <Button variant="ghost" size="sm" className="text-cuevana-white hover:text-cuevana-blue">
@@ -101,13 +101,6 @@ const Navbar = () => {
                   Salir
                 </Button>
               </div>
-            ) : (
-              <Link to="/admin/login">
-                <Button variant="ghost" size="sm" className="text-cuevana-white hover:text-cuevana-blue">
-                  <User className="h-4 w-4 mr-2" />
-                  Admin
-                </Button>
-              </Link>
             )}
           </div>
         </div>
@@ -152,9 +145,9 @@ const Navbar = () => {
               </Link>
             </div>
 
-            {/* Mobile User Menu */}
-            <div className="border-t border-cuevana-gray-200 pt-4">
-              {adminSession?.authenticated ? (
+            {/* Mobile User Menu - Only show if admin is authenticated */}
+            {adminSession?.authenticated && (
+              <div className="border-t border-cuevana-gray-200 pt-4">
                 <div className="space-y-2">
                   <Link to="/admin" onClick={closeMobileMenu}>
                     <Button variant="ghost" className="w-full justify-start text-cuevana-white hover:text-cuevana-blue">
@@ -173,15 +166,8 @@ const Navbar = () => {
                     Salir
                   </Button>
                 </div>
-              ) : (
-                <Link to="/admin/login" onClick={closeMobileMenu}>
-                  <Button variant="ghost" className="w-full justify-start text-cuevana-white hover:text-cuevana-blue">
-                    <User className="h-4 w-4 mr-2" />
-                    Admin
-                  </Button>
-                </Link>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>

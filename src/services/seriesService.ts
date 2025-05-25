@@ -25,8 +25,9 @@ export interface Series {
   updated_at?: string | null;
 }
 
+// For creating a new series, title is required
 export interface SeriesCreate extends Omit<Partial<Series>, 'title'> {
-  title: string;
+  title: string; // Title is required
 }
 
 export const fetchSeries = async (searchTerm: string = ''): Promise<Series[]> => {
@@ -48,22 +49,58 @@ export const fetchSeries = async (searchTerm: string = ''): Promise<Series[]> =>
   return data as Series[];
 };
 
-export const addSeries = async (series: SeriesCreate): Promise<Series> => {
-  console.log("Adding series to database:", series);
-  
+export const fetchSeriesById = async (id: string): Promise<Series> => {
   const { data, error } = await supabase
     .from('series')
-    .insert(series)
-    .select()
+    .select('*')
+    .eq('id', id)
     .single();
     
   if (error) {
-    console.error("Error adding series:", error);
     throw new Error(error.message);
   }
   
-  console.log("Series added successfully:", data);
   return data as Series;
+};
+
+export const addSeries = async (series: SeriesCreate): Promise<Series> => {
+  const { data, error } = await supabase
+    .from('series')
+    .insert(series)
+    .select();
+    
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  return data[0] as Series;
+};
+
+export const updateSeries = async (id: string, updates: Partial<Series>): Promise<Series> => {
+  const { data, error } = await supabase
+    .from('series')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select();
+    
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  return data[0] as Series;
+};
+
+export const deleteSeries = async (id: string): Promise<boolean> => {
+  const { error } = await supabase
+    .from('series')
+    .delete()
+    .eq('id', id);
+    
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  return true;
 };
 
 export const getTotalSeriesCount = async (): Promise<number> => {

@@ -38,8 +38,82 @@ serve(async (req) => {
     }
 
     const apiKey = secretsData.tmdb_api_key;
-    const { movieIds } = await req.json();
+    const { movieIds, seriesIds, type = 'movie' } = await req.json();
     
+    // Handle series import
+    if (type === 'tv' && seriesIds && Array.isArray(seriesIds)) {
+      const importedSeries = [];
+      const errors = [];
+
+      for (const tmdbId of seriesIds) {
+        try {
+          // Get detailed series info
+          const detailsUrl = `https://api.themoviedb.org/3/tv/${tmdbId}?api_key=${apiKey}&language=es-ES&append_to_response=videos,credits`;
+          const detailsResponse = await fetch(detailsUrl);
+          const seriesDetails = await detailsResponse.json();
+          
+          if (seriesDetails.success === false) {
+            errors.push({ id: tmdbId, error: seriesDetails.status_message });
+            continue;
+          }
+
+          // Extract genre names for display
+          const genreNames = seriesDetails.genres ? seriesDetails.genres.map(g => g.name) : [];
+          
+          // Create series object for database
+          const series = {
+            tmdb_id: tmdbId,
+            title: seriesDetails.name,
+            original_title: seriesDetails.original_name,
+            poster_path: seriesDetails.poster_path,
+            backdrop_path: seriesDetails.backdrop_path,
+            overview: seriesDetails.overview,
+            first_air_date: seriesDetails.first_air_date,
+            genres: genreNames,
+            rating: seriesDetails.vote_average,
+            number_of_seasons: seriesDetails.number_of_seasons,
+            number_of_episodes: seriesDetails.number_of_episodes,
+            status: seriesDetails.status,
+          };
+
+          console.log("Importing series with data:", series);
+
+          // Insert into database
+          const { data, error } = await supabaseClient
+            .from("series")
+            .upsert(series, { onConflict: "tmdb_id" })
+            .select();
+
+          if (error) {
+            console.error("Database error for series", tmdbId, ":", error);
+            errors.push({ id: tmdbId, error: error.message });
+          } else {
+            importedSeries.push(data[0]);
+          }
+        } catch (error) {
+          console.error("Error processing series", tmdbId, ":", error);
+          errors.push({ id: tmdbId, error: error.message });
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          imported: importedSeries,
+          errors: errors,
+          total: {
+            success: importedSeries.length,
+            failed: errors.length
+          }
+        }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200 
+        }
+      );
+    }
+
+    // Handle movie import (existing logic)
     if (!Array.isArray(movieIds) || movieIds.length === 0) {
       return new Response(
         JSON.stringify({ error: "No movie IDs provided" }),
@@ -89,11 +163,11 @@ serve(async (req) => {
           poster_path: movieDetails.poster_path,
           backdrop_path: movieDetails.backdrop_path,
           overview: movieDetails.overview,
-          release_date: movieDetails.release_date, // This should now be imported
+          release_date: movieDetails.release_date,
           genres: genreNames,
           genre_ids: genreIds,
           rating: movieDetails.vote_average,
-          runtime: movieDetails.runtime, // This should now be imported
+          runtime: movieDetails.runtime,
           trailer_url: trailerUrl,
         };
 

@@ -138,15 +138,42 @@ const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps)
 
       {/* Video Player */}
       <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
-        <video
-          key={currentStreamUrl}
-          controls
-          className="w-full h-full"
-          poster="https://image.tmdb.org/t/p/original/jYEW5xZkZk2WTrdbMGAPFuBqbDc.jpg"
-        >
-          <source src={currentStreamUrl} type="video/mp4" />
-          Tu navegador no soporta el elemento de video.
-        </video>
+        {currentStreamUrl && currentStreamUrl !== "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" ? (
+          // Check if it's a YouTube URL
+          currentStreamUrl.includes('youtube.com') || currentStreamUrl.includes('youtu.be') ? (
+            <iframe
+              key={currentStreamUrl}
+              src={currentStreamUrl.replace('watch?v=', 'embed/')}
+              title={title}
+              className="w-full h-full"
+              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            />
+          ) : (
+            // For direct video URLs
+            <video
+              key={currentStreamUrl}
+              controls
+              className="w-full h-full"
+              preload="metadata"
+            >
+              <source src={currentStreamUrl} type="video/mp4" />
+              <source src={currentStreamUrl} type="video/webm" />
+              <source src={currentStreamUrl} type="video/ogg" />
+              Tu navegador no soporta el elemento de video.
+            </video>
+          )
+        ) : (
+          // Fallback video
+          <video
+            key={currentStreamUrl}
+            controls
+            className="w-full h-full"
+          >
+            <source src={currentStreamUrl} type="video/mp4" />
+            Tu navegador no soporta el elemento de video.
+          </video>
+        )}
         
         {/* Custom overlay for branding */}
         <div className="absolute top-4 left-4 bg-cuevana-bg/80 text-cuevana-white text-sm px-3 py-1 rounded">
