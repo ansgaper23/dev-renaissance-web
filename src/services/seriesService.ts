@@ -114,3 +114,55 @@ export const getTotalSeriesCount = async (): Promise<number> => {
   
   return count || 0;
 };
+
+// TMDB Genre mapping for series
+const TMDB_TV_GENRES: { [key: number]: string } = {
+  10759: "Acción y Aventura",
+  16: "Animación",
+  35: "Comedia",
+  80: "Crimen",
+  99: "Documental",
+  18: "Drama",
+  10751: "Familia",
+  10762: "Infantil",
+  9648: "Misterio",
+  10763: "Noticias",
+  10764: "Reality",
+  10765: "Ciencia Ficción y Fantasía",
+  10766: "Telenovela",
+  10767: "Talk Show",
+  10768: "Bélica y Política",
+  37: "Western"
+};
+
+export const importSeriesFromTMDB = async (tmdbSeries: any, streamServers: Array<{
+  name: string;
+  url: string;
+  quality?: string;
+  language?: string;
+}>): Promise<Series> => {
+  console.log("Importing series from TMDB:", tmdbSeries);
+  console.log("Stream servers:", streamServers);
+  
+  // Map genre IDs to genre names for TV series
+  const genreNames = tmdbSeries.genre_ids ? 
+    tmdbSeries.genre_ids.map((id: number) => TMDB_TV_GENRES[id]).filter(Boolean) : [];
+
+  const seriesData: SeriesCreate = {
+    title: tmdbSeries.name || tmdbSeries.title,
+    original_title: tmdbSeries.original_name || tmdbSeries.original_title,
+    tmdb_id: tmdbSeries.id,
+    poster_path: tmdbSeries.poster_path,
+    backdrop_path: tmdbSeries.backdrop_path,
+    overview: tmdbSeries.overview,
+    first_air_date: tmdbSeries.first_air_date,
+    rating: tmdbSeries.vote_average,
+    number_of_seasons: tmdbSeries.number_of_seasons || null,
+    number_of_episodes: tmdbSeries.number_of_episodes || null,
+    status: tmdbSeries.status || null,
+    genres: genreNames,
+    stream_servers: streamServers.filter(server => server.url.trim() !== ''),
+  };
+
+  return addSeries(seriesData);
+};

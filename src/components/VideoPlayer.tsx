@@ -53,9 +53,58 @@ const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps)
     if (server.language) setSelectedLanguage(server.language);
   };
 
+  // Function to determine if URL needs iframe or video tag
+  const getVideoElement = (url: string) => {
+    if (!url) return null;
+
+    // Check for iframe-compatible URLs (swiftplayers, etc.)
+    if (url.includes('swiftplayers.com') || url.includes('streamtape.com') || url.includes('doodstream.com') || url.includes('mixdrop.co') || url.includes('fembed.com')) {
+      return (
+        <iframe
+          key={url}
+          src={url}
+          title={title}
+          className="w-full h-full border-0"
+          allowFullScreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        />
+      );
+    }
+
+    // Check if it's a YouTube URL
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      const embedUrl = url.includes('watch?v=') ? url.replace('watch?v=', 'embed/') : url;
+      return (
+        <iframe
+          key={url}
+          src={embedUrl}
+          title={title}
+          className="w-full h-full border-0"
+          allowFullScreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        />
+      );
+    }
+
+    // For direct video URLs
+    return (
+      <video
+        key={url}
+        controls
+        className="w-full h-full"
+        preload="metadata"
+      >
+        <source src={url} type="video/mp4" />
+        <source src={url} type="video/webm" />
+        <source src={url} type="video/ogg" />
+        Tu navegador no soporta el elemento de video.
+      </video>
+    );
+  };
+
   return (
     <div className="w-full">
-      {/* Server Options - Moved to top */}
+      {/* Server Options - At the top */}
       <div className="mb-4 p-4 bg-cuevana-gray-100 rounded-lg">
         <h4 className="text-cuevana-white font-medium mb-3">Servidores Disponibles:</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -138,46 +187,11 @@ const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps)
 
       {/* Video Player */}
       <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
-        {currentStreamUrl && currentStreamUrl !== "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" ? (
-          // Check if it's a YouTube URL
-          currentStreamUrl.includes('youtube.com') || currentStreamUrl.includes('youtu.be') ? (
-            <iframe
-              key={currentStreamUrl}
-              src={currentStreamUrl.replace('watch?v=', 'embed/')}
-              title={title}
-              className="w-full h-full"
-              allowFullScreen
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            />
-          ) : (
-            // For direct video URLs
-            <video
-              key={currentStreamUrl}
-              controls
-              className="w-full h-full"
-              preload="metadata"
-            >
-              <source src={currentStreamUrl} type="video/mp4" />
-              <source src={currentStreamUrl} type="video/webm" />
-              <source src={currentStreamUrl} type="video/ogg" />
-              Tu navegador no soporta el elemento de video.
-            </video>
-          )
-        ) : (
-          // Fallback video
-          <video
-            key={currentStreamUrl}
-            controls
-            className="w-full h-full"
-          >
-            <source src={currentStreamUrl} type="video/mp4" />
-            Tu navegador no soporta el elemento de video.
-          </video>
-        )}
+        {getVideoElement(currentStreamUrl)}
         
         {/* Custom overlay for branding */}
         <div className="absolute top-4 left-4 bg-cuevana-bg/80 text-cuevana-white text-sm px-3 py-1 rounded">
-          CineExplorer
+          Cuevana3
         </div>
       </div>
 

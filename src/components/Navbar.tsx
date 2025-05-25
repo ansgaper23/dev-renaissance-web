@@ -32,8 +32,8 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2" onClick={closeMobileMenu}>
             <div className="text-2xl font-bold">
-              <span className="text-cuevana-blue">Cine</span>
-              <span className="text-cuevana-white">Explorer</span>
+              <span className="text-cuevana-blue">Cuevana</span>
+              <span className="text-cuevana-white">3</span>
             </div>
           </Link>
 

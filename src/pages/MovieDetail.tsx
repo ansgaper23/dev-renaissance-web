@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -261,15 +260,6 @@ const MovieDetail = () => {
                   </div>
                 )}
               </div>
-            </div>
-            
-            {/* Admin Edit Button */}
-            <div className="bg-cuevana-gray-100 rounded-lg p-4 border border-cuevana-gray-200">
-              <Link to="/admin">
-                <Button variant="outline" className="w-full border-cuevana-blue text-cuevana-blue hover:bg-cuevana-blue hover:text-white">
-                  Editar película (Admin)
-                </Button>
-              </Link>
             </div>
           </div>
         </div>
