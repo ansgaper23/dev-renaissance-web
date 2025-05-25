@@ -56,7 +56,7 @@ serve(async (req) => {
 
     for (const tmdbId of movieIds) {
       try {
-        // Get detailed movie info
+        // Get detailed movie info including runtime and release_date
         const detailsUrl = `https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${apiKey}&language=es-ES&append_to_response=videos,credits`;
         const detailsResponse = await fetch(detailsUrl);
         const movieDetails = await detailsResponse.json();
@@ -81,7 +81,7 @@ serve(async (req) => {
         const genreNames = movieDetails.genres ? movieDetails.genres.map(g => g.name) : [];
         const genreIds = movieDetails.genres ? movieDetails.genres.map(g => g.id) : [];
         
-        // Create movie object for database
+        // Create movie object for database with all required fields
         const movie = {
           tmdb_id: tmdbId,
           title: movieDetails.title,
@@ -89,13 +89,15 @@ serve(async (req) => {
           poster_path: movieDetails.poster_path,
           backdrop_path: movieDetails.backdrop_path,
           overview: movieDetails.overview,
-          release_date: movieDetails.release_date,
+          release_date: movieDetails.release_date, // This should now be imported
           genres: genreNames,
           genre_ids: genreIds,
           rating: movieDetails.vote_average,
-          runtime: movieDetails.runtime,
+          runtime: movieDetails.runtime, // This should now be imported
           trailer_url: trailerUrl,
         };
+
+        console.log("Importing movie with data:", movie);
 
         // Insert into database
         const { data, error } = await supabaseClient
@@ -104,11 +106,13 @@ serve(async (req) => {
           .select();
 
         if (error) {
+          console.error("Database error for movie", tmdbId, ":", error);
           errors.push({ id: tmdbId, error: error.message });
         } else {
           importedMovies.push(data[0]);
         }
       } catch (error) {
+        console.error("Error processing movie", tmdbId, ":", error);
         errors.push({ id: tmdbId, error: error.message });
       }
     }

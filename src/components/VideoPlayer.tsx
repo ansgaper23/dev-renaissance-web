@@ -1,7 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Volume2, VolumeX, Maximize, Settings } from 'lucide-react';
 
 interface VideoPlayerProps {
   title: string;
@@ -16,11 +15,8 @@ interface VideoPlayerProps {
 
 const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps) => {
   const [selectedServer, setSelectedServer] = useState(0);
-  const [selectedQuality, setSelectedQuality] = useState('HD');
-  const [selectedLanguage, setSelectedLanguage] = useState('Latino');
-
-  const qualityOptions = ['HD', '720p', '480p'];
-  const languageOptions = ['Latino', 'Subtitulado', 'Español'];
+  const [selectedQuality, setSelectedQuality] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState('');
 
   // Use stream servers if available, otherwise fallback to single stream URL or default
   const availableServers = streamServers && streamServers.length > 0 ? streamServers : 
@@ -29,85 +25,44 @@ const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps)
     ];
   
   console.log("VideoPlayer - Stream servers received:", streamServers);
-  console.log("VideoPlayer - Stream URL received:", streamUrl);
   console.log("VideoPlayer - Available servers:", availableServers);
-  console.log("VideoPlayer - Selected server index:", selectedServer);
   
+  // Extract unique qualities and languages from available servers
+  const availableQualities = [...new Set(availableServers.map(server => server.quality).filter(Boolean))];
+  const availableLanguages = [...new Set(availableServers.map(server => server.language).filter(Boolean))];
+
+  // Set initial quality and language based on first server
+  useEffect(() => {
+    if (availableServers.length > 0) {
+      const firstServer = availableServers[0];
+      setSelectedQuality(firstServer.quality || '');
+      setSelectedLanguage(firstServer.language || '');
+    }
+  }, [availableServers]);
+
   const currentStreamUrl = availableServers[selectedServer]?.url || availableServers[0]?.url;
   console.log("VideoPlayer - Current stream URL:", currentStreamUrl);
 
   const hasValidServers = streamServers && streamServers.length > 0 && streamServers.some(server => server.url && server.url.trim() !== '');
 
+  const handleServerChange = (index: number) => {
+    console.log("Selecting server:", index, availableServers[index]);
+    setSelectedServer(index);
+    const server = availableServers[index];
+    if (server.quality) setSelectedQuality(server.quality);
+    if (server.language) setSelectedLanguage(server.language);
+  };
+
   return (
     <div className="w-full">
-      {/* Quality and Language Selectors */}
-      <div className="flex flex-wrap gap-3 mb-4">
-        <div className="flex items-center space-x-2">
-          <span className="text-cuevana-white text-sm font-medium">Calidad:</span>
-          {qualityOptions.map((quality) => (
-            <Button
-              key={quality}
-              onClick={() => setSelectedQuality(quality)}
-              variant={selectedQuality === quality ? "default" : "outline"}
-              size="sm"
-              className={selectedQuality === quality 
-                ? "bg-cuevana-blue text-white" 
-                : "border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-gray-200"
-              }
-            >
-              {quality}
-            </Button>
-          ))}
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <span className="text-cuevana-white text-sm font-medium">Idioma:</span>
-          {languageOptions.map((language) => (
-            <Button
-              key={language}
-              onClick={() => setSelectedLanguage(language)}
-              variant={selectedLanguage === language ? "default" : "outline"}
-              size="sm"
-              className={selectedLanguage === language 
-                ? "bg-cuevana-gold text-cuevana-bg" 
-                : "border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-gray-200"
-              }
-            >
-              {language}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Video Player */}
-      <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
-        <video
-          key={currentStreamUrl}
-          controls
-          className="w-full h-full"
-          poster="https://image.tmdb.org/t/p/original/jYEW5xZkZk2WTrdbMGAPFuBqbDc.jpg"
-        >
-          <source src={currentStreamUrl} type="video/mp4" />
-          Tu navegador no soporta el elemento de video.
-        </video>
-        
-        {/* Custom overlay for branding */}
-        <div className="absolute top-4 left-4 bg-cuevana-bg/80 text-cuevana-white text-sm px-3 py-1 rounded">
-          CineExplorer
-        </div>
-      </div>
-
-      {/* Server Options */}
-      <div className="mt-4 p-4 bg-cuevana-gray-100 rounded-lg">
+      {/* Server Options - Moved to top */}
+      <div className="mb-4 p-4 bg-cuevana-gray-100 rounded-lg">
         <h4 className="text-cuevana-white font-medium mb-3">Servidores Disponibles:</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {availableServers.map((server, index) => (
             <Button
               key={index}
-              onClick={() => {
-                console.log("Selecting server:", index, server);
-                setSelectedServer(index);
-              }}
+              onClick={() => handleServerChange(index)}
               variant={selectedServer === index ? "default" : "outline"}
               size="sm"
               className={selectedServer === index
@@ -136,20 +91,96 @@ const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps)
         )}
       </div>
 
+      {/* Quality and Language Selectors - Only show if options are available */}
+      {(availableQualities.length > 0 || availableLanguages.length > 0) && (
+        <div className="flex flex-wrap gap-3 mb-4">
+          {availableQualities.length > 0 && (
+            <div className="flex items-center space-x-2">
+              <span className="text-cuevana-white text-sm font-medium">Calidad:</span>
+              {availableQualities.map((quality) => (
+                <Button
+                  key={quality}
+                  onClick={() => setSelectedQuality(quality)}
+                  variant={selectedQuality === quality ? "default" : "outline"}
+                  size="sm"
+                  className={selectedQuality === quality 
+                    ? "bg-cuevana-blue text-white" 
+                    : "border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-gray-200"
+                  }
+                >
+                  {quality}
+                </Button>
+              ))}
+            </div>
+          )}
+          
+          {availableLanguages.length > 0 && (
+            <div className="flex items-center space-x-2">
+              <span className="text-cuevana-white text-sm font-medium">Idioma:</span>
+              {availableLanguages.map((language) => (
+                <Button
+                  key={language}
+                  onClick={() => setSelectedLanguage(language)}
+                  variant={selectedLanguage === language ? "default" : "outline"}
+                  size="sm"
+                  className={selectedLanguage === language 
+                    ? "bg-cuevana-gold text-cuevana-bg" 
+                    : "border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-gray-200"
+                  }
+                >
+                  {language}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Video Player */}
+      <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
+        <video
+          key={currentStreamUrl}
+          controls
+          className="w-full h-full"
+          poster="https://image.tmdb.org/t/p/original/jYEW5xZkZk2WTrdbMGAPFuBqbDc.jpg"
+        >
+          <source src={currentStreamUrl} type="video/mp4" />
+          Tu navegador no soporta el elemento de video.
+        </video>
+        
+        {/* Custom overlay for branding */}
+        <div className="absolute top-4 left-4 bg-cuevana-bg/80 text-cuevana-white text-sm px-3 py-1 rounded">
+          CineExplorer
+        </div>
+      </div>
+
       {/* Download Options */}
       <div className="mt-4 p-4 bg-cuevana-gray-100 rounded-lg">
         <h4 className="text-cuevana-white font-medium mb-3">Descargar:</h4>
         <div className="flex flex-wrap gap-2">
-          {['1080p', '720p', '480p'].map((quality) => (
-            <Button
-              key={quality}
-              variant="outline"
-              size="sm"
-              className="border-cuevana-gold text-cuevana-gold hover:bg-cuevana-gold hover:text-cuevana-bg"
-            >
-              Descargar {quality}
-            </Button>
-          ))}
+          {availableQualities.length > 0 ? (
+            availableQualities.map((quality) => (
+              <Button
+                key={quality}
+                variant="outline"
+                size="sm"
+                className="border-cuevana-gold text-cuevana-gold hover:bg-cuevana-gold hover:text-cuevana-bg"
+              >
+                Descargar {quality}
+              </Button>
+            ))
+          ) : (
+            ['1080p', '720p', '480p'].map((quality) => (
+              <Button
+                key={quality}
+                variant="outline"
+                size="sm"
+                className="border-cuevana-gold text-cuevana-gold hover:bg-cuevana-gold hover:text-cuevana-bg"
+              >
+                Descargar {quality}
+              </Button>
+            ))
+          )}
         </div>
       </div>
     </div>

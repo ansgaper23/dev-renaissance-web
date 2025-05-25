@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    // Create Supabase client with service role key (to bypass RLS)
+    // Create Supabase client with service role key
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -38,14 +38,31 @@ serve(async (req) => {
     }
 
     const apiKey = secretsData.tmdb_api_key;
-    const { query } = await req.json();
+    const { query, type = 'movie' } = await req.json();
     
-    // Make request to TMDB API
-    const tmdbUrl = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&language=es-ES&query=${encodeURIComponent(query)}&page=1&include_adult=false`;
-    const response = await fetch(tmdbUrl);
+    if (!query) {
+      return new Response(
+        JSON.stringify({ error: "Query parameter is required" }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400 
+        }
+      );
+    }
+
+    // Determine the search endpoint based on type
+    const searchType = type === 'tv' ? 'tv' : 'movie';
+    const searchUrl = `https://api.themoviedb.org/3/search/${searchType}?api_key=${apiKey}&language=es-ES&query=${encodeURIComponent(query)}&include_adult=false`;
+    
+    console.log("Searching TMDB with URL:", searchUrl);
+    
+    const response = await fetch(searchUrl);
     const data = await response.json();
     
-    // Return TMDB response
+    if (!response.ok) {
+      throw new Error(data.status_message || "TMDB API error");
+    }
+
     return new Response(
       JSON.stringify(data),
       { 
