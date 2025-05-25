@@ -14,7 +14,7 @@ const Footer = () => {
           <div>
             <Link to="/" className="flex items-center space-x-2 mb-4">
               <Film className="h-8 w-8 text-cuevana-blue" />
-              <span className="text-xl font-bold text-cuevana-white">CineExplorer</span>
+              <span className="text-xl font-bold text-cuevana-white">Cuevana3</span>
             </Link>
             <p className="text-cuevana-white/70 mb-4">
               Explora miles de películas y series online. Contenido de calidad con licencias apropiadas para tu entretenimiento.
@@ -85,7 +85,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-center text-cuevana-white/70">
                 <Mail className="h-4 w-4 mr-2" />
-                <span className="text-sm">info@cineexplorer.com</span>
+                <span className="text-sm">info@cuevana3.com</span>
               </li>
               <li className="flex items-center text-cuevana-white/70">
                 <Phone className="h-4 w-4 mr-2" />
@@ -103,7 +103,7 @@ const Footer = () => {
         <div className="border-t border-cuevana-gray-200 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-cuevana-white/70 text-sm mb-4 md:mb-0">
-              © {currentYear} CineExplorer. Todos los derechos reservados.
+              © {currentYear} Cuevana3. Todos los derechos reservados.
             </div>
             <div className="bg-cuevana-gray-200 text-cuevana-white text-xs px-4 py-2 rounded-full">
               🚨 Este sitio no aloja ningún video. Todo el contenido proviene de fuentes públicas.

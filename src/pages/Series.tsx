@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -83,7 +84,7 @@ const Series = () => {
               const genres = Array.isArray(serie.genres) ? serie.genres.slice(0, 2).join(', ') : 'Sin género';
 
               return (
-                <div key={serie.id} className="group cursor-pointer">
+                <Link key={serie.id} to={`/series/${serie.id}`} className="group cursor-pointer">
                   <div className="relative overflow-hidden rounded-lg bg-cuevana-gray-100 aspect-[2/3] mb-3">
                     <img 
                       src={posterUrl} 
@@ -116,7 +117,7 @@ const Series = () => {
                     <span className="mx-2">•</span>
                     <span className="truncate">{genres}</span>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>

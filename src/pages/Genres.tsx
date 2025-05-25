@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,8 @@ import { fetchMovies } from '@/services/movieService';
 import { fetchSeries } from '@/services/seriesService';
 
 const Genres = () => {
+  const navigate = useNavigate();
+  
   const { data: movies = [] } = useQuery({
     queryKey: ['movies'],
     queryFn: () => fetchMovies(''),
@@ -76,6 +78,11 @@ const Genres = () => {
     })).sort((a, b) => b.totalCount - a.totalCount);
   }, [movies, series]);
 
+  const handleGenreClick = (genreName: string) => {
+    // Navigate to genre-specific page
+    navigate(`/genre/${encodeURIComponent(genreName)}`);
+  };
+
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
       <Navbar />
@@ -92,6 +99,7 @@ const Genres = () => {
               <div 
                 key={genre.id} 
                 className="group cursor-pointer"
+                onClick={() => handleGenreClick(genre.name)}
               >
                 <div className="bg-cuevana-gray-100 rounded-lg p-6 border border-cuevana-gray-200 hover:border-cuevana-blue transition-all duration-300 hover:bg-cuevana-gray-200">
                   <div className="text-center">

@@ -217,6 +217,17 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
   const genreNames = tmdbMovie.genre_ids ? 
     tmdbMovie.genre_ids.map((id: number) => TMDB_GENRES[id]).filter(Boolean) : [];
 
+  // Get trailer URL if available
+  let trailerUrl = null;
+  if (tmdbMovie.videos && tmdbMovie.videos.results) {
+    const trailer = tmdbMovie.videos.results.find((video: any) => 
+      video.type === 'Trailer' && video.site === 'YouTube'
+    );
+    if (trailer) {
+      trailerUrl = `https://www.youtube.com/embed/${trailer.key}`;
+    }
+  }
+
   const movieData: MovieCreate = {
     title: tmdbMovie.title,
     original_title: tmdbMovie.original_title,
@@ -229,6 +240,7 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
     runtime: tmdbMovie.runtime || null,
     genre_ids: tmdbMovie.genre_ids || [],
     genres: genreNames,
+    trailer_url: trailerUrl,
     stream_servers: streamServers.filter(server => server.url.trim() !== ''),
   };
 
