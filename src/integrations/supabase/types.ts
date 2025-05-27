@@ -150,6 +150,7 @@ export type Database = {
           overview: string | null
           poster_path: string | null
           rating: number | null
+          seasons: Json | null
           status: string | null
           stream_servers: Json | null
           title: string
@@ -168,6 +169,7 @@ export type Database = {
           overview?: string | null
           poster_path?: string | null
           rating?: number | null
+          seasons?: Json | null
           status?: string | null
           stream_servers?: Json | null
           title: string
@@ -186,6 +188,7 @@ export type Database = {
           overview?: string | null
           poster_path?: string | null
           rating?: number | null
+          seasons?: Json | null
           status?: string | null
           stream_servers?: Json | null
           title?: string

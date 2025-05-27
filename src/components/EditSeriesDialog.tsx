@@ -66,16 +66,21 @@ const EditSeriesDialog = ({ series, onClose }: EditSeriesDialogProps) => {
     series.stream_servers || [{ name: '', url: '', language: 'Español Latino' }]
   );
 
-  const [seasons, setSeasons] = useState(
-    series.seasons || Array.from({ length: formData.number_of_seasons }, (_, i) => ({
+  // Initialize seasons with proper structure
+  const [seasons, setSeasons] = useState(() => {
+    if (series.seasons && series.seasons.length > 0) {
+      return series.seasons;
+    }
+    // Create default seasons structure if none exists
+    return Array.from({ length: formData.number_of_seasons }, (_, i) => ({
       season_number: i + 1,
       episodes: Array.from({ length: 10 }, (_, j) => ({
         episode_number: j + 1,
         title: `Episodio ${j + 1}`,
         stream_servers: [{ name: '', url: '', language: 'Español Latino' }]
       }))
-    }))
-  );
+    }));
+  });
 
   const queryClient = useQueryClient();
 
@@ -93,6 +98,7 @@ const EditSeriesDialog = ({ series, onClose }: EditSeriesDialogProps) => {
         description: "La serie se ha actualizado correctamente",
       });
       queryClient.invalidateQueries({ queryKey: ['series'] });
+      queryClient.invalidateQueries({ queryKey: ['series', series.id] });
       onClose();
     },
     onError: (error: any) => {
@@ -193,6 +199,31 @@ const EditSeriesDialog = ({ series, onClose }: EditSeriesDialogProps) => {
         episodes: season.episodes.map((episode, ei) => 
           ei === episodeIndex ? { ...episode, title } : episode
         )
+      } : season
+    ));
+  };
+
+  const addEpisodeToSeason = (seasonIndex: number) => {
+    setSeasons(prev => prev.map((season, si) => 
+      si === seasonIndex ? {
+        ...season,
+        episodes: [...season.episodes, {
+          episode_number: season.episodes.length + 1,
+          title: `Episodio ${season.episodes.length + 1}`,
+          stream_servers: [{ name: '', url: '', language: 'Español Latino' }]
+        }]
+      } : season
+    ));
+  };
+
+  const removeEpisodeFromSeason = (seasonIndex: number, episodeIndex: number) => {
+    setSeasons(prev => prev.map((season, si) => 
+      si === seasonIndex ? {
+        ...season,
+        episodes: season.episodes.filter((_, ei) => ei !== episodeIndex).map((ep, index) => ({
+          ...ep,
+          episode_number: index + 1
+        }))
       } : season
     ));
   };
@@ -382,6 +413,18 @@ const EditSeriesDialog = ({ series, onClose }: EditSeriesDialogProps) => {
                   Temporada {season.season_number}
                 </h3>
                 
+                <div className="mb-4">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => addEpisodeToSeason(seasonIndex)}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Agregar Episodio
+                  </Button>
+                </div>
+                
                 <div className="space-y-4">
                   {season.episodes.map((episode, episodeIndex) => (
                     <div key={episode.episode_number} className="p-3 bg-gray-800 rounded border border-gray-600">
@@ -402,6 +445,15 @@ const EditSeriesDialog = ({ series, onClose }: EditSeriesDialogProps) => {
                         >
                           <Plus className="h-4 w-4 mr-1" />
                           Servidor
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => removeEpisodeFromSeason(seasonIndex, episodeIndex)}
+                          disabled={season.episodes.length <= 1}
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                       

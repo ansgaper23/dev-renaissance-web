@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -238,12 +237,14 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
   let runtime = tmdbMovie.runtime || null;
   let trailerUrl = null;
   
+  // Always try to fetch detailed data if we have an ID
   if (tmdbMovie.id) {
     const detailedMovie = await fetchTMDBMovieDetails(tmdbMovie.id);
     
     if (detailedMovie) {
-      // Get runtime from detailed response
+      // Get runtime from detailed response - this is the key fix!
       runtime = detailedMovie.runtime || runtime;
+      console.log("Runtime from TMDB details:", runtime);
       
       // Get trailer from detailed response
       if (detailedMovie.videos && detailedMovie.videos.results) {
@@ -257,7 +258,7 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
     }
   }
 
-  // Handle trailer from tmdbMovie if available
+  // Handle trailer from tmdbMovie if available and not found in details
   if (!trailerUrl && tmdbMovie.videos && tmdbMovie.videos.results) {
     const trailer = tmdbMovie.videos.results.find((video: any) => 
       video.type === 'Trailer' && video.site === 'YouTube'
@@ -276,12 +277,13 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
     overview: tmdbMovie.overview,
     release_date: tmdbMovie.release_date,
     rating: tmdbMovie.vote_average,
-    runtime: runtime,
+    runtime: runtime, // This should now properly import the runtime
     genre_ids: tmdbMovie.genre_ids || [],
     genres: genreNames,
     trailer_url: trailerUrl,
     stream_servers: streamServers.filter(server => server.url.trim() !== ''),
   };
 
+  console.log("Final movie data with runtime:", movieData);
   return addMovie(movieData);
 };

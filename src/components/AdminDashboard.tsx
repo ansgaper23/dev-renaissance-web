@@ -6,6 +6,7 @@ import { getTotalMoviesCount } from '@/services/movieService';
 import { getTotalSeriesCount } from '@/services/seriesService';
 import { Loader2 } from 'lucide-react';
 import FeaturedMoviesManager from './FeaturedMoviesManager';
+import SiteSettings from './SiteSettings';
 
 const AdminDashboard = () => {
   const { data: totalMovies, isLoading } = useQuery({
@@ -63,6 +64,9 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Site Settings */}
+      <SiteSettings />
 
       {/* Featured Movies Manager */}
       <FeaturedMoviesManager />

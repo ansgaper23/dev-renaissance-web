@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -66,19 +65,37 @@ const MovieDetail = () => {
 
   console.log("Movie data:", movie);
 
-  const handleShare = () => {
+  const handleShare = async () => {
+    const title = movie?.title || 'Película en Cuevana3';
+    const text = `Mira ${movie?.title} en Cuevana3`;
+    const url = window.location.href;
+
     if (navigator.share) {
-      navigator.share({
-        title: movie?.title || 'Película en Cuevana3',
-        text: `Mira ${movie?.title} en Cuevana3`,
-        url: window.location.href,
-      });
+      try {
+        await navigator.share({
+          title,
+          text,
+          url,
+        });
+      } catch (error) {
+        // User cancelled sharing or error occurred
+        console.log('Error sharing:', error);
+      }
     } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Enlace copiado",
-        description: "El enlace de la película se ha copiado al portapapeles",
-      });
+      try {
+        await navigator.clipboard.writeText(url);
+        toast({
+          title: "Enlace copiado",
+          description: "El enlace de la película se ha copiado al portapapeles",
+        });
+      } catch (error) {
+        console.error('Error copying to clipboard:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo copiar el enlace",
+          variant: "destructive"
+        });
+      }
     }
   };
 
