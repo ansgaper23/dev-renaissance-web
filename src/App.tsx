@@ -10,6 +10,7 @@ import Series from "./pages/Series";
 import Genres from "./pages/Genres";
 import Admin from "./pages/Admin";
 import MovieDetail from "./pages/MovieDetail";
+import SeriesDetail from "./pages/SeriesDetail";
 import NotFound from "./pages/NotFound";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminRoute element={<Admin />} />} />
               <Route path="/movie/:id" element={<MovieDetail />} />
+              <Route path="/series/:id" element={<SeriesDetail />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/dmca" element={<DMCANotice />} />

@@ -3,10 +3,11 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Star, Calendar, Play, Heart, Share2, Loader2, Tv } from 'lucide-react';
+import { Star, Calendar, Play, Share2, Loader2, Tv } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import VideoPlayer from '@/components/VideoPlayer';
 import { fetchSeriesById } from '@/services/seriesService';
+import { toast } from '@/hooks/use-toast';
 
 const SeriesDetail = () => {
   const { id } = useParams();
@@ -18,6 +19,22 @@ const SeriesDetail = () => {
   });
 
   console.log("Series data:", series);
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: series?.title || 'Serie en Cuevana3',
+        text: `Mira ${series?.title} en Cuevana3`,
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Enlace copiado",
+        description: "El enlace de la serie se ha copiado al portapapeles",
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -128,10 +145,11 @@ const SeriesDetail = () => {
                 <Button className="bg-cuevana-blue hover:bg-cuevana-blue/90 text-white flex items-center gap-2 px-6 py-3">
                   <Play className="h-5 w-5" /> Ver Ahora
                 </Button>
-                <Button variant="outline" className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10 flex items-center gap-2">
-                  <Heart className="h-4 w-4" /> Favoritos
-                </Button>
-                <Button variant="outline" className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10 flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10 flex items-center gap-2"
+                  onClick={handleShare}
+                >
                   <Share2 className="h-4 w-4" /> Compartir
                 </Button>
               </div>
