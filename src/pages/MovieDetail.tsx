@@ -1,12 +1,14 @@
+
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Star, Calendar, Clock, Play, Download, Heart, Share2, Loader2 } from 'lucide-react';
+import { Star, Calendar, Clock, Play, Share2, Loader2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import VideoPlayer from '@/components/VideoPlayer';
 import RelatedMovies from '@/components/RelatedMovies';
 import { fetchMovieById } from '@/services/movieService';
+import { toast } from '@/hooks/use-toast';
 
 const relatedMovies = [
   {
@@ -63,6 +65,22 @@ const MovieDetail = () => {
   });
 
   console.log("Movie data:", movie);
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: movie?.title || 'Película en Cuevana3',
+        text: `Mira ${movie?.title} en Cuevana3`,
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Enlace copiado",
+        description: "El enlace de la película se ha copiado al portapapeles",
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -174,10 +192,11 @@ const MovieDetail = () => {
                 <Button className="bg-cuevana-blue hover:bg-cuevana-blue/90 text-white flex items-center gap-2 px-6 py-3">
                   <Play className="h-5 w-5" /> Ver Ahora
                 </Button>
-                <Button variant="outline" className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10 flex items-center gap-2">
-                  <Heart className="h-4 w-4" /> Favoritos
-                </Button>
-                <Button variant="outline" className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10 flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10 flex items-center gap-2"
+                  onClick={handleShare}
+                >
                   <Share2 className="h-4 w-4" /> Compartir
                 </Button>
               </div>

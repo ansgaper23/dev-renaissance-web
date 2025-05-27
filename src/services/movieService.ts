@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -203,6 +204,23 @@ const TMDB_GENRES: { [key: number]: string } = {
   37: "Western"
 };
 
+// Fetch detailed movie data from TMDB
+const fetchTMDBMovieDetails = async (movieId: number): Promise<any> => {
+  try {
+    const apiKey = '4a29f0dd1dfdbd0a8b506c7b9e35c506'; // Your TMDB API key
+    const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${apiKey}&append_to_response=videos`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch movie details from TMDB');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.warn("Could not fetch detailed movie data from TMDB:", error);
+    return null;
+  }
+};
+
 export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
   name: string;
   url: string;
@@ -216,38 +234,36 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
   const genreNames = tmdbMovie.genre_ids ? 
     tmdbMovie.genre_ids.map((id: number) => TMDB_GENRES[id]).filter(Boolean) : [];
 
-  // Get trailer URL if available
+  // Fetch detailed movie data to get runtime and trailer
+  let runtime = tmdbMovie.runtime || null;
   let trailerUrl = null;
-  if (tmdbMovie.videos && tmdbMovie.videos.results) {
+  
+  if (tmdbMovie.id) {
+    const detailedMovie = await fetchTMDBMovieDetails(tmdbMovie.id);
+    
+    if (detailedMovie) {
+      // Get runtime from detailed response
+      runtime = detailedMovie.runtime || runtime;
+      
+      // Get trailer from detailed response
+      if (detailedMovie.videos && detailedMovie.videos.results) {
+        const trailer = detailedMovie.videos.results.find((video: any) => 
+          video.type === 'Trailer' && video.site === 'YouTube'
+        );
+        if (trailer) {
+          trailerUrl = `https://www.youtube.com/embed/${trailer.key}`;
+        }
+      }
+    }
+  }
+
+  // Handle trailer from tmdbMovie if available
+  if (!trailerUrl && tmdbMovie.videos && tmdbMovie.videos.results) {
     const trailer = tmdbMovie.videos.results.find((video: any) => 
       video.type === 'Trailer' && video.site === 'YouTube'
     );
     if (trailer) {
       trailerUrl = `https://www.youtube.com/embed/${trailer.key}`;
-    }
-  }
-
-  // Fetch detailed movie data to get runtime
-  let runtime = tmdbMovie.runtime || null;
-  if (!runtime && tmdbMovie.id) {
-    try {
-      const response = await fetch(`https://api.themoviedb.org/3/movie/${tmdbMovie.id}?api_key=${process.env.TMDB_API_KEY || 'API_KEY_PLACEHOLDER'}&append_to_response=videos`);
-      if (response.ok) {
-        const detailedMovie = await response.json();
-        runtime = detailedMovie.runtime || null;
-        
-        // Also get trailer from detailed response if not found
-        if (!trailerUrl && detailedMovie.videos && detailedMovie.videos.results) {
-          const trailer = detailedMovie.videos.results.find((video: any) => 
-            video.type === 'Trailer' && video.site === 'YouTube'
-          );
-          if (trailer) {
-            trailerUrl = `https://www.youtube.com/embed/${trailer.key}`;
-          }
-        }
-      }
-    } catch (error) {
-      console.warn("Could not fetch detailed movie data:", error);
     }
   }
 
