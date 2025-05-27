@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface VideoPlayerProps {
   title: string;
@@ -15,15 +16,31 @@ interface VideoPlayerProps {
 
 const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps) => {
   const [selectedServer, setSelectedServer] = useState(0);
+  const [expandedLanguages, setExpandedLanguages] = useState<{ [key: string]: boolean }>({});
 
   // Use stream servers if available, otherwise fallback to single stream URL or default
   const availableServers = streamServers && streamServers.length > 0 ? streamServers : 
-    streamUrl ? [{ name: 'Servidor Principal', url: streamUrl }] : [
-      { name: 'Servidor Demo', url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" }
+    streamUrl ? [{ name: 'Servidor Principal', url: streamUrl, language: 'Español Latino' }] : [
+      { name: 'Servidor Demo', url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", language: 'Español Latino' }
     ];
   
   console.log("VideoPlayer - Stream servers received:", streamServers);
   console.log("VideoPlayer - Available servers:", availableServers);
+
+  // Group servers by language
+  const serversByLanguage = React.useMemo(() => {
+    const grouped: { [key: string]: typeof availableServers } = {};
+    
+    availableServers.forEach(server => {
+      const language = server.language || 'Español Latino';
+      if (!grouped[language]) {
+        grouped[language] = [];
+      }
+      grouped[language].push(server);
+    });
+    
+    return grouped;
+  }, [availableServers]);
 
   const currentStreamUrl = availableServers[selectedServer]?.url || availableServers[0]?.url;
   console.log("VideoPlayer - Current stream URL:", currentStreamUrl);
@@ -33,6 +50,13 @@ const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps)
   const handleServerChange = (index: number) => {
     console.log("Selecting server:", index, availableServers[index]);
     setSelectedServer(index);
+  };
+
+  const toggleLanguage = (language: string) => {
+    setExpandedLanguages(prev => ({
+      ...prev,
+      [language]: !prev[language]
+    }));
   };
 
   // Function to determine if URL needs iframe or video tag
@@ -96,28 +120,47 @@ const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps)
 
   return (
     <div className="w-full">
-      {/* Server Options */}
+      {/* Server Options by Language */}
       <div className="mb-4 p-4 bg-cuevana-gray-100 rounded-lg">
         <h4 className="text-cuevana-white font-medium mb-3">Servidores Disponibles:</h4>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {availableServers.map((server, index) => (
+        
+        {Object.entries(serversByLanguage).map(([language, servers]) => (
+          <div key={language} className="mb-3">
             <Button
-              key={index}
-              onClick={() => handleServerChange(index)}
-              variant={selectedServer === index ? "default" : "outline"}
-              size="sm"
-              className={selectedServer === index
-                ? "bg-cuevana-blue text-white"
-                : "border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue"
-              }
+              onClick={() => toggleLanguage(language)}
+              variant="outline"
+              className="w-full justify-between border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue mb-2"
             >
-              {server.name}
-              {server.quality && (
-                <span className="ml-1 text-xs opacity-75">({server.quality})</span>
-              )}
+              <span className="flex items-center">
+                <span className="text-sm font-medium">{language}</span>
+                <span className="ml-2 text-xs opacity-75">({servers.length} servidor{servers.length !== 1 ? 'es' : ''})</span>
+              </span>
+              {expandedLanguages[language] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
-          ))}
-        </div>
+            
+            {expandedLanguages[language] && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 ml-4">
+                {servers.map((server, serverIndex) => {
+                  const globalIndex = availableServers.findIndex(s => s === server);
+                  return (
+                    <Button
+                      key={serverIndex}
+                      onClick={() => handleServerChange(globalIndex)}
+                      variant={selectedServer === globalIndex ? "default" : "outline"}
+                      size="sm"
+                      className={selectedServer === globalIndex
+                        ? "bg-cuevana-blue text-white"
+                        : "border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue"
+                      }
+                    >
+                      {server.name}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ))}
         
         {!hasValidServers && (
           <p className="text-yellow-400 text-sm mt-2">

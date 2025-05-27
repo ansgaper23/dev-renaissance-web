@@ -37,9 +37,9 @@ const SeriesDetail = () => {
         <div className="container mx-auto px-4 py-12">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Serie no encontrada</h1>
-            <Link to="/">
+            <Link to="/series">
               <Button className="bg-cuevana-blue hover:bg-cuevana-blue/90">
-                Volver al inicio
+                Volver a Series
               </Button>
             </Link>
           </div>

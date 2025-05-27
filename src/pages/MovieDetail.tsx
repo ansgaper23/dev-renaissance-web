@@ -174,9 +174,6 @@ const MovieDetail = () => {
                 <Button className="bg-cuevana-blue hover:bg-cuevana-blue/90 text-white flex items-center gap-2 px-6 py-3">
                   <Play className="h-5 w-5" /> Ver Ahora
                 </Button>
-                <Button variant="outline" className="border-cuevana-gold text-cuevana-gold hover:bg-cuevana-gold hover:text-cuevana-bg flex items-center gap-2 px-6 py-3">
-                  <Download className="h-5 w-5" /> Descargar
-                </Button>
                 <Button variant="outline" className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10 flex items-center gap-2">
                   <Heart className="h-4 w-4" /> Favoritos
                 </Button>

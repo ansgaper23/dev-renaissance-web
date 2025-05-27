@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Edit, Trash2, Star, Calendar } from 'lucide-react';
+import { Edit, Trash2, Star, Calendar, Eye } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface Series {
   id: string;
@@ -166,6 +167,15 @@ const SeriesTable = ({ searchTerm }: SeriesTableProps) => {
                     </td>
                     <td className="p-3">
                       <div className="flex space-x-2">
+                        <Link to={`/series/${serie.id}`}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
                         <Button
                           size="sm"
                           variant="outline"

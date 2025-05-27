@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -228,6 +227,30 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
     }
   }
 
+  // Fetch detailed movie data to get runtime
+  let runtime = tmdbMovie.runtime || null;
+  if (!runtime && tmdbMovie.id) {
+    try {
+      const response = await fetch(`https://api.themoviedb.org/3/movie/${tmdbMovie.id}?api_key=${process.env.TMDB_API_KEY || 'API_KEY_PLACEHOLDER'}&append_to_response=videos`);
+      if (response.ok) {
+        const detailedMovie = await response.json();
+        runtime = detailedMovie.runtime || null;
+        
+        // Also get trailer from detailed response if not found
+        if (!trailerUrl && detailedMovie.videos && detailedMovie.videos.results) {
+          const trailer = detailedMovie.videos.results.find((video: any) => 
+            video.type === 'Trailer' && video.site === 'YouTube'
+          );
+          if (trailer) {
+            trailerUrl = `https://www.youtube.com/embed/${trailer.key}`;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn("Could not fetch detailed movie data:", error);
+    }
+  }
+
   const movieData: MovieCreate = {
     title: tmdbMovie.title,
     original_title: tmdbMovie.original_title,
@@ -237,7 +260,7 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
     overview: tmdbMovie.overview,
     release_date: tmdbMovie.release_date,
     rating: tmdbMovie.vote_average,
-    runtime: tmdbMovie.runtime || null,
+    runtime: runtime,
     genre_ids: tmdbMovie.genre_ids || [],
     genres: genreNames,
     trailer_url: trailerUrl,
