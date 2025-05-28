@@ -4,12 +4,19 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Settings, Menu, X } from 'lucide-react';
 import { getAdminSession, adminLogout } from '@/services/movieService';
+import { useQuery } from '@tanstack/react-query';
+import { getSettings } from '@/services/settingsService';
 import MovieSearch from './MovieSearch';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const adminSession = getAdminSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: getSettings
+  });
 
   const handleLogout = () => {
     adminLogout();
@@ -25,16 +32,30 @@ const Navbar = () => {
     setIsMobileMenuOpen(false);
   };
 
+  const siteName = settings?.site_name || 'Cuevana3';
+  const logoUrl = settings?.logo_url;
+
   return (
     <nav className="bg-cuevana-bg/95 backdrop-blur-sm border-b border-cuevana-gray-200 sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2" onClick={closeMobileMenu}>
-            <div className="text-2xl font-bold">
-              <span className="text-cuevana-blue">Cuevana</span>
-              <span className="text-cuevana-white">3</span>
-            </div>
+            {logoUrl ? (
+              <img 
+                src={logoUrl} 
+                alt={siteName}
+                className="h-8 w-auto object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="text-2xl font-bold">
+                <span className="text-cuevana-blue">{siteName.split('3')[0] || 'Cuevana'}</span>
+                <span className="text-cuevana-white">{siteName.includes('3') ? '3' : ''}</span>
+              </div>
+            )}
           </Link>
 
           {/* Mobile Menu Button */}

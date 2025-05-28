@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Movies from "./pages/Movies";
 import Series from "./pages/Series";
 import Genres from "./pages/Genres";
+import GenrePage from "./pages/GenrePage";
 import Admin from "./pages/Admin";
 import MovieDetail from "./pages/MovieDetail";
 import SeriesDetail from "./pages/SeriesDetail";
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/movies" element={<Movies />} />
               <Route path="/series" element={<Series />} />
               <Route path="/genres" element={<Genres />} />
+              <Route path="/genre/:genre" element={<GenrePage />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminRoute element={<Admin />} />} />
               <Route path="/movie/:id" element={<MovieDetail />} />
