@@ -1,6 +1,22 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+export interface SeriesEpisode {
+  episode_number: number;
+  title: string;
+  stream_servers?: Array<{
+    name: string;
+    url: string;
+    quality?: string;
+    language?: string;
+  }>;
+}
+
+export interface SeriesSeason {
+  season_number: number;
+  episodes: SeriesEpisode[];
+}
+
 export interface Series {
   id: string;
   tmdb_id?: number | null;
@@ -21,6 +37,7 @@ export interface Series {
     quality?: string;
     language?: string;
   }> | null;
+  seasons?: SeriesSeason[] | null;
   created_at?: string | null;
   updated_at?: string | null;
 }
@@ -46,7 +63,11 @@ export const fetchSeries = async (searchTerm: string = ''): Promise<Series[]> =>
     throw new Error(error.message);
   }
   
-  return data as Series[];
+  return (data || []).map(row => ({
+    ...row,
+    stream_servers: Array.isArray(row.stream_servers) ? row.stream_servers : [],
+    seasons: Array.isArray(row.seasons) ? row.seasons : []
+  })) as Series[];
 };
 
 export const fetchSeriesById = async (id: string): Promise<Series> => {
@@ -60,7 +81,11 @@ export const fetchSeriesById = async (id: string): Promise<Series> => {
     throw new Error(error.message);
   }
   
-  return data as Series;
+  return {
+    ...data,
+    stream_servers: Array.isArray(data.stream_servers) ? data.stream_servers : [],
+    seasons: Array.isArray(data.seasons) ? data.seasons : []
+  } as Series;
 };
 
 export const addSeries = async (series: SeriesCreate): Promise<Series> => {
@@ -73,7 +98,12 @@ export const addSeries = async (series: SeriesCreate): Promise<Series> => {
     throw new Error(error.message);
   }
   
-  return data[0] as Series;
+  const row = data[0];
+  return {
+    ...row,
+    stream_servers: Array.isArray(row.stream_servers) ? row.stream_servers : [],
+    seasons: Array.isArray(row.seasons) ? row.seasons : []
+  } as Series;
 };
 
 export const updateSeries = async (id: string, updates: Partial<Series>): Promise<Series> => {
@@ -87,7 +117,12 @@ export const updateSeries = async (id: string, updates: Partial<Series>): Promis
     throw new Error(error.message);
   }
   
-  return data[0] as Series;
+  const row = data[0];
+  return {
+    ...row,
+    stream_servers: Array.isArray(row.stream_servers) ? row.stream_servers : [],
+    seasons: Array.isArray(row.seasons) ? row.seasons : []
+  } as Series;
 };
 
 export const deleteSeries = async (id: string): Promise<boolean> => {
@@ -162,6 +197,7 @@ export const importSeriesFromTMDB = async (tmdbSeries: any, streamServers: Array
     status: tmdbSeries.status || null,
     genres: genreNames,
     stream_servers: streamServers.filter(server => server.url.trim() !== ''),
+    seasons: []
   };
 
   return addSeries(seriesData);

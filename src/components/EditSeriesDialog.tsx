@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -6,41 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { updateSeries } from '@/services/seriesService';
+import { updateSeries, Series, SeriesSeason, SeriesEpisode } from '@/services/seriesService';
 import { toast } from '@/hooks/use-toast';
 import { Plus, Trash2 } from 'lucide-react';
-
-interface Series {
-  id: string;
-  title: string;
-  original_title?: string;
-  poster_path?: string;
-  backdrop_path?: string;
-  overview?: string;
-  first_air_date?: string;
-  rating?: number;
-  number_of_seasons?: number;
-  number_of_episodes?: number;
-  status?: string;
-  genres?: string[];
-  stream_servers?: Array<{
-    name: string;
-    url: string;
-    language?: string;
-  }>;
-  seasons?: Array<{
-    season_number: number;
-    episodes: Array<{
-      episode_number: number;
-      title: string;
-      stream_servers?: Array<{
-        name: string;
-        url: string;
-        language?: string;
-      }>;
-    }>;
-  }>;
-}
 
 interface EditSeriesDialogProps {
   series: Series;
@@ -67,7 +34,7 @@ const EditSeriesDialog = ({ series, onClose }: EditSeriesDialogProps) => {
   );
 
   // Initialize seasons with proper structure
-  const [seasons, setSeasons] = useState(() => {
+  const [seasons, setSeasons] = useState<SeriesSeason[]>(() => {
     if (series.seasons && series.seasons.length > 0) {
       return series.seasons;
     }

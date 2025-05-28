@@ -190,40 +190,44 @@ const SeriesDetail = () => {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Season and Episode Selection */}
-            <div className="flex gap-4 mb-6">
-              <div className="relative">
-                <select
-                  value={selectedSeason}
-                  onChange={(e) => {
-                    setSelectedSeason(Number(e.target.value));
-                    setSelectedEpisode(1);
-                  }}
-                  className="bg-cuevana-gray-100 text-cuevana-white border border-cuevana-gray-200 rounded px-4 py-2 pr-8 appearance-none cursor-pointer"
-                >
-                  {seasons.map((season) => (
-                    <option key={season.season_number} value={season.season_number}>
-                      Temporada {season.season_number}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-cuevana-white pointer-events-none" />
+            {seasons.length > 0 && (
+              <div className="flex gap-4 mb-6">
+                <div className="relative">
+                  <select
+                    value={selectedSeason}
+                    onChange={(e) => {
+                      setSelectedSeason(Number(e.target.value));
+                      setSelectedEpisode(1);
+                    }}
+                    className="bg-cuevana-gray-100 text-cuevana-white border border-cuevana-gray-200 rounded px-4 py-2 pr-8 appearance-none cursor-pointer"
+                  >
+                    {seasons.map((season) => (
+                      <option key={season.season_number} value={season.season_number}>
+                        Temporada {season.season_number}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-cuevana-white pointer-events-none" />
+                </div>
+                
+                {currentSeason && currentSeason.episodes.length > 0 && (
+                  <div className="relative">
+                    <select
+                      value={selectedEpisode}
+                      onChange={(e) => setSelectedEpisode(Number(e.target.value))}
+                      className="bg-cuevana-gray-100 text-cuevana-white border border-cuevana-gray-200 rounded px-4 py-2 pr-8 appearance-none cursor-pointer"
+                    >
+                      {currentSeason.episodes.map((episode) => (
+                        <option key={episode.episode_number} value={episode.episode_number}>
+                          Episodio {episode.episode_number}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-cuevana-white pointer-events-none" />
+                  </div>
+                )}
               </div>
-              
-              <div className="relative">
-                <select
-                  value={selectedEpisode}
-                  onChange={(e) => setSelectedEpisode(Number(e.target.value))}
-                  className="bg-cuevana-gray-100 text-cuevana-white border border-cuevana-gray-200 rounded px-4 py-2 pr-8 appearance-none cursor-pointer"
-                >
-                  {currentSeason?.episodes?.map((episode) => (
-                    <option key={episode.episode_number} value={episode.episode_number}>
-                      Episodio {episode.episode_number}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-cuevana-white pointer-events-none" />
-              </div>
-            </div>
+            )}
 
             {/* Video Player */}
             <section>
