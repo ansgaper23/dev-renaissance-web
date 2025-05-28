@@ -47,6 +47,24 @@ export interface SeriesCreate extends Omit<Partial<Series>, 'title'> {
   title: string; // Title is required
 }
 
+// Helper function to convert database row to Series
+const convertToSeries = (row: any): Series => {
+  return {
+    ...row,
+    stream_servers: Array.isArray(row.stream_servers) ? row.stream_servers : [],
+    seasons: Array.isArray(row.seasons) ? row.seasons : []
+  };
+};
+
+// Helper function to convert Series to database format
+const convertToDbFormat = (series: Partial<Series>) => {
+  return {
+    ...series,
+    stream_servers: series.stream_servers || [],
+    seasons: series.seasons || []
+  };
+};
+
 export const fetchSeries = async (searchTerm: string = ''): Promise<Series[]> => {
   let query = supabase
     .from('series')
@@ -63,11 +81,7 @@ export const fetchSeries = async (searchTerm: string = ''): Promise<Series[]> =>
     throw new Error(error.message);
   }
   
-  return (data || []).map(row => ({
-    ...row,
-    stream_servers: Array.isArray(row.stream_servers) ? row.stream_servers : [],
-    seasons: Array.isArray(row.seasons) ? row.seasons : []
-  })) as Series[];
+  return (data || []).map(convertToSeries);
 };
 
 export const fetchSeriesById = async (id: string): Promise<Series> => {
@@ -81,48 +95,40 @@ export const fetchSeriesById = async (id: string): Promise<Series> => {
     throw new Error(error.message);
   }
   
-  return {
-    ...data,
-    stream_servers: Array.isArray(data.stream_servers) ? data.stream_servers : [],
-    seasons: Array.isArray(data.seasons) ? data.seasons : []
-  } as Series;
+  return convertToSeries(data);
 };
 
 export const addSeries = async (series: SeriesCreate): Promise<Series> => {
+  const dbData = convertToDbFormat(series);
+  
   const { data, error } = await supabase
     .from('series')
-    .insert(series)
-    .select();
+    .insert(dbData)
+    .select()
+    .single();
     
   if (error) {
     throw new Error(error.message);
   }
   
-  const row = data[0];
-  return {
-    ...row,
-    stream_servers: Array.isArray(row.stream_servers) ? row.stream_servers : [],
-    seasons: Array.isArray(row.seasons) ? row.seasons : []
-  } as Series;
+  return convertToSeries(data);
 };
 
 export const updateSeries = async (id: string, updates: Partial<Series>): Promise<Series> => {
+  const dbData = convertToDbFormat({ ...updates, updated_at: new Date().toISOString() });
+  
   const { data, error } = await supabase
     .from('series')
-    .update({ ...updates, updated_at: new Date().toISOString() })
+    .update(dbData)
     .eq('id', id)
-    .select();
+    .select()
+    .single();
     
   if (error) {
     throw new Error(error.message);
   }
   
-  const row = data[0];
-  return {
-    ...row,
-    stream_servers: Array.isArray(row.stream_servers) ? row.stream_servers : [],
-    seasons: Array.isArray(row.seasons) ? row.seasons : []
-  } as Series;
+  return convertToSeries(data);
 };
 
 export const deleteSeries = async (id: string): Promise<boolean> => {
