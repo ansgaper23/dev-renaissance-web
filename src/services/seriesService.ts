@@ -58,11 +58,18 @@ const convertToSeries = (row: any): Series => {
 
 // Helper function to convert Series to database format
 const convertToDbFormat = (series: Partial<Series>) => {
-  return {
-    ...series,
-    stream_servers: series.stream_servers || [],
-    seasons: series.seasons || []
-  };
+  const dbData: any = { ...series };
+  
+  // Convert complex objects to JSON-compatible format
+  if (series.stream_servers) {
+    dbData.stream_servers = JSON.parse(JSON.stringify(series.stream_servers));
+  }
+  
+  if (series.seasons) {
+    dbData.seasons = JSON.parse(JSON.stringify(series.seasons));
+  }
+  
+  return dbData;
 };
 
 export const fetchSeries = async (searchTerm: string = ''): Promise<Series[]> => {
