@@ -183,6 +183,44 @@ const TMDB_TV_GENRES: { [key: number]: string } = {
   37: "Western"
 };
 
+// Función para buscar por IMDB ID para series
+export const searchSeriesByIMDBId = async (imdbId: string): Promise<any> => {
+  try {
+    console.log("Searching for series IMDB ID:", imdbId);
+    
+    // Buscar en TMDB usando el IMDB ID
+    const tmdbApiKey = '4a29f0dd1dfdbd0a8b506c7b9e35c506';
+    const tmdbResponse = await fetch(`https://api.themoviedb.org/3/find/${imdbId}?api_key=${tmdbApiKey}&external_source=imdb_id&language=es-ES`);
+    
+    if (!tmdbResponse.ok) {
+      throw new Error('Error al buscar en TMDB');
+    }
+    
+    const tmdbData = await tmdbResponse.json();
+    console.log("TMDB search result for series:", tmdbData);
+    
+    // Verificar si encontramos resultados de TV
+    if (tmdbData.tv_results && tmdbData.tv_results.length > 0) {
+      const series = tmdbData.tv_results[0];
+      
+      // Obtener detalles completos de la serie
+      const detailsResponse = await fetch(`https://api.themoviedb.org/3/tv/${series.id}?api_key=${tmdbApiKey}&append_to_response=videos,external_ids&language=es-ES`);
+      const seriesDetails = await detailsResponse.json();
+      
+      return {
+        ...seriesDetails,
+        imdb_id: imdbId,
+        type: 'tv'
+      };
+    }
+    
+    throw new Error('No se encontraron series para este IMDB ID');
+  } catch (error) {
+    console.error("Error searching series by IMDB ID:", error);
+    throw error;
+  }
+};
+
 export const importSeriesFromTMDB = async (tmdbSeries: any, streamServers: Array<{
   name: string;
   url: string;
@@ -214,4 +252,24 @@ export const importSeriesFromTMDB = async (tmdbSeries: any, streamServers: Array
   };
 
   return addSeries(seriesData);
+};
+
+// Import from IMDB ID para series
+export const importSeriesFromIMDB = async (imdbId: string, streamServers: Array<{
+  name: string;
+  url: string;
+  quality?: string;
+  language?: string;
+}>): Promise<Series> => {
+  console.log("Importing series from IMDB ID:", imdbId);
+  
+  // Buscar datos en TMDB usando IMDB ID
+  const tmdbData = await searchSeriesByIMDBId(imdbId);
+  
+  if (!tmdbData || tmdbData.type !== 'tv') {
+    throw new Error('No se encontró la serie en TMDB con este IMDB ID');
+  }
+  
+  // Usar la función existente para importar desde TMDB
+  return importSeriesFromTMDB(tmdbData, streamServers);
 };

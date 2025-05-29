@@ -212,6 +212,58 @@ const TMDB_GENRES: { [key: number]: string } = {
   10768: "Bélica y Política"
 };
 
+// Función para buscar por IMDB ID
+export const searchByIMDBId = async (imdbId: string): Promise<any> => {
+  try {
+    console.log("Searching for IMDB ID:", imdbId);
+    
+    // Buscar en TMDB usando el IMDB ID
+    const tmdbApiKey = '4a29f0dd1dfdbd0a8b506c7b9e35c506';
+    const tmdbResponse = await fetch(`https://api.themoviedb.org/3/find/${imdbId}?api_key=${tmdbApiKey}&external_source=imdb_id&language=es-ES`);
+    
+    if (!tmdbResponse.ok) {
+      throw new Error('Error al buscar en TMDB');
+    }
+    
+    const tmdbData = await tmdbResponse.json();
+    console.log("TMDB search result:", tmdbData);
+    
+    // Verificar si encontramos resultados
+    if (tmdbData.movie_results && tmdbData.movie_results.length > 0) {
+      const movie = tmdbData.movie_results[0];
+      
+      // Obtener detalles completos de la película
+      const detailsResponse = await fetch(`https://api.themoviedb.org/3/movie/${movie.id}?api_key=${tmdbApiKey}&append_to_response=videos,external_ids&language=es-ES`);
+      const movieDetails = await detailsResponse.json();
+      
+      return {
+        ...movieDetails,
+        imdb_id: imdbId,
+        type: 'movie'
+      };
+    }
+    
+    if (tmdbData.tv_results && tmdbData.tv_results.length > 0) {
+      const series = tmdbData.tv_results[0];
+      
+      // Obtener detalles completos de la serie
+      const detailsResponse = await fetch(`https://api.themoviedb.org/3/tv/${series.id}?api_key=${tmdbApiKey}&append_to_response=videos,external_ids&language=es-ES`);
+      const seriesDetails = await detailsResponse.json();
+      
+      return {
+        ...seriesDetails,
+        imdb_id: imdbId,
+        type: 'tv'
+      };
+    }
+    
+    throw new Error('No se encontraron resultados para este IMDB ID');
+  } catch (error) {
+    console.error("Error searching by IMDB ID:", error);
+    throw error;
+  }
+};
+
 // Fetch detailed movie data from TMDB with enhanced metadata
 const fetchTMDBMovieDetails = async (movieId: number): Promise<any> => {
   try {
@@ -380,4 +432,24 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
   console.log("Additional IMDB metadata - Keywords:", keywords);
   
   return addMovie(movieData);
+};
+
+// Import from IMDB ID
+export const importMovieFromIMDB = async (imdbId: string, streamServers: Array<{
+  name: string;
+  url: string;
+  quality?: string;
+  language?: string;
+}>): Promise<Movie> => {
+  console.log("Importing movie from IMDB ID:", imdbId);
+  
+  // Buscar datos en TMDB usando IMDB ID
+  const tmdbData = await searchByIMDBId(imdbId);
+  
+  if (!tmdbData || tmdbData.type !== 'movie') {
+    throw new Error('No se encontró la película en TMDB con este IMDB ID');
+  }
+  
+  // Usar la función existente para importar desde TMDB
+  return importMovieFromTMDB(tmdbData, streamServers);
 };

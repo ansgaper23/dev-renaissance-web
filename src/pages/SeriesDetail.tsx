@@ -146,6 +146,13 @@ const SeriesDetail = () => {
                 <p className="text-xl text-cuevana-blue mb-4 italic">{series.original_title}</p>
               )}
               
+              {/* Sinopsis debajo del título */}
+              {series.overview && (
+                <p className="text-cuevana-white/90 mb-6 text-lg leading-relaxed max-w-4xl">
+                  {series.overview}
+                </p>
+              )}
+              
               <div className="flex flex-wrap gap-4 mb-6">
                 {series.rating && (
                   <div className="flex items-center bg-cuevana-blue px-3 py-1 rounded">
@@ -164,8 +171,50 @@ const SeriesDetail = () => {
                   </div>
                 )}
                 <span className="bg-cuevana-gray-100 text-cuevana-white px-3 py-1 rounded text-sm">
-                  Comedia
+                  {genres}
                 </span>
+              </div>
+
+              {/* Detalles adicionales */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-6">
+                <div>
+                  <span className="text-cuevana-blue font-medium">Género: </span>
+                  <span className="text-cuevana-white">{genres}</span>
+                </div>
+                <div>
+                  <span className="text-cuevana-blue font-medium">Actores: </span>
+                  <span className="text-cuevana-white">Ryan Wesen, Denise Reed, Jimmy Dalton, Verina Banks</span>
+                </div>
+                <div>
+                  <span className="text-cuevana-blue font-medium">Título Original: </span>
+                  <span className="text-cuevana-white">{series.original_title || series.title}</span>
+                </div>
+                <div>
+                  <span className="text-cuevana-blue font-medium">Año: </span>
+                  <span className="text-cuevana-white">{releaseYear}</span>
+                </div>
+                <div>
+                  <span className="text-cuevana-blue font-medium">Temporadas: </span>
+                  <span className="text-cuevana-white">{series.number_of_seasons || 'N/A'}</span>
+                </div>
+                {series.number_of_episodes && (
+                  <div>
+                    <span className="text-cuevana-blue font-medium">Episodios: </span>
+                    <span className="text-cuevana-white">{series.number_of_episodes}</span>
+                  </div>
+                )}
+                {series.status && (
+                  <div>
+                    <span className="text-cuevana-blue font-medium">Estado: </span>
+                    <span className="text-cuevana-white">{series.status}</span>
+                  </div>
+                )}
+                {series.rating && (
+                  <div>
+                    <span className="text-cuevana-blue font-medium">Calificación: </span>
+                    <span className="text-cuevana-white">{series.rating}/10</span>
+                  </div>
+                )}
               </div>
               
               <div className="flex flex-wrap gap-3 mb-6">
@@ -191,59 +240,6 @@ const SeriesDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Sinopsis with Details */}
-            <section>
-              <h2 className="text-2xl font-semibold mb-4 text-cuevana-white">Sinopsis</h2>
-              <div className="bg-cuevana-gray-100 rounded-lg p-6 border border-cuevana-gray-200">
-                {series.overview && (
-                  <p className="text-cuevana-white/90 mb-6 text-lg leading-relaxed">
-                    {series.overview}
-                  </p>
-                )}
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-cuevana-blue font-medium">Género: </span>
-                    <span className="text-cuevana-white">{genres}</span>
-                  </div>
-                  <div>
-                    <span className="text-cuevana-blue font-medium">Actores: </span>
-                    <span className="text-cuevana-white">Ryan Wesen, Denise Reed, Jimmy Dalton, Verina Banks</span>
-                  </div>
-                  <div>
-                    <span className="text-cuevana-blue font-medium">Título Original: </span>
-                    <span className="text-cuevana-white">{series.original_title || series.title}</span>
-                  </div>
-                  <div>
-                    <span className="text-cuevana-blue font-medium">Año: </span>
-                    <span className="text-cuevana-white">{releaseYear}</span>
-                  </div>
-                  <div>
-                    <span className="text-cuevana-blue font-medium">Temporadas: </span>
-                    <span className="text-cuevana-white">{series.number_of_seasons || 'N/A'}</span>
-                  </div>
-                  {series.number_of_episodes && (
-                    <div>
-                      <span className="text-cuevana-blue font-medium">Episodios: </span>
-                      <span className="text-cuevana-white">{series.number_of_episodes}</span>
-                    </div>
-                  )}
-                  {series.status && (
-                    <div>
-                      <span className="text-cuevana-blue font-medium">Estado: </span>
-                      <span className="text-cuevana-white">{series.status}</span>
-                    </div>
-                  )}
-                  {series.rating && (
-                    <div>
-                      <span className="text-cuevana-blue font-medium">Calificación: </span>
-                      <span className="text-cuevana-white">{series.rating}/10</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
-
             {/* Season and Episode Selection */}
             {seasons.length > 0 && (
               <div className="flex gap-4 mb-6">

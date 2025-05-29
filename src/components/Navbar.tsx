@@ -36,8 +36,9 @@ const Navbar = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const logoUrl = settings?.logo_url || '/placeholder.svg';
+  const logoUrl = settings?.logo_url;
   const siteName = settings?.site_name || 'Cuevana3';
+  const hasLogo = logoUrl && logoUrl !== '/placeholder.svg';
 
   return (
     <nav className="bg-cuevana-bg border-b border-cuevana-gray-200 sticky top-0 z-50">
@@ -45,15 +46,18 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <img 
-              src={logoUrl} 
-              alt={siteName}
-              className="h-8 w-auto"
-              onError={(e) => {
-                e.currentTarget.src = '/placeholder.svg';
-              }}
-            />
-            <span className="text-cuevana-white text-xl font-bold">{siteName}</span>
+            {hasLogo ? (
+              <img 
+                src={logoUrl} 
+                alt={siteName}
+                className="h-8 w-auto"
+                onError={(e) => {
+                  e.currentTarget.src = '/placeholder.svg';
+                }}
+              />
+            ) : (
+              <span className="text-cuevana-white text-xl font-bold">{siteName}</span>
+            )}
           </Link>
 
           {/* Desktop Navigation */}
@@ -80,7 +84,7 @@ const Navbar = () => {
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-cuevana-gray-100 border-cuevana-gray-200">
+              <DropdownMenuContent className="bg-cuevana-gray-100 border-cuevana-gray-200 z-50">
                 <DropdownMenuItem asChild>
                   <Link to="/movies" className="text-cuevana-white hover:text-cuevana-blue">
                     Últimas publicadas
@@ -126,7 +130,7 @@ const Navbar = () => {
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-cuevana-gray-100 border-cuevana-gray-200">
+              <DropdownMenuContent className="bg-cuevana-gray-100 border-cuevana-gray-200 z-50">
                 <DropdownMenuItem asChild>
                   <Link to="/series" className="text-cuevana-white hover:text-cuevana-blue">
                     Series
