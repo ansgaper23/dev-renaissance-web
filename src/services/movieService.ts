@@ -180,7 +180,7 @@ export const getTotalMoviesCount = async (): Promise<number> => {
   return count || 0;
 };
 
-// TMDB Genre mapping
+// TMDB Genre mapping with additional genres
 const TMDB_GENRES: { [key: number]: string } = {
   28: "Acción",
   12: "Aventura", 
@@ -200,14 +200,22 @@ const TMDB_GENRES: { [key: number]: string } = {
   10770: "Película de TV",
   53: "Suspenso",
   10752: "Bélica",
-  37: "Western"
+  37: "Western",
+  10759: "Acción y Aventura",
+  10762: "Infantil",
+  10763: "Noticias",
+  10764: "Reality",
+  10765: "Ciencia Ficción y Fantasía",
+  10766: "Telenovela",
+  10767: "Talk Show",
+  10768: "Bélica y Política"
 };
 
-// Fetch detailed movie data from TMDB
+// Fetch detailed movie data from TMDB with enhanced metadata
 const fetchTMDBMovieDetails = async (movieId: number): Promise<any> => {
   try {
-    const apiKey = '4a29f0dd1dfdbd0a8b506c7b9e35c506'; // Your TMDB API key
-    const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${apiKey}&append_to_response=videos`);
+    const apiKey = '4a29f0dd1dfdbd0a8b506c7b9e35c506';
+    const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${apiKey}&append_to_response=videos,credits,external_ids,keywords`);
     
     if (!response.ok) {
       throw new Error('Failed to fetch movie details from TMDB');
@@ -220,31 +228,47 @@ const fetchTMDBMovieDetails = async (movieId: number): Promise<any> => {
   }
 };
 
+// Fetch IMDB metadata if available
+const fetchIMDBData = async (imdbId: string): Promise<any> => {
+  try {
+    // Note: This would require an OMDB API key or similar service
+    // For now, we'll use the IMDB ID for enhanced metadata structure
+    console.log("IMDB ID found:", imdbId);
+    return { imdb_id: imdbId };
+  } catch (error) {
+    console.warn("Could not fetch IMDB data:", error);
+    return null;
+  }
+};
+
 export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
   name: string;
   url: string;
   quality?: string;
   language?: string;
 }>): Promise<Movie> => {
-  console.log("Importing movie from TMDB:", tmdbMovie);
+  console.log("Importing movie from TMDB with enhanced metadata:", tmdbMovie);
   console.log("Stream servers:", streamServers);
   
   // Map genre IDs to genre names
   const genreNames = tmdbMovie.genre_ids ? 
     tmdbMovie.genre_ids.map((id: number) => TMDB_GENRES[id]).filter(Boolean) : [];
 
-  // Fetch detailed movie data to get runtime and trailer
+  // Fetch detailed movie data to get runtime, trailer, cast, and IMDB ID
   let runtime = tmdbMovie.runtime || null;
   let trailerUrl = null;
+  let imdbId = null;
+  let cast = [];
+  let director = null;
+  let keywords = [];
   
-  // Always try to fetch detailed data if we have an ID
   if (tmdbMovie.id) {
     const detailedMovie = await fetchTMDBMovieDetails(tmdbMovie.id);
     
     if (detailedMovie) {
-      // Get runtime from detailed response - this is the key fix!
+      // Get runtime from detailed response
       runtime = detailedMovie.runtime || runtime;
-      console.log("Runtime from TMDB details:", runtime);
+      console.log("Enhanced runtime from TMDB details:", runtime);
       
       // Get trailer from detailed response
       if (detailedMovie.videos && detailedMovie.videos.results) {
@@ -254,6 +278,38 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
         if (trailer) {
           trailerUrl = `https://www.youtube.com/embed/${trailer.key}`;
         }
+      }
+
+      // Get IMDB ID from external IDs
+      if (detailedMovie.external_ids && detailedMovie.external_ids.imdb_id) {
+        imdbId = detailedMovie.external_ids.imdb_id;
+        console.log("IMDB ID found:", imdbId);
+        
+        // Fetch additional IMDB metadata
+        const imdbData = await fetchIMDBData(imdbId);
+        console.log("IMDB metadata:", imdbData);
+      }
+
+      // Get cast information
+      if (detailedMovie.credits && detailedMovie.credits.cast) {
+        cast = detailedMovie.credits.cast.slice(0, 10).map((actor: any) => ({
+          name: actor.name,
+          character: actor.character,
+          profile_path: actor.profile_path
+        }));
+      }
+
+      // Get director information
+      if (detailedMovie.credits && detailedMovie.credits.crew) {
+        const directorInfo = detailedMovie.credits.crew.find((person: any) => person.job === 'Director');
+        if (directorInfo) {
+          director = directorInfo.name;
+        }
+      }
+
+      // Get keywords for SEO
+      if (detailedMovie.keywords && detailedMovie.keywords.keywords) {
+        keywords = detailedMovie.keywords.keywords.map((keyword: any) => keyword.name);
       }
     }
   }
@@ -277,13 +333,18 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
     overview: tmdbMovie.overview,
     release_date: tmdbMovie.release_date,
     rating: tmdbMovie.vote_average,
-    runtime: runtime, // This should now properly import the runtime
+    runtime: runtime,
     genre_ids: tmdbMovie.genre_ids || [],
     genres: genreNames,
     trailer_url: trailerUrl,
     stream_servers: streamServers.filter(server => server.url.trim() !== ''),
   };
 
-  console.log("Final movie data with runtime:", movieData);
+  console.log("Final enhanced movie data:", movieData);
+  console.log("Additional metadata - Cast:", cast);
+  console.log("Additional metadata - Director:", director);
+  console.log("Additional metadata - IMDB ID:", imdbId);
+  console.log("Additional metadata - Keywords:", keywords);
+  
   return addMovie(movieData);
 };

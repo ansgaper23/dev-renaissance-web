@@ -1,18 +1,21 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Star, Calendar, Clock, Play, Share2, Loader2, ChevronDown } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import VideoPlayer from '@/components/VideoPlayer';
-import { fetchSeriesById } from '@/services/seriesService';
+import SEOHead from '@/components/SEOHead';
+import { fetchSeriesById, fetchSeries } from '@/services/seriesService';
+import { getSettings } from '@/services/settingsService';
 import { toast } from '@/hooks/use-toast';
 
 const SeriesDetail = () => {
   const { id } = useParams();
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
+  const videoPlayerRef = useRef<HTMLDivElement>(null);
   
   const { data: series, isLoading, error } = useQuery({
     queryKey: ['series', id],
@@ -20,7 +23,24 @@ const SeriesDetail = () => {
     enabled: !!id,
   });
 
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: getSettings
+  });
+
+  const { data: relatedSeries } = useQuery({
+    queryKey: ['relatedSeries'],
+    queryFn: () => fetchSeries(''),
+  });
+
   console.log("Series data:", series);
+
+  const scrollToPlayer = () => {
+    videoPlayerRef.current?.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
+    });
+  };
 
   const handleShare = async () => {
     const title = series?.title || 'Serie en Cuevana3';
@@ -104,8 +124,30 @@ const SeriesDetail = () => {
   const currentSeason = seasons.find(s => s.season_number === selectedSeason);
   const currentEpisode = currentSeason?.episodes?.find(e => e.episode_number === selectedEpisode);
   
+  // Get real related series (limit to 6)
+  const realRelatedSeries = relatedSeries?.slice(0, 6).map(s => ({
+    id: s.id,
+    title: s.title,
+    posterUrl: s.poster_path?.startsWith('http') 
+      ? s.poster_path 
+      : s.poster_path 
+        ? `https://image.tmdb.org/t/p/w500${s.poster_path}`
+        : '/placeholder.svg',
+    rating: s.rating || 0,
+    year: s.first_air_date ? new Date(s.first_air_date).getFullYear() : 0
+  })) || [];
+  
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
+      <SEOHead
+        title={series.title}
+        description={series.overview || `Mira ${series.title} online gratis en Cuevana3`}
+        image={backdropUrl}
+        url={window.location.href}
+        type="series"
+        siteName={settings?.site_name}
+        logoUrl={settings?.logo_url}
+      />
       <Navbar />
       
       {/* Hero Section */}
@@ -168,7 +210,10 @@ const SeriesDetail = () => {
               )}
               
               <div className="flex flex-wrap gap-3">
-                <Button className="bg-cuevana-blue hover:bg-cuevana-blue/90 text-white flex items-center gap-2 px-6 py-3">
+                <Button 
+                  onClick={scrollToPlayer}
+                  className="bg-cuevana-blue hover:bg-cuevana-blue/90 text-white flex items-center gap-2 px-6 py-3"
+                >
                   <Play className="h-5 w-5" /> Ver Ahora
                 </Button>
                 <Button 
@@ -230,7 +275,7 @@ const SeriesDetail = () => {
             )}
 
             {/* Video Player */}
-            <section>
+            <section ref={videoPlayerRef}>
               <h2 className="text-2xl font-semibold mb-4 text-cuevana-white">
                 {currentEpisode?.title || `Episodio ${selectedEpisode}`}
               </h2>
@@ -243,6 +288,25 @@ const SeriesDetail = () => {
           
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Genres Section */}
+            {Array.isArray(series.genres) && series.genres.length > 0 && (
+              <div className="bg-cuevana-gray-100 rounded-lg p-6 border border-cuevana-gray-200">
+                <h3 className="text-xl font-semibold mb-4 text-cuevana-white">Géneros</h3>
+                <div className="flex flex-wrap gap-2">
+                  {series.genres.map((genre, index) => (
+                    <Link
+                      key={index}
+                      to={`/genre/${encodeURIComponent(genre)}`}
+                      className="bg-cuevana-blue text-white px-3 py-1 rounded text-sm hover:bg-cuevana-blue/80 transition-colors"
+                    >
+                      {genre}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Series Details */}
             <div className="bg-cuevana-gray-100 rounded-lg p-6 border border-cuevana-gray-200">
               <h3 className="text-xl font-semibold mb-4 text-cuevana-white">Detalles</h3>
               
@@ -250,11 +314,6 @@ const SeriesDetail = () => {
                 <div>
                   <h4 className="text-cuevana-blue mb-2 font-medium">Título Original</h4>
                   <p className="text-cuevana-white">{series.original_title || series.title}</p>
-                </div>
-                
-                <div>
-                  <h4 className="text-cuevana-blue mb-2 font-medium">Género</h4>
-                  <p className="text-cuevana-white">{genres}</p>
                 </div>
                 
                 <div>
@@ -289,6 +348,33 @@ const SeriesDetail = () => {
                 )}
               </div>
             </div>
+
+            {/* Featured Series */}
+            {realRelatedSeries.length > 0 && (
+              <div className="bg-cuevana-gray-100 rounded-lg p-6 border border-cuevana-gray-200">
+                <h3 className="text-xl font-semibold mb-4 text-cuevana-white">Series Destacadas</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {realRelatedSeries.slice(0, 4).map((relatedSerie) => (
+                    <Link key={relatedSerie.id} to={`/series/${relatedSerie.id}`} className="group">
+                      <div className="relative aspect-[2/3] overflow-hidden rounded">
+                        <img
+                          src={relatedSerie.posterUrl}
+                          alt={relatedSerie.title}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        />
+                        <div className="absolute top-1 left-1 bg-cuevana-bg/80 text-cuevana-gold text-xs font-bold px-1 py-0.5 rounded flex items-center">
+                          <Star className="h-2 w-2 mr-0.5 fill-current" />
+                          {relatedSerie.rating.toFixed(1)}
+                        </div>
+                      </div>
+                      <h4 className="text-cuevana-white text-xs mt-2 line-clamp-2 group-hover:text-cuevana-blue">
+                        {relatedSerie.title}
+                      </h4>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
