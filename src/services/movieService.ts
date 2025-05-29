@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -215,7 +216,7 @@ const TMDB_GENRES: { [key: number]: string } = {
 const fetchTMDBMovieDetails = async (movieId: number): Promise<any> => {
   try {
     const apiKey = '4a29f0dd1dfdbd0a8b506c7b9e35c506';
-    const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${apiKey}&append_to_response=videos,credits,external_ids,keywords`);
+    const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${apiKey}&append_to_response=videos,credits,external_ids,keywords&language=es-ES`);
     
     if (!response.ok) {
       throw new Error('Failed to fetch movie details from TMDB');
@@ -228,16 +229,43 @@ const fetchTMDBMovieDetails = async (movieId: number): Promise<any> => {
   }
 };
 
-// Fetch IMDB metadata if available
+// Enhanced IMDB data fetching with OMDb API
 const fetchIMDBData = async (imdbId: string): Promise<any> => {
   try {
-    // Note: This would require an OMDB API key or similar service
-    // For now, we'll use the IMDB ID for enhanced metadata structure
-    console.log("IMDB ID found:", imdbId);
-    return { imdb_id: imdbId };
+    // Using OMDb API (you can get a free API key from http://www.omdbapi.com/)
+    const omdbApiKey = 'b6003d8a'; // Public demo key, replace with your own
+    const response = await fetch(`https://www.omdbapi.com/?i=${imdbId}&apikey=${omdbApiKey}&plot=full`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch IMDB data from OMDb');
+    }
+    
+    const data = await response.json();
+    
+    if (data.Response === 'True') {
+      console.log("IMDB data successfully fetched:", data);
+      return {
+        imdb_id: imdbId,
+        imdb_rating: data.imdbRating ? parseFloat(data.imdbRating) : null,
+        box_office: data.BoxOffice || null,
+        awards: data.Awards || null,
+        metascore: data.Metascore ? parseInt(data.Metascore) : null,
+        imdb_votes: data.imdbVotes ? data.imdbVotes.replace(/,/g, '') : null,
+        plot_full: data.Plot || null,
+        director: data.Director || null,
+        writer: data.Writer || null,
+        actors: data.Actors ? data.Actors.split(', ') : null,
+        country: data.Country || null,
+        language: data.Language || null,
+        rated: data.Rated || null
+      };
+    } else {
+      console.warn("OMDb API error:", data.Error);
+      return { imdb_id: imdbId };
+    }
   } catch (error) {
-    console.warn("Could not fetch IMDB data:", error);
-    return null;
+    console.warn("Could not fetch IMDB data from OMDb:", error);
+    return { imdb_id: imdbId };
   }
 };
 
@@ -247,7 +275,7 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
   quality?: string;
   language?: string;
 }>): Promise<Movie> => {
-  console.log("Importing movie from TMDB with enhanced metadata:", tmdbMovie);
+  console.log("Importing movie from TMDB with enhanced IMDB integration:", tmdbMovie);
   console.log("Stream servers:", streamServers);
   
   // Map genre IDs to genre names
@@ -261,6 +289,7 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
   let cast = [];
   let director = null;
   let keywords = [];
+  let imdbData = null;
   
   if (tmdbMovie.id) {
     const detailedMovie = await fetchTMDBMovieDetails(tmdbMovie.id);
@@ -285,9 +314,9 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
         imdbId = detailedMovie.external_ids.imdb_id;
         console.log("IMDB ID found:", imdbId);
         
-        // Fetch additional IMDB metadata
-        const imdbData = await fetchIMDBData(imdbId);
-        console.log("IMDB metadata:", imdbData);
+        // Fetch additional IMDB metadata from OMDb
+        imdbData = await fetchIMDBData(imdbId);
+        console.log("Enhanced IMDB metadata:", imdbData);
       }
 
       // Get cast information
@@ -299,8 +328,10 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
         }));
       }
 
-      // Get director information
-      if (detailedMovie.credits && detailedMovie.credits.crew) {
+      // Get director information (prioritize IMDB data if available)
+      if (imdbData && imdbData.director) {
+        director = imdbData.director;
+      } else if (detailedMovie.credits && detailedMovie.credits.crew) {
         const directorInfo = detailedMovie.credits.crew.find((person: any) => person.job === 'Director');
         if (directorInfo) {
           director = directorInfo.name;
@@ -324,15 +355,16 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
     }
   }
 
+  // Enhanced movie data with IMDB integration
   const movieData: MovieCreate = {
     title: tmdbMovie.title,
     original_title: tmdbMovie.original_title,
     tmdb_id: tmdbMovie.id,
     poster_path: tmdbMovie.poster_path,
     backdrop_path: tmdbMovie.backdrop_path,
-    overview: tmdbMovie.overview,
+    overview: imdbData?.plot_full || tmdbMovie.overview, // Use IMDB plot if available
     release_date: tmdbMovie.release_date,
-    rating: tmdbMovie.vote_average,
+    rating: imdbData?.imdb_rating || tmdbMovie.vote_average, // Prefer IMDB rating
     runtime: runtime,
     genre_ids: tmdbMovie.genre_ids || [],
     genres: genreNames,
@@ -340,11 +372,12 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
     stream_servers: streamServers.filter(server => server.url.trim() !== ''),
   };
 
-  console.log("Final enhanced movie data:", movieData);
-  console.log("Additional metadata - Cast:", cast);
-  console.log("Additional metadata - Director:", director);
-  console.log("Additional metadata - IMDB ID:", imdbId);
-  console.log("Additional metadata - Keywords:", keywords);
+  console.log("Final enhanced movie data with IMDB integration:", movieData);
+  console.log("Additional IMDB metadata - Cast:", imdbData?.actors);
+  console.log("Additional IMDB metadata - Director:", director);
+  console.log("Additional IMDB metadata - Awards:", imdbData?.awards);
+  console.log("Additional IMDB metadata - Box Office:", imdbData?.box_office);
+  console.log("Additional IMDB metadata - Keywords:", keywords);
   
   return addMovie(movieData);
 };

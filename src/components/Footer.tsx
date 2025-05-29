@@ -2,9 +2,19 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Film, Heart, Mail, Phone, MapPin } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { getSettings } from '@/services/settingsService';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: getSettings
+  });
+
+  const logoUrl = settings?.logo_url || '/placeholder.svg';
+  const siteName = settings?.site_name || 'Cuevana3';
 
   return (
     <footer className="bg-cuevana-gray-100 border-t border-cuevana-gray-200 text-cuevana-white">
@@ -13,8 +23,15 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <Link to="/" className="flex items-center space-x-2 mb-4">
-              <Film className="h-8 w-8 text-cuevana-blue" />
-              <span className="text-xl font-bold text-cuevana-white">Cuevana3</span>
+              <img 
+                src={logoUrl} 
+                alt={siteName}
+                className="h-8 w-auto"
+                onError={(e) => {
+                  e.currentTarget.src = '/placeholder.svg';
+                }}
+              />
+              <span className="text-xl font-bold text-cuevana-white">{siteName}</span>
             </Link>
             <p className="text-cuevana-white/70 mb-4">
               Explora miles de películas y series online. Contenido de calidad con licencias apropiadas para tu entretenimiento.
@@ -103,7 +120,7 @@ const Footer = () => {
         <div className="border-t border-cuevana-gray-200 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-cuevana-white/70 text-sm mb-4 md:mb-0">
-              © {currentYear} Cuevana3. Todos los derechos reservados.
+              © {currentYear} {siteName}. Todos los derechos reservados.
             </div>
             <div className="bg-cuevana-gray-200 text-cuevana-white text-xs px-4 py-2 rounded-full">
               🚨 Este sitio no aloja ningún video. Todo el contenido proviene de fuentes públicas.
