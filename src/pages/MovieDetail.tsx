@@ -3,13 +3,13 @@ import React, { useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Star, Calendar, Clock, Play, Share2, Loader2 } from 'lucide-react';
+import { Star, Calendar, Clock, Play, Loader2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import VideoPlayer from '@/components/VideoPlayer';
 import SEOHead from '@/components/SEOHead';
+import ShareButton from '@/components/ShareButton';
 import { fetchMovieById, fetchMovies } from '@/services/movieService';
 import { getSettings } from '@/services/settingsService';
-import { toast } from '@/hooks/use-toast';
 
 const MovieDetail = () => {
   const { id } = useParams();
@@ -31,46 +31,11 @@ const MovieDetail = () => {
     queryFn: () => fetchMovies(''),
   });
 
-  console.log("Movie data:", movie);
-
   const scrollToPlayer = () => {
     videoPlayerRef.current?.scrollIntoView({ 
       behavior: 'smooth',
       block: 'start'
     });
-  };
-
-  const handleShare = async () => {
-    const title = movie?.title || 'Película en Cuevana3';
-    const text = `Mira ${movie?.title} en Cuevana3`;
-    const url = window.location.href;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title,
-          text,
-          url,
-        });
-      } catch (error) {
-        console.log('Error sharing:', error);
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(url);
-        toast({
-          title: "Enlace copiado",
-          description: "El enlace de la película se ha copiado al portapapeles",
-        });
-      } catch (error) {
-        console.error('Error copying to clipboard:', error);
-        toast({
-          title: "Error",
-          description: "No se pudo copiar el enlace",
-          variant: "destructive"
-        });
-      }
-    }
   };
 
   if (isLoading) {
@@ -191,30 +156,22 @@ const MovieDetail = () => {
                   <span>{duration}</span>
                 </div>
                 <span className="bg-cuevana-gray-100 text-cuevana-white px-3 py-1 rounded text-sm">
-                  {genres}
+                  Comedia
                 </span>
               </div>
               
-              {movie.overview && (
-                <p className="text-cuevana-white/90 mb-6 text-lg leading-relaxed">
-                  {movie.overview}
-                </p>
-              )}
-              
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 mb-6">
                 <Button 
                   onClick={scrollToPlayer}
                   className="bg-cuevana-blue hover:bg-cuevana-blue/90 text-white flex items-center gap-2 px-6 py-3"
                 >
                   <Play className="h-5 w-5" /> Ver Ahora
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10 flex items-center gap-2"
-                  onClick={handleShare}
-                >
-                  <Share2 className="h-4 w-4" /> Compartir
-                </Button>
+                <ShareButton 
+                  title={movie.title}
+                  variant="outline"
+                  className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10"
+                />
               </div>
             </div>
           </div>
@@ -226,6 +183,47 @@ const MovieDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Sinopsis with Details */}
+            <section>
+              <h2 className="text-2xl font-semibold mb-4 text-cuevana-white">Sinopsis</h2>
+              <div className="bg-cuevana-gray-100 rounded-lg p-6 border border-cuevana-gray-200">
+                {movie.overview && (
+                  <p className="text-cuevana-white/90 mb-6 text-lg leading-relaxed">
+                    {movie.overview}
+                  </p>
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-cuevana-blue font-medium">Género: </span>
+                    <span className="text-cuevana-white">{genres}</span>
+                  </div>
+                  <div>
+                    <span className="text-cuevana-blue font-medium">Actores: </span>
+                    <span className="text-cuevana-white">Ryan Wesen, Denise Reed, Jimmy Dalton, Verina Banks</span>
+                  </div>
+                  <div>
+                    <span className="text-cuevana-blue font-medium">Título Original: </span>
+                    <span className="text-cuevana-white">{movie.original_title || movie.title}</span>
+                  </div>
+                  <div>
+                    <span className="text-cuevana-blue font-medium">Año: </span>
+                    <span className="text-cuevana-white">{releaseYear}</span>
+                  </div>
+                  <div>
+                    <span className="text-cuevana-blue font-medium">Duración: </span>
+                    <span className="text-cuevana-white">{duration}</span>
+                  </div>
+                  {movie.rating && (
+                    <div>
+                      <span className="text-cuevana-blue font-medium">Calificación: </span>
+                      <span className="text-cuevana-white">{movie.rating}/10</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+
             {/* Video Player */}
             <section ref={videoPlayerRef}>
               <h2 className="text-2xl font-semibold mb-4 text-cuevana-white">Reproducir</h2>
@@ -271,42 +269,6 @@ const MovieDetail = () => {
                 </div>
               </div>
             )}
-
-            {/* Movie Details */}
-            <div className="bg-cuevana-gray-100 rounded-lg p-6 border border-cuevana-gray-200">
-              <h3 className="text-xl font-semibold mb-4 text-cuevana-white">Detalles</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-cuevana-blue mb-2 font-medium">Título Original</h4>
-                  <p className="text-cuevana-white">{movie.original_title || movie.title}</p>
-                </div>
-                
-                <div>
-                  <h4 className="text-cuevana-blue mb-2 font-medium">Año</h4>
-                  <p className="text-cuevana-white">{releaseYear}</p>
-                </div>
-                
-                <div>
-                  <h4 className="text-cuevana-blue mb-2 font-medium">Duración</h4>
-                  <p className="text-cuevana-white">{duration}</p>
-                </div>
-                
-                {movie.rating && (
-                  <div>
-                    <h4 className="text-cuevana-blue mb-2 font-medium">Calificación</h4>
-                    <p className="text-cuevana-white">{movie.rating}/10</p>
-                  </div>
-                )}
-                
-                {movie.stream_servers && movie.stream_servers.length > 0 && (
-                  <div>
-                    <h4 className="text-cuevana-blue mb-2 font-medium">Servidores</h4>
-                    <p className="text-cuevana-white">{movie.stream_servers.length} servidor(es) disponible(s)</p>
-                  </div>
-                )}
-              </div>
-            </div>
 
             {/* Featured Movies */}
             {realRelatedMovies.length > 0 && (

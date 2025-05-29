@@ -3,13 +3,13 @@ import React, { useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Star, Calendar, Clock, Play, Share2, Loader2, ChevronDown } from 'lucide-react';
+import { Star, Calendar, Clock, Play, Loader2, ChevronDown } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import VideoPlayer from '@/components/VideoPlayer';
+import SeriesVideoPlayer from '@/components/SeriesVideoPlayer';
 import SEOHead from '@/components/SEOHead';
+import ShareButton from '@/components/ShareButton';
 import { fetchSeriesById, fetchSeries } from '@/services/seriesService';
 import { getSettings } from '@/services/settingsService';
-import { toast } from '@/hooks/use-toast';
 
 const SeriesDetail = () => {
   const { id } = useParams();
@@ -33,46 +33,11 @@ const SeriesDetail = () => {
     queryFn: () => fetchSeries(''),
   });
 
-  console.log("Series data:", series);
-
   const scrollToPlayer = () => {
     videoPlayerRef.current?.scrollIntoView({ 
       behavior: 'smooth',
       block: 'start'
     });
-  };
-
-  const handleShare = async () => {
-    const title = series?.title || 'Serie en Cuevana3';
-    const text = `Mira ${series?.title} en Cuevana3`;
-    const url = window.location.href;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title,
-          text,
-          url,
-        });
-      } catch (error) {
-        console.log('Error sharing:', error);
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(url);
-        toast({
-          title: "Enlace copiado",
-          description: "El enlace de la serie se ha copiado al portapapeles",
-        });
-      } catch (error) {
-        console.error('Error copying to clipboard:', error);
-        toast({
-          title: "Error",
-          description: "No se pudo copiar el enlace",
-          variant: "destructive"
-        });
-      }
-    }
   };
 
   if (isLoading) {
@@ -199,30 +164,22 @@ const SeriesDetail = () => {
                   </div>
                 )}
                 <span className="bg-cuevana-gray-100 text-cuevana-white px-3 py-1 rounded text-sm">
-                  {genres}
+                  Comedia
                 </span>
               </div>
               
-              {series.overview && (
-                <p className="text-cuevana-white/90 mb-6 text-lg leading-relaxed">
-                  {series.overview}
-                </p>
-              )}
-              
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 mb-6">
                 <Button 
                   onClick={scrollToPlayer}
                   className="bg-cuevana-blue hover:bg-cuevana-blue/90 text-white flex items-center gap-2 px-6 py-3"
                 >
                   <Play className="h-5 w-5" /> Ver Ahora
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10 flex items-center gap-2"
-                  onClick={handleShare}
-                >
-                  <Share2 className="h-4 w-4" /> Compartir
-                </Button>
+                <ShareButton 
+                  title={series.title}
+                  variant="outline"
+                  className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10"
+                />
               </div>
             </div>
           </div>
@@ -234,6 +191,59 @@ const SeriesDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Sinopsis with Details */}
+            <section>
+              <h2 className="text-2xl font-semibold mb-4 text-cuevana-white">Sinopsis</h2>
+              <div className="bg-cuevana-gray-100 rounded-lg p-6 border border-cuevana-gray-200">
+                {series.overview && (
+                  <p className="text-cuevana-white/90 mb-6 text-lg leading-relaxed">
+                    {series.overview}
+                  </p>
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-cuevana-blue font-medium">Género: </span>
+                    <span className="text-cuevana-white">{genres}</span>
+                  </div>
+                  <div>
+                    <span className="text-cuevana-blue font-medium">Actores: </span>
+                    <span className="text-cuevana-white">Ryan Wesen, Denise Reed, Jimmy Dalton, Verina Banks</span>
+                  </div>
+                  <div>
+                    <span className="text-cuevana-blue font-medium">Título Original: </span>
+                    <span className="text-cuevana-white">{series.original_title || series.title}</span>
+                  </div>
+                  <div>
+                    <span className="text-cuevana-blue font-medium">Año: </span>
+                    <span className="text-cuevana-white">{releaseYear}</span>
+                  </div>
+                  <div>
+                    <span className="text-cuevana-blue font-medium">Temporadas: </span>
+                    <span className="text-cuevana-white">{series.number_of_seasons || 'N/A'}</span>
+                  </div>
+                  {series.number_of_episodes && (
+                    <div>
+                      <span className="text-cuevana-blue font-medium">Episodios: </span>
+                      <span className="text-cuevana-white">{series.number_of_episodes}</span>
+                    </div>
+                  )}
+                  {series.status && (
+                    <div>
+                      <span className="text-cuevana-blue font-medium">Estado: </span>
+                      <span className="text-cuevana-white">{series.status}</span>
+                    </div>
+                  )}
+                  {series.rating && (
+                    <div>
+                      <span className="text-cuevana-blue font-medium">Calificación: </span>
+                      <span className="text-cuevana-white">{series.rating}/10</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+
             {/* Season and Episode Selection */}
             {seasons.length > 0 && (
               <div className="flex gap-4 mb-6">
@@ -279,9 +289,12 @@ const SeriesDetail = () => {
               <h2 className="text-2xl font-semibold mb-4 text-cuevana-white">
                 {currentEpisode?.title || `Episodio ${selectedEpisode}`}
               </h2>
-              <VideoPlayer 
-                title={`${series.title} - T${selectedSeason}E${selectedEpisode}`}
-                streamServers={currentEpisode?.stream_servers || series.stream_servers || []}
+              <SeriesVideoPlayer 
+                series={series}
+                selectedSeason={selectedSeason}
+                selectedEpisode={selectedEpisode}
+                onSeasonChange={setSelectedSeason}
+                onEpisodeChange={setSelectedEpisode}
               />
             </section>
           </div>
@@ -305,49 +318,6 @@ const SeriesDetail = () => {
                 </div>
               </div>
             )}
-
-            {/* Series Details */}
-            <div className="bg-cuevana-gray-100 rounded-lg p-6 border border-cuevana-gray-200">
-              <h3 className="text-xl font-semibold mb-4 text-cuevana-white">Detalles</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-cuevana-blue mb-2 font-medium">Título Original</h4>
-                  <p className="text-cuevana-white">{series.original_title || series.title}</p>
-                </div>
-                
-                <div>
-                  <h4 className="text-cuevana-blue mb-2 font-medium">Año</h4>
-                  <p className="text-cuevana-white">{releaseYear}</p>
-                </div>
-                
-                <div>
-                  <h4 className="text-cuevana-blue mb-2 font-medium">Temporadas</h4>
-                  <p className="text-cuevana-white">{series.number_of_seasons || 'N/A'}</p>
-                </div>
-                
-                {series.number_of_episodes && (
-                  <div>
-                    <h4 className="text-cuevana-blue mb-2 font-medium">Episodios</h4>
-                    <p className="text-cuevana-white">{series.number_of_episodes}</p>
-                  </div>
-                )}
-                
-                {series.status && (
-                  <div>
-                    <h4 className="text-cuevana-blue mb-2 font-medium">Estado</h4>
-                    <p className="text-cuevana-white">{series.status}</p>
-                  </div>
-                )}
-                
-                {series.rating && (
-                  <div>
-                    <h4 className="text-cuevana-blue mb-2 font-medium">Calificación</h4>
-                    <p className="text-cuevana-white">{series.rating}/10</p>
-                  </div>
-                )}
-              </div>
-            </div>
 
             {/* Featured Series */}
             {realRelatedSeries.length > 0 && (
