@@ -1,18 +1,19 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Star, Calendar, Clock, Play, Loader2, ChevronDown } from 'lucide-react';
+import { Star, Calendar, Clock, Play, Loader2, ChevronDown, Tv, FilePlay, Tag, Heart } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import SeriesVideoPlayer from '@/components/SeriesVideoPlayer';
 import SEOHead from '@/components/SEOHead';
 import ShareButton from '@/components/ShareButton';
 import { fetchSeriesById, fetchSeries } from '@/services/seriesService';
 import { getSettings } from '@/services/settingsService';
+import { recordSeriesView, fetchRelatedSeries } from '@/services/viewsService';
 
 const SeriesDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
+
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
   const videoPlayerRef = useRef<HTMLDivElement>(null);
@@ -23,23 +24,58 @@ const SeriesDetail = () => {
     enabled: !!id,
   });
 
+  // Query para series relacionadas
+  const { data: relatedSeries = [] } = useQuery({
+    queryKey: ['relatedSeries', id, series?.genres],
+    queryFn: () => fetchRelatedSeries(id!, series?.genres || []),
+    enabled: !!id && !!series,
+  });
+
+  // Registrar vista cuando se carga la serie
+  useEffect(() => {
+    if (series?.id) {
+      recordSeriesView(series.id);
+    }
+  }, [series?.id]);
+
   const { data: settings } = useQuery({
     queryKey: ['settings'],
     queryFn: getSettings
   });
 
-  const { data: relatedSeries } = useQuery({
-    queryKey: ['relatedSeries'],
-    queryFn: () => fetchSeries(''),
-  });
+  const posterUrl = series.poster_path?.startsWith('http') 
+    ? series.poster_path 
+    : series.poster_path 
+      ? `https://image.tmdb.org/t/p/w500${series.poster_path}`
+      : '/placeholder.svg';
 
-  const scrollToPlayer = () => {
-    videoPlayerRef.current?.scrollIntoView({ 
-      behavior: 'smooth',
-      block: 'start'
-    });
-  };
+  const backdropUrl = series.backdrop_path?.startsWith('http')
+    ? series.backdrop_path
+    : series.backdrop_path
+      ? `https://image.tmdb.org/t/p/original${series.backdrop_path}`
+      : posterUrl;
 
+  const releaseYear = series.first_air_date ? new Date(series.first_air_date).getFullYear() : 'Sin fecha';
+  const genres = Array.isArray(series.genres) ? series.genres.join(', ') : 'Sin género';
+
+  // Get current episode data
+  const seasons = series.seasons || [];
+  const currentSeason = seasons.find(s => s.season_number === selectedSeason);
+  const currentEpisode = currentSeason?.episodes?.find(e => e.episode_number === selectedEpisode);
+  
+  // Get real related series (limit to 6)
+  const realRelatedSeries = relatedSeries?.slice(0, 6).map(s => ({
+    id: s.id,
+    title: s.title,
+    posterUrl: s.poster_path?.startsWith('http') 
+      ? s.poster_path 
+      : s.poster_path 
+        ? `https://image.tmdb.org/t/p/w500${s.poster_path}`
+        : '/placeholder.svg',
+    rating: s.rating || 0,
+    year: s.first_air_date ? new Date(s.first_air_date).getFullYear() : 0
+  })) || [];
+  
   if (isLoading) {
     return (
       <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
@@ -69,39 +105,6 @@ const SeriesDetail = () => {
     );
   }
 
-  const posterUrl = series.poster_path?.startsWith('http') 
-    ? series.poster_path 
-    : series.poster_path 
-      ? `https://image.tmdb.org/t/p/w500${series.poster_path}`
-      : '/placeholder.svg';
-
-  const backdropUrl = series.backdrop_path?.startsWith('http')
-    ? series.backdrop_path
-    : series.backdrop_path
-      ? `https://image.tmdb.org/t/p/original${series.backdrop_path}`
-      : posterUrl;
-
-  const releaseYear = series.first_air_date ? new Date(series.first_air_date).getFullYear() : 'N/A';
-  const genres = Array.isArray(series.genres) ? series.genres.join(', ') : 'Sin género';
-  
-  // Get current episode data
-  const seasons = series.seasons || [];
-  const currentSeason = seasons.find(s => s.season_number === selectedSeason);
-  const currentEpisode = currentSeason?.episodes?.find(e => e.episode_number === selectedEpisode);
-  
-  // Get real related series (limit to 6)
-  const realRelatedSeries = relatedSeries?.slice(0, 6).map(s => ({
-    id: s.id,
-    title: s.title,
-    posterUrl: s.poster_path?.startsWith('http') 
-      ? s.poster_path 
-      : s.poster_path 
-        ? `https://image.tmdb.org/t/p/w500${s.poster_path}`
-        : '/placeholder.svg',
-    rating: s.rating || 0,
-    year: s.first_air_date ? new Date(s.first_air_date).getFullYear() : 0
-  })) || [];
-  
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
       <SEOHead

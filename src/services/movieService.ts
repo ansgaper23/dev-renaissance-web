@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -284,8 +283,8 @@ const fetchTMDBMovieDetails = async (movieId: number): Promise<any> => {
 // Enhanced IMDB data fetching with OMDb API
 const fetchIMDBData = async (imdbId: string): Promise<any> => {
   try {
-    // Using OMDb API (you can get a free API key from http://www.omdbapi.com/)
-    const omdbApiKey = 'b6003d8a'; // Public demo key, replace with your own
+    // Using your OMDb API key
+    const omdbApiKey = '46b723f1'; // Your OMDb API key
     const response = await fetch(`https://www.omdbapi.com/?i=${imdbId}&apikey=${omdbApiKey}&plot=full`);
     
     if (!response.ok) {
@@ -452,4 +451,74 @@ export const importMovieFromIMDB = async (imdbId: string, streamServers: Array<{
   
   // Usar la función existente para importar desde TMDB
   return importMovieFromTMDB(tmdbData, streamServers);
+};
+
+// Función para registrar una vista de película
+export const recordMovieView = async (movieId: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('movie_views')
+      .insert({
+        movie_id: movieId,
+        ip_address: null, // Por privacidad, no guardamos IP real
+        user_agent: navigator.userAgent
+      });
+
+    if (error) {
+      console.warn('Error recording movie view:', error);
+    }
+  } catch (error) {
+    console.warn('Error recording movie view:', error);
+  }
+};
+
+// Función para obtener películas más vistas
+export const fetchMostViewedMovies = async (): Promise<Movie[]> => {
+  const { data, error } = await supabase
+    .from('most_viewed_movies')
+    .select('*')
+    .limit(20);
+
+  if (error) {
+    console.warn('Error fetching most viewed movies, falling back to recent:', error);
+    // Fallback a películas recientes si hay error
+    return fetchMovies('');
+  }
+
+  return (data || []) as Movie[];
+};
+
+// Función para obtener películas relacionadas por género
+export const fetchRelatedMovies = async (movieId: string, genres: string[] = []): Promise<Movie[]> => {
+  try {
+    let query = supabase
+      .from('movies')
+      .select('*')
+      .neq('id', movieId) // Excluir la película actual
+      .limit(6);
+
+    if (genres && genres.length > 0) {
+      // Buscar películas que tengan al menos un género en común
+      query = query.overlaps('genres', genres);
+    }
+
+    const { data, error } = await query;
+
+    if (error || !data || data.length === 0) {
+      // Si no hay películas relacionadas por género, buscar las más recientes
+      const { data: fallbackData } = await supabase
+        .from('movies')
+        .select('*')
+        .neq('id', movieId)
+        .order('created_at', { ascending: false })
+        .limit(6);
+      
+      return (fallbackData || []) as Movie[];
+    }
+
+    return data as Movie[];
+  } catch (error) {
+    console.warn('Error fetching related movies:', error);
+    return [];
+  }
 };

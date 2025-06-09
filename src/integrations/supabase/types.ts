@@ -54,6 +54,52 @@ export type Database = {
             foreignKeyName: "featured_movies_movie_id_fkey"
             columns: ["movie_id"]
             isOneToOne: true
+            referencedRelation: "most_viewed_movies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "featured_movies_movie_id_fkey"
+            columns: ["movie_id"]
+            isOneToOne: true
+            referencedRelation: "movies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      movie_views: {
+        Row: {
+          id: string
+          ip_address: unknown | null
+          movie_id: string
+          user_agent: string | null
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          ip_address?: unknown | null
+          movie_id: string
+          user_agent?: string | null
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          ip_address?: unknown | null
+          movie_id?: string
+          user_agent?: string | null
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movie_views_movie_id_fkey"
+            columns: ["movie_id"]
+            isOneToOne: false
+            referencedRelation: "most_viewed_movies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movie_views_movie_id_fkey"
+            columns: ["movie_id"]
+            isOneToOne: false
             referencedRelation: "movies"
             referencedColumns: ["id"]
           },
@@ -197,6 +243,45 @@ export type Database = {
         }
         Relationships: []
       }
+      series_views: {
+        Row: {
+          id: string
+          ip_address: unknown | null
+          series_id: string
+          user_agent: string | null
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          ip_address?: unknown | null
+          series_id: string
+          user_agent?: string | null
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          ip_address?: unknown | null
+          series_id?: string
+          user_agent?: string | null
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "series_views_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "most_viewed_series"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "series_views_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settings: {
         Row: {
           ads_code: string | null
@@ -226,7 +311,52 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      most_viewed_movies: {
+        Row: {
+          backdrop_path: string | null
+          created_at: string | null
+          genre_ids: number[] | null
+          genres: string[] | null
+          id: string | null
+          original_title: string | null
+          overview: string | null
+          poster_path: string | null
+          rating: number | null
+          release_date: string | null
+          runtime: number | null
+          stream_servers: Json | null
+          stream_url: string | null
+          title: string | null
+          tmdb_id: number | null
+          trailer_url: string | null
+          updated_at: string | null
+          view_count: number | null
+        }
+        Relationships: []
+      }
+      most_viewed_series: {
+        Row: {
+          backdrop_path: string | null
+          created_at: string | null
+          first_air_date: string | null
+          genres: string[] | null
+          id: string | null
+          number_of_episodes: number | null
+          number_of_seasons: number | null
+          original_title: string | null
+          overview: string | null
+          poster_path: string | null
+          rating: number | null
+          seasons: Json | null
+          status: string | null
+          stream_servers: Json | null
+          title: string | null
+          tmdb_id: number | null
+          updated_at: string | null
+          view_count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       gtrgm_compress: {

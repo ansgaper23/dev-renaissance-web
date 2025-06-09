@@ -1,50 +1,49 @@
-
-import React, { useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Star, Calendar, Clock, Play, Loader2 } from 'lucide-react';
+import { fetchMovieById } from '@/services/movieService';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import VideoPlayer from '@/components/VideoPlayer';
-import SEOHead from '@/components/SEOHead';
+import { SEOHead } from '@/components/SEOHead';
+import { Button } from '@/components/ui/button';
+import { Play, Star, Calendar, Clock, Tag, Heart } from 'lucide-react';
 import ShareButton from '@/components/ShareButton';
-import { fetchMovieById, fetchMovies } from '@/services/movieService';
-import { getSettings } from '@/services/settingsService';
+import MovieSection from '@/components/MovieSection';
+import { recordMovieView, fetchRelatedMovies } from '@/services/movieService';
 
 const MovieDetail = () => {
-  const { id } = useParams();
-  const videoPlayerRef = useRef<HTMLDivElement>(null);
-  
+  const { id } = useParams<{ id: string }>();
+  const [selectedServer, setSelectedServer] = useState(0);
+
   const { data: movie, isLoading, error } = useQuery({
     queryKey: ['movie', id],
     queryFn: () => fetchMovieById(id!),
     enabled: !!id,
   });
 
-  const { data: settings } = useQuery({
-    queryKey: ['settings'],
-    queryFn: getSettings
+  // Query para películas relacionadas
+  const { data: relatedMovies = [] } = useQuery({
+    queryKey: ['relatedMovies', id, movie?.genres],
+    queryFn: () => fetchRelatedMovies(id!, movie?.genres || []),
+    enabled: !!id && !!movie,
   });
 
-  const { data: relatedMovies } = useQuery({
-    queryKey: ['relatedMovies'],
-    queryFn: () => fetchMovies(''),
-  });
-
-  const scrollToPlayer = () => {
-    videoPlayerRef.current?.scrollIntoView({ 
-      behavior: 'smooth',
-      block: 'start'
-    });
-  };
+  // Registrar vista cuando se carga la película
+  useEffect(() => {
+    if (movie?.id) {
+      recordMovieView(movie.id);
+    }
+  }, [movie?.id]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
         <Navbar />
-        <div className="flex justify-center items-center h-96">
-          <Loader2 className="h-8 w-8 animate-spin text-cuevana-blue" />
+        <div className="container mx-auto px-4 py-20 text-center">
+          Cargando...
         </div>
+        <Footer />
       </div>
     );
   }
@@ -53,16 +52,10 @@ const MovieDetail = () => {
     return (
       <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
         <Navbar />
-        <div className="container mx-auto px-4 py-12">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Película no encontrada</h1>
-            <Link to="/">
-              <Button className="bg-cuevana-blue hover:bg-cuevana-blue/90">
-                Volver al inicio
-              </Button>
-            </Link>
-          </div>
+        <div className="container mx-auto px-4 py-20 text-center">
+          Error al cargar la película
         </div>
+        <Footer />
       </div>
     );
   }
@@ -79,259 +72,126 @@ const MovieDetail = () => {
       ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}`
       : posterUrl;
 
-  const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : 'N/A';
-  const duration = movie.runtime ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m` : 'N/A';
+  const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : 'Sin fecha';
   const genres = Array.isArray(movie.genres) ? movie.genres.join(', ') : 'Sin género';
-  
-  // Get real related movies (limit to 6)
-  const realRelatedMovies = relatedMovies?.slice(0, 6).map(m => ({
-    id: m.id,
-    title: m.title,
-    posterUrl: m.poster_path?.startsWith('http') 
-      ? m.poster_path 
-      : m.poster_path 
-        ? `https://image.tmdb.org/t/p/w500${m.poster_path}`
-        : '/placeholder.svg',
-    rating: m.rating || 0,
-    year: m.release_date ? new Date(m.release_date).getFullYear() : 0
-  })) || [];
-  
+  const runtime = movie.runtime ? `${movie.runtime} min` : 'Duración no disponible';
+
+  // Transformar películas relacionadas para MovieSection
+  const transformedRelatedMovies = relatedMovies.map(relatedMovie => ({
+    id: relatedMovie.id,
+    title: relatedMovie.title,
+    posterUrl: relatedMovie.poster_path ? 
+      (relatedMovie.poster_path.startsWith('http') ? relatedMovie.poster_path : `https://image.tmdb.org/t/p/w500${relatedMovie.poster_path}`) : 
+      '/placeholder.svg',
+    rating: relatedMovie.rating || 0,
+    year: relatedMovie.release_date ? new Date(relatedMovie.release_date).getFullYear() : new Date().getFullYear(),
+    genre: relatedMovie.genres ? relatedMovie.genres[0] : 'Sin género'
+  }));
+
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
-      <SEOHead
-        title={movie.title}
-        description={movie.overview || `Mira ${movie.title} online gratis en Cuevana3`}
-        image={backdropUrl}
-        url={window.location.href}
-        type="movie"
-        siteName={settings?.site_name}
-        logoUrl={settings?.logo_url}
-      />
       <Navbar />
+      <SEOHead 
+        title={movie.title}
+        description={movie.overview || `Mira ${movie.title} online gratis`}
+        image={posterUrl}
+        type="video.movie"
+      />
       
-      {/* Hero Section */}
       <div className="relative">
         {/* Backdrop */}
-        <div className="absolute inset-0 h-[50vh]">
+        <div className="relative h-[60vh] overflow-hidden">
           <img 
-            src={backdropUrl} 
-            alt={movie.title} 
+            src={backdropUrl}
+            alt={movie.title}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-cuevana-bg via-cuevana-bg/60 to-cuevana-bg/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-cuevana-bg via-cuevana-bg/60 to-transparent" />
         </div>
-        
-        {/* Content */}
-        <div className="relative container mx-auto px-4 pt-8">
+
+        {/* Movie Info */}
+        <div className="container mx-auto px-4 -mt-32 relative z-10">
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Poster */}
             <div className="flex-shrink-0">
               <img 
-                src={posterUrl} 
-                alt={movie.title} 
-                className="w-64 mx-auto lg:mx-0 rounded-lg shadow-2xl border border-cuevana-gray-200"
+                src={posterUrl}
+                alt={movie.title}
+                className="w-64 h-96 object-cover rounded-lg shadow-2xl mx-auto lg:mx-0"
               />
             </div>
-            
-            {/* Info */}
-            <div className="flex-1 pt-16">
-              <h1 className="text-3xl md:text-5xl font-bold mb-2 text-cuevana-white">{movie.title}</h1>
-              {movie.original_title && movie.original_title !== movie.title && (
-                <p className="text-xl text-cuevana-blue mb-4 italic">{movie.original_title}</p>
-              )}
+
+            {/* Details */}
+            <div className="flex-1 lg:ml-8">
+              <h1 className="text-4xl lg:text-5xl font-bold mb-4">{movie.title}</h1>
               
               {/* Sinopsis debajo del título */}
               {movie.overview && (
-                <p className="text-cuevana-white/90 mb-6 text-lg leading-relaxed max-w-4xl">
+                <p className="text-cuevana-white/90 text-lg leading-relaxed mb-6">
                   {movie.overview}
                 </p>
               )}
-              
-              <div className="flex flex-wrap gap-4 mb-6">
+
+              <div className="flex flex-wrap items-center gap-6 mb-6">
                 {movie.rating && (
-                  <div className="flex items-center bg-cuevana-blue px-3 py-1 rounded">
-                    <Star className="h-4 w-4 text-cuevana-gold mr-1 fill-current" />
-                    <span className="font-semibold">{movie.rating}/10</span>
+                  <div className="flex items-center gap-2">
+                    <Star className="h-5 w-5 text-cuevana-gold fill-current" />
+                    <span className="text-lg font-semibold">{movie.rating}/10</span>
                   </div>
                 )}
-                <div className="flex items-center text-cuevana-white/80">
-                  <Calendar className="h-4 w-4 mr-1" />
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-cuevana-blue" />
                   <span>{releaseYear}</span>
                 </div>
-                <div className="flex items-center text-cuevana-white/80">
-                  <Clock className="h-4 w-4 mr-1" />
-                  <span>{duration}</span>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-cuevana-blue" />
+                  <span>{runtime}</span>
                 </div>
-                <span className="bg-cuevana-gray-100 text-cuevana-white px-3 py-1 rounded text-sm">
-                  {genres}
-                </span>
+                <div className="flex items-center gap-2">
+                  <Tag className="h-5 w-5 text-cuevana-blue" />
+                  <span>{genres}</span>
+                </div>
               </div>
 
-              {/* Detalles adicionales */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-6">
-                <div>
-                  <span className="text-cuevana-blue font-medium">Género: </span>
-                  <span className="text-cuevana-white">{genres}</span>
-                </div>
-                <div>
-                  <span className="text-cuevana-blue font-medium">Actores: </span>
-                  <span className="text-cuevana-white">Ryan Wesen, Denise Reed, Jimmy Dalton, Verina Banks</span>
-                </div>
-                <div>
-                  <span className="text-cuevana-blue font-medium">Título Original: </span>
-                  <span className="text-cuevana-white">{movie.original_title || movie.title}</span>
-                </div>
-                <div>
-                  <span className="text-cuevana-blue font-medium">Año: </span>
-                  <span className="text-cuevana-white">{releaseYear}</span>
-                </div>
-                <div>
-                  <span className="text-cuevana-blue font-medium">Duración: </span>
-                  <span className="text-cuevana-white">{duration}</span>
-                </div>
-                {movie.rating && (
-                  <div>
-                    <span className="text-cuevana-blue font-medium">Calificación: </span>
-                    <span className="text-cuevana-white">{movie.rating}/10</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex flex-wrap gap-3 mb-6">
-                <Button 
-                  onClick={scrollToPlayer}
-                  className="bg-cuevana-blue hover:bg-cuevana-blue/90 text-white flex items-center gap-2 px-6 py-3"
-                >
-                  <Play className="h-5 w-5" /> Ver Ahora
+              <div className="flex flex-wrap gap-4 mb-8">
+                <Button className="bg-cuevana-blue hover:bg-cuevana-blue/90 flex items-center gap-2">
+                  <Play className="h-5 w-5" />
+                  Ver Película
                 </Button>
                 <ShareButton 
                   title={movie.title}
-                  variant="outline"
-                  className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10"
+                  description={movie.overview || `Mira ${movie.title} online gratis`}
                 />
+                <Button variant="outline" className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10">
+                  <Heart className="h-5 w-5 mr-2" />
+                  Favoritos
+                </Button>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      
-      {/* Content Section */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Video Player */}
-            <section ref={videoPlayerRef}>
-              <h2 className="text-2xl font-semibold mb-4 text-cuevana-white">Reproducir</h2>
-              <VideoPlayer 
-                title={movie.title} 
-                streamServers={movie.stream_servers || []}
-                streamUrl={movie.stream_url || undefined}
-              />
-            </section>
-            
-            {/* Trailer */}
-            {movie.trailer_url && (
-              <section>
-                <h2 className="text-2xl font-semibold mb-4 text-cuevana-white">Trailer</h2>
-                <div className="aspect-video rounded-lg overflow-hidden">
-                  <iframe 
-                    src={movie.trailer_url} 
-                    title={`${movie.title} trailer`}
-                    className="w-full h-full"
-                    allowFullScreen
-                  ></iframe>
-                </div>
-              </section>
-            )}
-          </div>
-          
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Genres Section */}
-            {Array.isArray(movie.genres) && movie.genres.length > 0 && (
-              <div className="bg-cuevana-gray-100 rounded-lg p-6 border border-cuevana-gray-200">
-                <h3 className="text-xl font-semibold mb-4 text-cuevana-white">Géneros</h3>
-                <div className="flex flex-wrap gap-2">
-                  {movie.genres.map((genre, index) => (
-                    <Link
-                      key={index}
-                      to={`/genre/${encodeURIComponent(genre)}`}
-                      className="bg-cuevana-blue text-white px-3 py-1 rounded text-sm hover:bg-cuevana-blue/80 transition-colors"
-                    >
-                      {genre}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {/* Featured Movies */}
-            {realRelatedMovies.length > 0 && (
-              <div className="bg-cuevana-gray-100 rounded-lg p-6 border border-cuevana-gray-200">
-                <h3 className="text-xl font-semibold mb-4 text-cuevana-white">Películas Destacadas</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {realRelatedMovies.slice(0, 4).map((relatedMovie) => (
-                    <Link key={relatedMovie.id} to={`/movie/${relatedMovie.id}`} className="group">
-                      <div className="relative aspect-[2/3] overflow-hidden rounded">
-                        <img
-                          src={relatedMovie.posterUrl}
-                          alt={relatedMovie.title}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                        />
-                        <div className="absolute top-1 left-1 bg-cuevana-bg/80 text-cuevana-gold text-xs font-bold px-1 py-0.5 rounded flex items-center">
-                          <Star className="h-2 w-2 mr-0.5 fill-current" />
-                          {relatedMovie.rating.toFixed(1)}
-                        </div>
-                      </div>
-                      <h4 className="text-cuevana-white text-xs mt-2 line-clamp-2 group-hover:text-cuevana-blue">
-                        {relatedMovie.title}
-                      </h4>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        {/* Related Movies */}
-        {realRelatedMovies.length > 0 && (
+          {/* Video Player */}
           <div className="mt-12">
-            <section className="py-8">
-              <h3 className="text-2xl font-bold text-cuevana-white mb-6">Películas Relacionadas</h3>
-              
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {realRelatedMovies.map((relatedMovie) => (
-                  <Link key={relatedMovie.id} to={`/movie/${relatedMovie.id}`} className="group">
-                    <div className="bg-cuevana-gray-100 border-cuevana-gray-200 overflow-hidden transition-all duration-300 group-hover:scale-105 rounded-lg">
-                      <div className="relative aspect-[2/3] overflow-hidden">
-                        <img
-                          src={relatedMovie.posterUrl}
-                          alt={relatedMovie.title}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                        />
-                        
-                        <div className="absolute top-2 left-2 bg-cuevana-bg/80 text-cuevana-gold text-xs font-bold px-2 py-1 rounded flex items-center">
-                          <Star className="h-3 w-3 mr-1 fill-current" />
-                          {relatedMovie.rating.toFixed(1)}
-                        </div>
-                      </div>
-                      
-                      <div className="p-3">
-                        <h4 className="text-cuevana-white font-medium text-sm line-clamp-2 mb-1">
-                          {relatedMovie.title}
-                        </h4>
-                        <span className="text-cuevana-white/70 text-xs">{relatedMovie.year}</span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
+            <VideoPlayer 
+              title={movie.title}
+              streamServers={movie.stream_servers || []}
+              streamUrl={movie.stream_url || undefined}
+            />
           </div>
-        )}
+
+          {/* Related Movies */}
+          {transformedRelatedMovies.length > 0 && (
+            <div className="mt-16">
+              <MovieSection 
+                title="Películas Relacionadas"
+                movies={transformedRelatedMovies}
+              />
+            </div>
+          )}
+        </div>
       </div>
+
+      <Footer />
     </div>
   );
 };

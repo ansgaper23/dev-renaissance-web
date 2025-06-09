@@ -2,8 +2,9 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import FeaturedCarousel from '@/components/FeaturedCarousel';
-import MovieSectionConnector from '@/components/MovieSectionConnector';
+import MostViewedMoviesSection from '@/components/MostViewedMoviesSection';
 import SeriesSectionConnector from '@/components/SeriesSectionConnector';
+import MovieSectionConnector from '@/components/MovieSectionConnector';
 
 const Index = () => {
   return (
@@ -15,10 +16,9 @@ const Index = () => {
       
       {/* Movie and Series Sections with real data */}
       <div className="space-y-8 pb-12">
-        <MovieSectionConnector 
-          title="🔥 Películas Recientes" 
+        <MostViewedMoviesSection 
+          title="📺 Películas más vistas" 
           limit={6}
-          sortBy="created_at"
           viewAllLink="/movies"
         />
         
