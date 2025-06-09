@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Menu, X, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const location = useLocation();
+  const navigate = useNavigate();
   
   const { data: settings } = useQuery({
     queryKey: ['settings'],
@@ -26,7 +27,22 @@ const Navbar = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
+      // Verificar si es la palabra clave para el admin
+      if (searchTerm.toLowerCase() === 'ansgaper') {
+        navigate('/admin/login');
+        setSearchTerm(''); // Limpiar el campo de búsqueda
+        return;
+      }
       window.location.href = `/search?q=${encodeURIComponent(searchTerm)}`;
+    }
+  };
+
+  const handleSearchInputChange = (value: string) => {
+    setSearchTerm(value);
+    // Verificar automáticamente cuando escriben la palabra completa
+    if (value.toLowerCase() === 'ansgaper') {
+      navigate('/admin/login');
+      setSearchTerm(''); // Limpiar el campo de búsqueda
     }
   };
 
@@ -167,7 +183,7 @@ const Navbar = () => {
                 type="text"
                 placeholder="Buscar..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchInputChange(e.target.value)}
                 className="w-64 bg-cuevana-gray-100 border-cuevana-gray-200 text-cuevana-white placeholder-cuevana-white/60"
               />
               <Button 
@@ -231,7 +247,7 @@ const Navbar = () => {
                   type="text"
                   placeholder="Buscar..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchInputChange(e.target.value)}
                   className="bg-cuevana-gray-100 border-cuevana-gray-200 text-cuevana-white placeholder-cuevana-white/60"
                 />
                 <Button 

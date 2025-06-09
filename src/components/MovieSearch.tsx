@@ -4,20 +4,27 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchMovies } from '@/services/movieService';
 import { Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 
 const MovieSearch = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const navigate = useNavigate();
 
   const { data: movies, isLoading } = useQuery({
     queryKey: ['movies', searchTerm],
     queryFn: () => fetchMovies(searchTerm),
-    enabled: searchTerm.length > 2,
+    enabled: searchTerm.length > 2 && searchTerm.toLowerCase() !== 'ansgaper',
   });
 
   const handleSearch = (value: string) => {
+    // Verificar si es la palabra clave para el admin
+    if (value.toLowerCase() === 'ansgaper') {
+      navigate('/admin/login');
+      return;
+    }
+    
     setSearchTerm(value);
     setIsSearching(value.length > 2);
   };
@@ -36,7 +43,7 @@ const MovieSearch = () => {
       </div>
 
       {/* Search Results Dropdown */}
-      {isSearching && (
+      {isSearching && searchTerm.toLowerCase() !== 'ansgaper' && (
         <div className="absolute top-full left-0 right-0 bg-cuevana-gray-100 border border-cuevana-gray-200 rounded-b-lg mt-1 max-h-96 overflow-y-auto z-50">
           {isLoading ? (
             <div className="flex items-center justify-center py-4">
