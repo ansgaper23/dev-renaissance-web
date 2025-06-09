@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Series } from "./seriesService";
+import { Series } from "@/services/seriesService";
 
 // Función para registrar una vista de serie
 export const recordSeriesView = async (seriesId: string): Promise<void> => {
@@ -39,15 +39,15 @@ export const fetchMostViewedSeries = async (): Promise<Series[]> => {
     
     return (fallbackData || []).map(series => ({
       ...series,
-      stream_servers: Array.isArray(series.stream_servers) ? series.stream_servers : [],
-      seasons: Array.isArray(series.seasons) ? series.seasons : []
+      stream_servers: Array.isArray(series.stream_servers) ? series.stream_servers as { name: string; url: string; quality?: string; language?: string; }[] : [],
+      seasons: Array.isArray(series.seasons) ? series.seasons as any[] : []
     })) as Series[];
   }
 
   return (data || []).map(series => ({
     ...series,
-    stream_servers: Array.isArray(series.stream_servers) ? series.stream_servers : [],
-    seasons: Array.isArray(series.seasons) ? series.seasons : []
+    stream_servers: Array.isArray(series.stream_servers) ? series.stream_servers as { name: string; url: string; quality?: string; language?: string; }[] : [],
+    seasons: Array.isArray(series.seasons) ? series.seasons as any[] : []
   })) as Series[];
 };
 
@@ -78,15 +78,15 @@ export const fetchRelatedSeries = async (seriesId: string, genres: string[] = []
       
       return (fallbackData || []).map(series => ({
         ...series,
-        stream_servers: Array.isArray(series.stream_servers) ? series.stream_servers : [],
-        seasons: Array.isArray(series.seasons) ? series.seasons : []
+        stream_servers: Array.isArray(series.stream_servers) ? series.stream_servers as { name: string; url: string; quality?: string; language?: string; }[] : [],
+        seasons: Array.isArray(series.seasons) ? series.seasons as any[] : []
       })) as Series[];
     }
 
     return data.map(series => ({
       ...series,
-      stream_servers: Array.isArray(series.stream_servers) ? series.stream_servers : [],
-      seasons: Array.isArray(series.seasons) ? series.seasons : []
+      stream_servers: Array.isArray(series.stream_servers) ? series.stream_servers as { name: string; url: string; quality?: string; language?: string; }[] : [],
+      seasons: Array.isArray(series.seasons) ? series.seasons as any[] : []
     })) as Series[];
   } catch (error) {
     console.warn('Error fetching related series:', error);

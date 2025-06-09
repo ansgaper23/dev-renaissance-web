@@ -96,7 +96,7 @@ const MovieDetail = () => {
         title={movie.title}
         description={movie.overview || `Mira ${movie.title} online gratis`}
         image={posterUrl}
-        type="video.movie"
+        type="movie"
       />
       
       <div className="relative">

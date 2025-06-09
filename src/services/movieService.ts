@@ -485,13 +485,13 @@ export const fetchMostViewedMovies = async (): Promise<Movie[]> => {
     
     return (fallbackData || []).map(movie => ({
       ...movie,
-      stream_servers: Array.isArray(movie.stream_servers) ? movie.stream_servers : []
+      stream_servers: Array.isArray(movie.stream_servers) ? movie.stream_servers as { name: string; url: string; quality?: string; language?: string; }[] : []
     })) as Movie[];
   }
 
   return (data || []).map(movie => ({
     ...movie,
-    stream_servers: Array.isArray(movie.stream_servers) ? movie.stream_servers : []
+    stream_servers: Array.isArray(movie.stream_servers) ? movie.stream_servers as { name: string; url: string; quality?: string; language?: string; }[] : []
   })) as Movie[];
 };
 
@@ -522,13 +522,13 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[] = [])
       
       return (fallbackData || []).map(movie => ({
         ...movie,
-        stream_servers: Array.isArray(movie.stream_servers) ? movie.stream_servers : []
+        stream_servers: Array.isArray(movie.stream_servers) ? movie.stream_servers as { name: string; url: string; quality?: string; language?: string; }[] : []
       })) as Movie[];
     }
 
     return data.map(movie => ({
       ...movie,
-      stream_servers: Array.isArray(movie.stream_servers) ? movie.stream_servers : []
+      stream_servers: Array.isArray(movie.stream_servers) ? movie.stream_servers as { name: string; url: string; quality?: string; language?: string; }[] : []
     })) as Movie[];
   } catch (error) {
     console.warn('Error fetching related movies:', error);
