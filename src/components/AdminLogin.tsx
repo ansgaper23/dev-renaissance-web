@@ -121,12 +121,6 @@ const AdminLogin = () => {
           Acceso exclusivo para administradores
         </CardFooter>
       </Card>
-      
-      <div className="mt-4 text-gray-400 text-sm">
-        <p>Credenciales de prueba:</p>
-        <p>Email: jorge968122@gmail.com</p>
-        <p>Contraseña: 123456</p>
-      </div>
     </div>
   );
 };

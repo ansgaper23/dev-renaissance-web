@@ -5,28 +5,56 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cuevana3 - Películas y Series Online Gratis</title>
+    <title>Cuevana3 - Ver Películas y Series Online Gratis en HD</title>
+    
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="//image.tmdb.org">
+    <link rel="dns-prefetch" href="//www.youtube.com">
     
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Explora miles de películas y series online gratis en Cuevana3. Contenido de calidad con licencias apropiadas para tu entretenimiento." />
-    <meta name="keywords" content="películas online, series online, cuevana3, streaming gratis, cine online, ver películas gratis" />
+    <meta name="description" content="Ver películas y series online gratis en HD. Estrenos, clásicos y contenido exclusivo en Cuevana3. Sin registro, sin límites. La mejor experiencia de streaming." />
+    <meta name="keywords" content="cuevana3, películas online gratis, series online, ver peliculas, streaming gratis, cine online, estrenos 2024, películas HD, series HD, sin registro, películas completas, ver series gratis" />
     <meta name="author" content="Cuevana3" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="language" content="es" />
+    <meta name="geo.region" content="ES" />
+    <meta name="geo.placename" content="España" />
+    <meta name="distribution" content="global" />
+    <meta name="rating" content="general" />
+    <meta name="revisit-after" content="1 days" />
     
     <!-- Open Graph Meta Tags -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Cuevana3 - Películas y Series Online Gratis" />
-    <meta property="og:description" content="Explora miles de películas y series online gratis en Cuevana3. Contenido de calidad con licencias apropiadas para tu entretenimiento." />
+    <meta property="og:title" content="Cuevana3 - Ver Películas y Series Online Gratis en HD" />
+    <meta property="og:description" content="Ver películas y series online gratis en HD. Estrenos, clásicos y contenido exclusivo en Cuevana3. Sin registro, sin límites." />
     <meta property="og:url" content="https://cuevana3.com" />
     <meta property="og:site_name" content="Cuevana3" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:image" content="https://cuevana3.com/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/jpeg" />
     
     <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Cuevana3 - Películas y Series Online Gratis" />
-    <meta name="twitter:description" content="Explora miles de películas y series online gratis en Cuevana3. Contenido de calidad con licencias apropiadas para tu entretenimiento." />
+    <meta name="twitter:title" content="Cuevana3 - Ver Películas y Series Online Gratis en HD" />
+    <meta name="twitter:description" content="Ver películas y series online gratis en HD. Estrenos, clásicos y contenido exclusivo en Cuevana3. Sin registro, sin límites." />
+    <meta name="twitter:image" content="https://cuevana3.com/og-image.jpg" />
+    <meta name="twitter:site" content="@cuevana3" />
+    <meta name="twitter:creator" content="@cuevana3" />
     
     <!-- Canonical URL -->
     <link rel="canonical" href="https://cuevana3.com" />
+    
+    <!-- Hreflang for international SEO -->
+    <link rel="alternate" hreflang="es" href="https://cuevana3.com" />
+    <link rel="alternate" hreflang="x-default" href="https://cuevana3.com" />
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico" />
     
     <!-- JSON-LD Schema -->
     <script type="application/ld+json">
@@ -34,12 +62,31 @@
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "Cuevana3",
-      "description": "Explora miles de películas y series online gratis en Cuevana3",
+      "alternateName": ["Cuevana 3", "Cuevana3.com"],
+      "description": "Ver películas y series online gratis en HD. Estrenos, clásicos y contenido exclusivo sin registro.",
       "url": "https://cuevana3.com",
       "potentialAction": {
         "@type": "SearchAction",
-        "target": "https://cuevana3.com/search?q={search_term_string}",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://cuevana3.com/search?q={search_term_string}"
+        },
         "query-input": "required name=search_term_string"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Cuevana3",
+        "url": "https://cuevana3.com",
+        "sameAs": [
+          "https://www.facebook.com/cuevana3",
+          "https://twitter.com/cuevana3",
+          "https://www.instagram.com/cuevana3"
+        ]
+      },
+      "mainEntity": {
+        "@type": "VideoGallery",
+        "name": "Películas y Series Online",
+        "description": "Catálogo completo de películas y series para ver online gratis"
       }
     }
     </script>

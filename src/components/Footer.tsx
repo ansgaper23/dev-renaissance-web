@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Film, Heart, Mail, Phone, MapPin } from 'lucide-react';
+import { Film, Heart } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getSettings } from '@/services/settingsService';
 
@@ -19,7 +19,7 @@ const Footer = () => {
   return (
     <footer className="bg-cuevana-gray-100 border-t border-cuevana-gray-200 text-cuevana-white">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Brand */}
           <div>
             <Link to="/" className="flex items-center space-x-2 mb-4">
@@ -34,7 +34,7 @@ const Footer = () => {
               <span className="text-xl font-bold text-cuevana-white">{siteName}</span>
             </Link>
             <p className="text-cuevana-white/70 mb-4">
-              Explora miles de películas y series online. Contenido de calidad con licencias apropiadas para tu entretenimiento.
+              La mejor plataforma para ver películas y series online gratis en HD. Contenido actualizado diariamente con los últimos estrenos y clásicos del cine.
             </p>
             <div className="flex items-center text-cuevana-white/70">
               <Heart className="h-4 w-4 mr-2 text-cuevana-gold" />
@@ -92,25 +92,6 @@ const Footer = () => {
                 <Link to="/dmca" className="text-cuevana-white/70 hover:text-cuevana-blue transition-colors">
                   Aviso DMCA
                 </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 text-cuevana-blue">Contacto</h3>
-            <ul className="space-y-3">
-              <li className="flex items-center text-cuevana-white/70">
-                <Mail className="h-4 w-4 mr-2" />
-                <span className="text-sm">info@cuevana3.com</span>
-              </li>
-              <li className="flex items-center text-cuevana-white/70">
-                <Phone className="h-4 w-4 mr-2" />
-                <span className="text-sm">+1 (555) 123-4567</span>
-              </li>
-              <li className="flex items-center text-cuevana-white/70">
-                <MapPin className="h-4 w-4 mr-2" />
-                <span className="text-sm">Ciudad, País</span>
               </li>
             </ul>
           </div>

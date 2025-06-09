@@ -1,14 +1,48 @@
-User-agent: Googlebot
+
+User-agent: *
 Allow: /
 
+# Sitemap
+Sitemap: https://cuevana3.com/sitemap.xml
+
+# High-priority crawling
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
 User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+# Social media crawlers
+User-agent: facebookexternalhit
 Allow: /
 
 User-agent: Twitterbot
 Allow: /
 
-User-agent: facebookexternalhit
+User-agent: LinkedInBot
 Allow: /
 
+# Block admin areas
+Disallow: /admin
+Disallow: /admin/*
+
+# Block sensitive paths
+Disallow: /api/
+Disallow: /_next/
+Disallow: /private/
+
+# Allow specific important pages
+Allow: /movies
+Allow: /series
+Allow: /genres
+Allow: /search
+
+# Request crawl delay for heavy crawlers
 User-agent: *
-Allow: /
+Crawl-delay: 2
