@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { Star, Play } from 'lucide-react';
-import { Movie } from '@/services/movieService';
+import { Movie, generateSlug } from '@/services/movieService';
 
 interface MovieGridProps {
   movies: Movie[];
@@ -50,6 +50,9 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
     : '/placeholder.svg';
 
+  // Generar slug para la URL
+  const movieSlug = generateSlug(movie.title);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -59,7 +62,7 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link to={`/movie/${movie.id}`}>
+      <Link to={`/movie/${movieSlug}`}>
         <Card className="overflow-hidden bg-cuevana-gray-100 border-cuevana-gray-200 transition-all duration-300 hover:scale-105">
           <div className="relative aspect-[2/3] overflow-hidden">
             <img

@@ -46,7 +46,7 @@ const App = () => (
               <Route path="/genre/:genre" element={<GenrePage />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminRoute element={<Admin />} />} />
-              <Route path="/movie/:id" element={<MovieDetail />} />
+              <Route path="/movie/:slug" element={<MovieDetail />} />
               <Route path="/series/:id" element={<SeriesDetail />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />

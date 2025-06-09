@@ -36,6 +36,18 @@ export interface AdminSession {
   authenticated: boolean;
 }
 
+// Función para generar slug del título
+export const generateSlug = (title: string): string => {
+  return title
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove accents
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single
+    .trim();
+};
+
 export const fetchMovies = async (searchTerm: string = ''): Promise<Movie[]> => {
   let query = supabase
     .from('movies')
@@ -67,6 +79,27 @@ export const fetchMovieById = async (id: string): Promise<Movie> => {
   }
   
   return data as Movie;
+};
+
+// Nueva función para buscar película por slug (título)
+export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
+  // Primero intentamos buscar por título exacto convertido a slug
+  const { data: movies, error } = await supabase
+    .from('movies')
+    .select('*');
+    
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  // Encontrar la película que coincida con el slug
+  const movie = movies.find(movie => generateSlug(movie.title) === slug);
+  
+  if (!movie) {
+    throw new Error('Película no encontrada');
+  }
+  
+  return movie as Movie;
 };
 
 export const addMovie = async (movie: MovieCreate): Promise<Movie> => {

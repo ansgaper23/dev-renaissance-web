@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { fetchMovieById } from '@/services/movieService';
+import { fetchMovieBySlug } from '@/services/movieService';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import VideoPlayer from '@/components/VideoPlayer';
@@ -14,20 +14,20 @@ import MovieSection from '@/components/MovieSection';
 import { recordMovieView, fetchRelatedMovies } from '@/services/movieService';
 
 const MovieDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const [selectedServer, setSelectedServer] = useState(0);
 
   const { data: movie, isLoading, error } = useQuery({
-    queryKey: ['movie', id],
-    queryFn: () => fetchMovieById(id!),
-    enabled: !!id,
+    queryKey: ['movie', slug],
+    queryFn: () => fetchMovieBySlug(slug!),
+    enabled: !!slug,
   });
 
   // Query para películas relacionadas
   const { data: relatedMovies = [] } = useQuery({
-    queryKey: ['relatedMovies', id, movie?.genres],
-    queryFn: () => fetchRelatedMovies(id!, movie?.genres || []),
-    enabled: !!id && !!movie,
+    queryKey: ['relatedMovies', movie?.id, movie?.genres],
+    queryFn: () => fetchRelatedMovies(movie!.id, movie?.genres || []),
+    enabled: !!movie,
   });
 
   // Registrar vista cuando se carga la película
