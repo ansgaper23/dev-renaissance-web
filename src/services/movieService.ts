@@ -2,27 +2,22 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
   id: string;
-  tmdb_id?: number | null;
+  tmdb_id?: number;
   title: string;
-  original_title?: string | null;
-  poster_path?: string | null;
-  backdrop_path?: string | null;
-  overview?: string | null;
-  release_date?: string | null;
-  genre_ids?: number[] | null;
-  genres?: string[] | null;
-  rating?: number | null;
-  runtime?: number | null;
-  trailer_url?: string | null;
-  stream_url?: string | null;
-  stream_servers?: Array<{
-    name: string;
-    url: string;
-    quality?: string;
-    language?: string;
-  }> | null;
-  created_at?: string | null;
-  updated_at?: string | null;
+  original_title?: string;
+  poster_path?: string;
+  backdrop_path?: string;
+  overview?: string;
+  release_date?: string;
+  genres?: string[];
+  genre_ids?: number[];
+  rating?: number;
+  runtime?: number;
+  stream_servers?: { name: string; url: string; quality?: string; language?: string; }[];
+  stream_url?: string;
+  trailer_url?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // For creating a new movie, title is required
@@ -482,10 +477,22 @@ export const fetchMostViewedMovies = async (): Promise<Movie[]> => {
   if (error) {
     console.warn('Error fetching most viewed movies, falling back to recent:', error);
     // Fallback a películas recientes si hay error
-    return fetchMovies('');
+    const { data: fallbackData } = await supabase
+      .from('movies')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    
+    return (fallbackData || []).map(movie => ({
+      ...movie,
+      stream_servers: Array.isArray(movie.stream_servers) ? movie.stream_servers : []
+    })) as Movie[];
   }
 
-  return (data || []) as Movie[];
+  return (data || []).map(movie => ({
+    ...movie,
+    stream_servers: Array.isArray(movie.stream_servers) ? movie.stream_servers : []
+  })) as Movie[];
 };
 
 // Función para obtener películas relacionadas por género
@@ -513,10 +520,16 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[] = [])
         .order('created_at', { ascending: false })
         .limit(6);
       
-      return (fallbackData || []) as Movie[];
+      return (fallbackData || []).map(movie => ({
+        ...movie,
+        stream_servers: Array.isArray(movie.stream_servers) ? movie.stream_servers : []
+      })) as Movie[];
     }
 
-    return data as Movie[];
+    return data.map(movie => ({
+      ...movie,
+      stream_servers: Array.isArray(movie.stream_servers) ? movie.stream_servers : []
+    })) as Movie[];
   } catch (error) {
     console.warn('Error fetching related movies:', error);
     return [];

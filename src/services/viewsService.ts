@@ -37,10 +37,18 @@ export const fetchMostViewedSeries = async (): Promise<Series[]> => {
       .order('created_at', { ascending: false })
       .limit(20);
     
-    return (fallbackData || []) as Series[];
+    return (fallbackData || []).map(series => ({
+      ...series,
+      stream_servers: Array.isArray(series.stream_servers) ? series.stream_servers : [],
+      seasons: Array.isArray(series.seasons) ? series.seasons : []
+    })) as Series[];
   }
 
-  return (data || []) as Series[];
+  return (data || []).map(series => ({
+    ...series,
+    stream_servers: Array.isArray(series.stream_servers) ? series.stream_servers : [],
+    seasons: Array.isArray(series.seasons) ? series.seasons : []
+  })) as Series[];
 };
 
 // Función para obtener series relacionadas por género
@@ -68,10 +76,18 @@ export const fetchRelatedSeries = async (seriesId: string, genres: string[] = []
         .order('created_at', { ascending: false })
         .limit(6);
       
-      return (fallbackData || []) as Series[];
+      return (fallbackData || []).map(series => ({
+        ...series,
+        stream_servers: Array.isArray(series.stream_servers) ? series.stream_servers : [],
+        seasons: Array.isArray(series.seasons) ? series.seasons : []
+      })) as Series[];
     }
 
-    return data as Series[];
+    return data.map(series => ({
+      ...series,
+      stream_servers: Array.isArray(series.stream_servers) ? series.stream_servers : [],
+      seasons: Array.isArray(series.seasons) ? series.seasons : []
+    })) as Series[];
   } catch (error) {
     console.warn('Error fetching related series:', error);
     return [];

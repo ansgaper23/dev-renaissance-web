@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -5,7 +6,7 @@ import { fetchMovieById } from '@/services/movieService';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import VideoPlayer from '@/components/VideoPlayer';
-import { SEOHead } from '@/components/SEOHead';
+import SEOHead from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
 import { Play, Star, Calendar, Clock, Tag, Heart } from 'lucide-react';
 import ShareButton from '@/components/ShareButton';
@@ -160,7 +161,6 @@ const MovieDetail = () => {
                 </Button>
                 <ShareButton 
                   title={movie.title}
-                  description={movie.overview || `Mira ${movie.title} online gratis`}
                 />
                 <Button variant="outline" className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10">
                   <Heart className="h-5 w-5 mr-2" />
