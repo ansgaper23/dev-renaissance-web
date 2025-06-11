@@ -170,32 +170,72 @@ const SEOHead = ({
       existingSchema.remove();
     }
 
-    let schema: any = {
-      "@context": "https://schema.org",
-      "@type": type === 'website' ? "WebSite" : (type === 'movie' ? "Movie" : "TVSeries"),
-      "name": title || siteName,
-      "description": defaultDescription,
-      "url": currentUrl,
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": {
-          "@type": "EntryPoint",
-          "urlTemplate": `${window.location.origin}/search?q={search_term_string}`
+    // Create schema based on type
+    let schema: any;
+
+    if (type === 'website') {
+      // For website, create a proper @graph structure without circular references
+      const websiteSchema = {
+        "@type": "WebSite",
+        "@id": `${window.location.origin}/#website`,
+        "name": siteName,
+        "description": defaultDescription,
+        "url": window.location.origin,
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": `${window.location.origin}/search?q={search_term_string}`
+          },
+          "query-input": "required name=search_term_string"
         },
-        "query-input": "required name=search_term_string"
-      }
-    };
-
-    if (image) {
-      schema.image = {
-        "@type": "ImageObject",
-        "url": image,
-        "width": 1200,
-        "height": 630
+        "publisher": {
+          "@id": `${window.location.origin}/#organization`
+        }
       };
-    }
 
-    if (type !== 'website') {
+      const organizationSchema = {
+        "@type": "Organization",
+        "@id": `${window.location.origin}/#organization`,
+        "name": siteName,
+        "url": window.location.origin,
+        "sameAs": [
+          "https://www.facebook.com/cuevana3",
+          "https://twitter.com/cuevana3",
+          "https://www.instagram.com/cuevana3"
+        ]
+      };
+
+      if (logoUrl) {
+        organizationSchema["logo"] = {
+          "@type": "ImageObject",
+          "url": logoUrl
+        };
+      }
+
+      schema = {
+        "@context": "https://schema.org",
+        "@graph": [websiteSchema, organizationSchema]
+      };
+    } else {
+      // For movies and series
+      schema = {
+        "@context": "https://schema.org",
+        "@type": type === 'movie' ? "Movie" : "TVSeries",
+        "name": title || siteName,
+        "description": defaultDescription,
+        "url": currentUrl
+      };
+
+      if (image) {
+        schema.image = {
+          "@type": "ImageObject",
+          "url": image,
+          "width": 1200,
+          "height": 630
+        };
+      }
+
       if (publishedTime) {
         schema.datePublished = publishedTime;
       }
@@ -205,40 +245,23 @@ const SEOHead = ({
       if (tags.length > 0) {
         schema.genre = tags;
       }
+      
       schema.author = {
         "@type": "Organization",
         "name": siteName
       };
+      
       schema.publisher = {
         "@type": "Organization",
-        "name": siteName,
-        "logo": logoUrl ? {
+        "name": siteName
+      };
+
+      if (logoUrl) {
+        schema.publisher.logo = {
           "@type": "ImageObject",
           "url": logoUrl
-        } : undefined
-      };
-    }
-
-    // Add organization schema
-    if (type === 'website') {
-      schema["@graph"] = [
-        schema,
-        {
-          "@type": "Organization",
-          "@id": `${window.location.origin}/#organization`,
-          "name": siteName,
-          "url": window.location.origin,
-          "logo": logoUrl ? {
-            "@type": "ImageObject",
-            "url": logoUrl
-          } : undefined,
-          "sameAs": [
-            "https://www.facebook.com/cuevana3",
-            "https://twitter.com/cuevana3",
-            "https://www.instagram.com/cuevana3"
-          ]
-        }
-      ];
+        };
+      }
     }
 
     const script = document.createElement('script');
