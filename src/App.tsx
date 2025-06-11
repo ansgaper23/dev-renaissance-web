@@ -12,6 +12,7 @@ import GenrePage from "./pages/GenrePage";
 import Admin from "./pages/Admin";
 import MovieDetail from "./pages/MovieDetail";
 import SeriesDetail from "./pages/SeriesDetail";
+import Search from "./pages/Search";
 import NotFound from "./pages/NotFound";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/series" element={<Series />} />
               <Route path="/genres" element={<Genres />} />
               <Route path="/genre/:genre" element={<GenrePage />} />
+              <Route path="/search" element={<Search />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminRoute element={<Admin />} />} />
               <Route path="/movie/:slug" element={<MovieDetail />} />

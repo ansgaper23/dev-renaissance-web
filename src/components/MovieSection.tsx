@@ -63,7 +63,7 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
   const [isHovered, setIsHovered] = React.useState(false);
 
   const posterUrl = movie.poster_path 
-    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+    ? (movie.poster_path.startsWith('http') ? movie.poster_path : `https://image.tmdb.org/t/p/w500${movie.poster_path}`)
     : '/placeholder.svg';
 
   // Generar slug para la URL basado en el título de la película
@@ -97,7 +97,7 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
             )}
             
             {/* Rating badge */}
-            {movie.rating && (
+            {movie.rating && movie.rating > 0 && (
               <div className="absolute top-2 left-2 bg-cuevana-bg/80 text-cuevana-gold text-xs font-bold px-2 py-1 rounded flex items-center">
                 <Star className="h-3 w-3 mr-1 fill-current" />
                 {movie.rating}
@@ -108,8 +108,13 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
             <h3 className="text-sm font-medium text-cuevana-white truncate">{movie.title}</h3>
             <div className="flex justify-between items-center mt-1">
               <span className="text-xs text-cuevana-white/70">
-                {movie.release_date ? new Date(movie.release_date).getFullYear() : 'N/A'}
+                {movie.release_date ? new Date(movie.release_date).getFullYear() : 'Sin año'}
               </span>
+              {movie.genres && movie.genres.length > 0 && (
+                <span className="text-xs text-cuevana-white/50">
+                  {movie.genres[0]}
+                </span>
+              )}
             </div>
           </CardContent>
         </Card>

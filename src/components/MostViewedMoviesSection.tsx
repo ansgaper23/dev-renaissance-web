@@ -51,8 +51,11 @@ const MostViewedMoviesSection = ({ title, viewAllLink, limit = 6 }: MostViewedMo
       (movie.poster_path.startsWith('http') ? movie.poster_path : `https://image.tmdb.org/t/p/w500${movie.poster_path}`) : 
       '/placeholder.svg',
     rating: movie.rating || 0,
-    year: movie.release_date ? new Date(movie.release_date).getFullYear() : new Date().getFullYear(),
-    genre: movie.genres ? movie.genres[0] : 'Sin género'
+    year: movie.release_date ? new Date(movie.release_date).getFullYear() : null,
+    genre: (movie.genres && movie.genres.length > 0) ? movie.genres[0] : null,
+    // Mantener datos originales para el slug
+    release_date: movie.release_date,
+    poster_path: movie.poster_path
   }));
 
   return (

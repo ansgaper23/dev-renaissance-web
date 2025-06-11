@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -115,22 +116,25 @@ export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
     const movieSlug = generateSlug(movie.title);
     const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : '';
     
-    // Probar diferentes variaciones del slug
+    // Generar todas las variaciones posibles del slug
     const slugVariations = [
-      movieSlug,
-      releaseYear ? `${movieSlug}-${releaseYear}` : null,
-      // También probar sin año en caso de que el slug venga con año pero la película no tenga fecha
-      slug.replace(/-\d{4}$/, '')
+      movieSlug, // titulo-de-pelicula
+      releaseYear ? `${movieSlug}-${releaseYear}` : null, // titulo-de-pelicula-2024
     ].filter(Boolean);
     
-    console.log(`Comparing slug variations:`, slugVariations, `against:`, slug);
+    console.log(`Movie "${movie.title}": generated slugs:`, slugVariations, `comparing against:`, slug);
     
-    return slugVariations.some(variation => variation === slug) || 
-           slugVariations.some(variation => generateSlug(variation || '') === slug);
+    // Verificar si alguna variación coincide exactamente con el slug buscado
+    return slugVariations.includes(slug);
   });
   
   if (!movie) {
     console.error("Movie not found for slug:", slug);
+    console.log("Available movie slugs:", movies?.map(m => {
+      const movieSlug = generateSlug(m.title);
+      const releaseYear = m.release_date ? new Date(m.release_date).getFullYear() : '';
+      return releaseYear ? `${movieSlug}-${releaseYear}` : movieSlug;
+    }));
     throw new Error('Película no encontrada');
   }
   
