@@ -50,8 +50,12 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
     : '/placeholder.svg';
 
-  // Generar slug para la URL
+  // Generar slug para la URL basado en el título de la película
   const movieSlug = generateSlug(movie.title);
+  const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : '';
+  
+  // Crear slug completo con año si está disponible
+  const fullSlug = releaseYear ? `${movieSlug}-${releaseYear}` : movieSlug;
 
   return (
     <motion.div
@@ -62,7 +66,7 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link to={`/movie/${movieSlug}`}>
+      <Link to={`/movie/${fullSlug}`}>
         <Card className="overflow-hidden bg-cuevana-gray-100 border-cuevana-gray-200 transition-all duration-300 hover:scale-105">
           <div className="relative aspect-[2/3] overflow-hidden">
             <img

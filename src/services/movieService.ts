@@ -82,7 +82,7 @@ export const fetchMovieById = async (id: string): Promise<Movie> => {
   return data as Movie;
 };
 
-// Nueva función para buscar película por slug (título) - mejorada
+// Función mejorada para buscar película por slug
 export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
   console.log("Searching for movie with slug:", slug);
   
@@ -113,8 +113,20 @@ export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
   // Encontrar la película que coincida con el slug
   const movie = movies?.find(movie => {
     const movieSlug = generateSlug(movie.title);
-    console.log(`Comparing: "${movieSlug}" === "${slug}"`);
-    return movieSlug === slug;
+    const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : '';
+    
+    // Probar diferentes variaciones del slug
+    const slugVariations = [
+      movieSlug,
+      releaseYear ? `${movieSlug}-${releaseYear}` : null,
+      // También probar sin año en caso de que el slug venga con año pero la película no tenga fecha
+      slug.replace(/-\d{4}$/, '')
+    ].filter(Boolean);
+    
+    console.log(`Comparing slug variations:`, slugVariations, `against:`, slug);
+    
+    return slugVariations.some(variation => variation === slug) || 
+           slugVariations.some(variation => generateSlug(variation || '') === slug);
   });
   
   if (!movie) {
