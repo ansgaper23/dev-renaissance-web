@@ -45,6 +45,7 @@ export const generateSlug = (title: string): string => {
     .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/-+/g, '-') // Replace multiple hyphens with single
+    .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
     .trim();
 };
 
@@ -81,24 +82,47 @@ export const fetchMovieById = async (id: string): Promise<Movie> => {
   return data as Movie;
 };
 
-// Nueva función para buscar película por slug (título)
+// Nueva función para buscar película por slug (título) - mejorada
 export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
-  // Primero intentamos buscar por título exacto convertido a slug
+  console.log("Searching for movie with slug:", slug);
+  
+  // Primero intentamos buscar por ID directo (si el slug es un UUID)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(slug)) {
+    try {
+      const movie = await fetchMovieById(slug);
+      console.log("Found movie by ID:", movie);
+      return movie;
+    } catch (error) {
+      console.log("Movie not found by ID, trying slug search");
+    }
+  }
+  
+  // Buscar todas las películas para hacer la comparación de slug
   const { data: movies, error } = await supabase
     .from('movies')
     .select('*');
     
   if (error) {
+    console.error("Error fetching movies:", error);
     throw new Error(error.message);
   }
   
+  console.log("Available movies:", movies?.length);
+  
   // Encontrar la película que coincida con el slug
-  const movie = movies.find(movie => generateSlug(movie.title) === slug);
+  const movie = movies?.find(movie => {
+    const movieSlug = generateSlug(movie.title);
+    console.log(`Comparing: "${movieSlug}" === "${slug}"`);
+    return movieSlug === slug;
+  });
   
   if (!movie) {
+    console.error("Movie not found for slug:", slug);
     throw new Error('Película no encontrada');
   }
   
+  console.log("Found movie:", movie);
   return movie as Movie;
 };
 

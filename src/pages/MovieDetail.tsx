@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchMovieBySlug } from '@/services/movieService';
 import Navbar from '@/components/Navbar';
@@ -8,19 +8,24 @@ import Footer from '@/components/Footer';
 import VideoPlayer from '@/components/VideoPlayer';
 import SEOHead from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
-import { Play, Star, Calendar, Clock, Tag, Heart } from 'lucide-react';
+import { Play, Star, Calendar, Clock, Tag, Heart, ArrowLeft } from 'lucide-react';
 import ShareButton from '@/components/ShareButton';
 import MovieSection from '@/components/MovieSection';
 import { recordMovieView, fetchRelatedMovies } from '@/services/movieService';
 
 const MovieDetail = () => {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const [selectedServer, setSelectedServer] = useState(0);
 
   const { data: movie, isLoading, error } = useQuery({
     queryKey: ['movie', slug],
     queryFn: () => fetchMovieBySlug(slug!),
     enabled: !!slug,
+    retry: (failureCount, error) => {
+      console.error(`Attempt ${failureCount + 1} failed:`, error);
+      return failureCount < 2; // Retry up to 2 times
+    }
   });
 
   // Query para películas relacionadas
@@ -42,7 +47,10 @@ const MovieDetail = () => {
       <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
         <Navbar />
         <div className="container mx-auto px-4 py-20 text-center">
-          Cargando...
+          <div className="flex flex-col items-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cuevana-blue"></div>
+            <p className="text-lg">Cargando película...</p>
+          </div>
         </div>
         <Footer />
       </div>
@@ -50,11 +58,27 @@ const MovieDetail = () => {
   }
 
   if (error || !movie) {
+    console.error("Error loading movie:", error);
     return (
       <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
         <Navbar />
         <div className="container mx-auto px-4 py-20 text-center">
-          Error al cargar la película
+          <div className="flex flex-col items-center space-y-4">
+            <h2 className="text-2xl font-bold text-red-400">Error al cargar la película</h2>
+            <p className="text-cuevana-white/70">
+              {error?.message || 'No se pudo encontrar la película solicitada'}
+            </p>
+            <p className="text-sm text-cuevana-white/50">
+              Slug buscado: {slug}
+            </p>
+            <Button 
+              onClick={() => navigate('/')}
+              className="bg-cuevana-blue hover:bg-cuevana-blue/90 flex items-center gap-2"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              Volver al inicio
+            </Button>
+          </div>
         </div>
         <Footer />
       </div>
