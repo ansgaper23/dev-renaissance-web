@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -100,7 +101,7 @@ const MovieDetail = () => {
   const genres = Array.isArray(movie.genres) ? movie.genres.join(', ') : 'Sin género';
   const runtime = movie.runtime ? `${movie.runtime} min` : 'Duración no disponible';
 
-  // Transformar películas relacionadas para MovieSection
+  // Transformar películas relacionadas para MovieSection - CORREGIDO
   const transformedRelatedMovies = relatedMovies.map(relatedMovie => ({
     id: relatedMovie.id,
     title: relatedMovie.title,
@@ -108,8 +109,11 @@ const MovieDetail = () => {
       (relatedMovie.poster_path.startsWith('http') ? relatedMovie.poster_path : `https://image.tmdb.org/t/p/w500${relatedMovie.poster_path}`) : 
       '/placeholder.svg',
     rating: relatedMovie.rating || 0,
-    year: relatedMovie.release_date ? new Date(relatedMovie.release_date).getFullYear() : new Date().getFullYear(),
-    genre: relatedMovie.genres ? relatedMovie.genres[0] : 'Sin género'
+    year: relatedMovie.release_date ? new Date(relatedMovie.release_date).getFullYear() : null,
+    genre: (relatedMovie.genres && relatedMovie.genres.length > 0) ? relatedMovie.genres[0] : null,
+    // Mantener datos originales para el slug
+    release_date: relatedMovie.release_date,
+    poster_path: relatedMovie.poster_path
   }));
 
   return (
