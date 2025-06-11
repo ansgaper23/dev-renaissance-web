@@ -59,6 +59,7 @@ const MostViewedMoviesSection = ({ title, viewAllLink, limit = 6 }: MostViewedMo
     <MovieSection 
       title={title}
       movies={transformedMovies}
+      isLoading={false}
       viewAllLink={viewAllLink}
     />
   );

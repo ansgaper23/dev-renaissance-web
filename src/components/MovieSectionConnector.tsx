@@ -61,6 +61,7 @@ const MovieSectionConnector = ({ title, viewAllLink, limit = 6, sortBy = 'create
     <MovieSection 
       title={title}
       movies={transformedMovies}
+      isLoading={false}
       viewAllLink={viewAllLink}
     />
   );
