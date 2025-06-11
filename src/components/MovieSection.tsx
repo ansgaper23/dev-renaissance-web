@@ -1,109 +1,120 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
-
-interface Movie {
-  id: string | number; // Permitir tanto string (UUID) como number para compatibilidad
-  title: string;
-  posterUrl: string;
-  rating: number;
-  year: number;
-  genre: string;
-}
+import { Card, CardContent } from '@/components/ui/card';
+import { Star, Play, ChevronRight } from 'lucide-react';
+import { Movie, generateSlug } from '@/services/movieService';
 
 interface MovieSectionProps {
   title: string;
   movies: Movie[];
+  isLoading: boolean;
   viewAllLink?: string;
 }
 
-const MovieSection = ({ title, movies, viewAllLink }: MovieSectionProps) => {
-  const scrollRef = React.useRef<HTMLDivElement>(null);
+const MovieSection = ({ title, movies, isLoading, viewAllLink }: MovieSectionProps) => {
+  if (isLoading) {
+    return (
+      <section className="px-4 md:px-8 py-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl md:text-2xl font-bold text-cuevana-white">{title}</h2>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="animate-pulse">
+              <div className="bg-cuevana-gray-100 aspect-[2/3] rounded-lg mb-2"></div>
+              <div className="bg-cuevana-gray-100 h-4 rounded mb-1"></div>
+              <div className="bg-cuevana-gray-100 h-3 rounded w-2/3"></div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollRef.current) {
-      const scrollAmount = 300;
-      scrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
+  if (movies.length === 0) {
+    return null;
+  }
 
   return (
-    <section className="py-8">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-cuevana-white">{title}</h2>
-          {viewAllLink && (
-            <Link to={viewAllLink}>
-              <Button variant="outline" className="border-cuevana-blue text-cuevana-blue hover:bg-cuevana-blue hover:text-white">
-                Ver todas
-              </Button>
-            </Link>
-          )}
-        </div>
-
-        <div className="relative group">
-          <button
-            onClick={() => scroll('left')}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-r-lg opacity-0 group-hover:opacity-100 transition-opacity"
+    <section className="px-4 md:px-8 py-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl md:text-2xl font-bold text-cuevana-white">{title}</h2>
+        {viewAllLink && (
+          <Link 
+            to={viewAllLink}
+            className="flex items-center text-cuevana-blue hover:text-cuevana-blue/80 transition-colors text-sm font-medium"
           >
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-
-          <div
-            ref={scrollRef}
-            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {movies.map((movie) => (
-              <Link 
-                key={movie.id} 
-                to={`/movie/${movie.id}`} // Usar el ID real (UUID o número)
-                className="flex-shrink-0 group cursor-pointer"
-              >
-                <div className="w-48 transform transition-transform group-hover:scale-105">
-                  <div className="relative">
-                    <img
-                      src={movie.posterUrl}
-                      alt={movie.title}
-                      className="w-full h-72 object-cover rounded-lg shadow-lg"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="flex items-center gap-2 text-white">
-                        <Star className="h-4 w-4 text-cuevana-gold fill-current" />
-                        <span className="text-sm">{movie.rating}/10</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <h3 className="text-cuevana-white font-medium text-sm line-clamp-2 mb-1">
-                      {movie.title}
-                    </h3>
-                    <div className="flex items-center justify-between text-xs text-cuevana-white/70">
-                      <span>{movie.year}</span>
-                      <span>{movie.genre}</span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          <button
-            onClick={() => scroll('right')}
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-l-lg opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <ChevronRight className="h-6 w-6" />
-          </button>
-        </div>
+            Ver todo <ChevronRight className="h-4 w-4 ml-1" />
+          </Link>
+        )}
+      </div>
+      
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {movies.map((movie) => (
+          <MovieCard key={movie.id} movie={movie} />
+        ))}
       </div>
     </section>
+  );
+};
+
+const MovieCard = ({ movie }: { movie: Movie }) => {
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  const posterUrl = movie.poster_path 
+    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+    : '/placeholder.svg';
+
+  // Generar slug para la URL basado en el título de la película
+  const movieSlug = generateSlug(movie.title);
+  const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : '';
+  
+  // Crear slug completo con año si está disponible
+  const fullSlug = releaseYear ? `${movieSlug}-${releaseYear}` : movieSlug;
+
+  return (
+    <div
+      className="relative group cursor-pointer"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <Link to={`/movie/${fullSlug}`}>
+        <Card className="overflow-hidden bg-cuevana-gray-100 border-cuevana-gray-200 transition-all duration-300 hover:scale-105">
+          <div className="relative aspect-[2/3] overflow-hidden">
+            <img
+              src={posterUrl}
+              alt={movie.title}
+              className="w-full h-full object-cover transition-transform duration-300"
+              style={{ transform: isHovered ? 'scale(1.05)' : 'scale(1)' }}
+            />
+            {isHovered && (
+              <div className="absolute inset-0 bg-cuevana-bg/70 flex items-center justify-center">
+                <div className="bg-cuevana-blue rounded-full p-3 text-white">
+                  <Play className="h-6 w-6" />
+                </div>
+              </div>
+            )}
+            
+            {/* Rating badge */}
+            {movie.rating && (
+              <div className="absolute top-2 left-2 bg-cuevana-bg/80 text-cuevana-gold text-xs font-bold px-2 py-1 rounded flex items-center">
+                <Star className="h-3 w-3 mr-1 fill-current" />
+                {movie.rating}
+              </div>
+            )}
+          </div>
+          <CardContent className="p-2 pt-3 px-0">
+            <h3 className="text-sm font-medium text-cuevana-white truncate">{movie.title}</h3>
+            <div className="flex justify-between items-center mt-1">
+              <span className="text-xs text-cuevana-white/70">
+                {movie.release_date ? new Date(movie.release_date).getFullYear() : 'N/A'}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+    </div>
   );
 };
 

@@ -57,6 +57,8 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
   // Crear slug completo con año si está disponible
   const fullSlug = releaseYear ? `${movieSlug}-${releaseYear}` : movieSlug;
 
+  console.log(`Movie: ${movie.title}, Generated slug: ${fullSlug}`);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
