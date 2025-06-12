@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -255,7 +254,7 @@ export const recordMovieView = async (movieId: string): Promise<void> => {
   }
 };
 
-// Simplified related movies function with basic implementation
+// Simplified related movies function with explicit typing
 export const fetchRelatedMovies = async (movieId: string, genres: string[]): Promise<Movie[]> => {
   if (!genres || genres.length === 0) {
     return [];
@@ -277,14 +276,19 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
       return [];
     }
 
-    // Simple filtering without complex type inference
-    const relatedMovies = data.filter(movie => {
-      if (!movie.genres || !Array.isArray(movie.genres)) {
-        return false;
+    // Explicit type casting and filtering
+    const relatedMovies: Movie[] = [];
+    
+    for (const row of data) {
+      if (row.genres && Array.isArray(row.genres)) {
+        const movieGenres = row.genres as string[];
+        const hasMatchingGenre = movieGenres.some(genre => genres.includes(genre));
+        
+        if (hasMatchingGenre) {
+          relatedMovies.push(convertToMovie(row));
+        }
       }
-      
-      return movie.genres.some((genre: string) => genres.includes(genre));
-    }).map(convertToMovie);
+    }
 
     return relatedMovies;
   } catch (error) {
