@@ -254,7 +254,7 @@ export const recordMovieView = async (movieId: string): Promise<void> => {
   }
 };
 
-// Simplified related movies function to avoid type inference issues
+// Simplified related movies function with explicit typing
 export const fetchRelatedMovies = async (movieId: string, genres: string[]): Promise<Movie[]> => {
   if (!genres || genres.length === 0) {
     return [];
@@ -276,15 +276,25 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
       return [];
     }
 
-    // Use a simple for loop to avoid complex type inference
+    // Explicit typing to avoid inference issues
     const relatedMovies: Movie[] = [];
-    for (const movieData of data) {
-      if (movieData.genres && Array.isArray(movieData.genres)) {
-        for (const genre of movieData.genres) {
-          if (genres.includes(genre)) {
-            relatedMovies.push(convertToMovie(movieData));
-            break; // Only add once per movie
+    
+    for (let i = 0; i < data.length; i++) {
+      const movieData = data[i];
+      const movieGenres = movieData.genres;
+      
+      if (movieGenres && Array.isArray(movieGenres)) {
+        let hasMatchingGenre = false;
+        
+        for (let j = 0; j < movieGenres.length; j++) {
+          if (genres.includes(movieGenres[j])) {
+            hasMatchingGenre = true;
+            break;
           }
+        }
+        
+        if (hasMatchingGenre) {
+          relatedMovies.push(convertToMovie(movieData));
         }
       }
     }
