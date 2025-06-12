@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -258,19 +259,25 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
     return [];
   }
 
+  // Use a simpler approach to avoid type inference issues
   const { data, error } = await supabase
     .from('movies')
     .select('*')
-    .neq('id', movieId) // Exclude the current movie
-    .contains('genres', genres) // Filter by genres
-    .limit(10); // Limit to a reasonable number of related movies
+    .neq('id', movieId)
+    .limit(10);
 
   if (error) {
     console.error("Error fetching related movies:", error);
     return [];
   }
 
-  return (data || []).map(convertToMovie);
+  // Filter by genres in JavaScript to avoid complex SQL type issues
+  const relatedMovies = (data || []).filter(movie => {
+    if (!movie.genres || !Array.isArray(movie.genres)) return false;
+    return movie.genres.some((genre: string) => genres.includes(genre));
+  });
+
+  return relatedMovies.map(convertToMovie);
 };
 
 // Función para buscar por IMDB ID
