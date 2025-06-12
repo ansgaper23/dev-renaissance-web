@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -185,10 +184,14 @@ export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
     .from('movies')
     .select('*')
     .eq('slug', slug)
-    .single();
+    .maybeSingle();
     
   if (error) {
     throw new Error(error.message);
+  }
+  
+  if (!data) {
+    throw new Error('Movie not found');
   }
   
   return convertToMovie(data);
@@ -450,7 +453,7 @@ export const importMovieFromTMDB = async (tmdbMovie: TMDBMovieResult & { imdb_id
     runtime: tmdbMovie.runtime,
     stream_servers: streamServers.filter(server => server.url.trim() !== '')
   };
-
+  
   return addMovie(movieData);
 };
 
