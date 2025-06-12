@@ -43,25 +43,14 @@ const MostViewedMoviesSection = ({ title, viewAllLink, limit = 6 }: MostViewedMo
     );
   }
 
-  // Transformar los datos para que coincidan con la interfaz del MovieSection
-  const transformedMovies = movies.slice(0, limit).map(movie => ({
-    id: movie.id,
-    title: movie.title,
-    posterUrl: movie.poster_path ? 
-      (movie.poster_path.startsWith('http') ? movie.poster_path : `https://image.tmdb.org/t/p/w500${movie.poster_path}`) : 
-      '/placeholder.svg',
-    rating: movie.rating || 0,
-    year: movie.release_date ? new Date(movie.release_date).getFullYear() : null,
-    genre: (movie.genres && movie.genres.length > 0) ? movie.genres[0] : null,
-    // Mantener datos originales para el slug
-    release_date: movie.release_date,
-    poster_path: movie.poster_path
-  }));
+  // Ensure movies is an array and slice it properly
+  const moviesArray = Array.isArray(movies) ? movies : [];
+  const limitedMovies = moviesArray.slice(0, limit);
 
   return (
     <MovieSection 
       title={title}
-      movies={transformedMovies}
+      movies={limitedMovies}
       isLoading={false}
       viewAllLink={viewAllLink}
     />

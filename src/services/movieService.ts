@@ -31,6 +31,18 @@ export interface MovieCreate extends Omit<Partial<Movie>, 'title'> {
   title: string; // Title is required
 }
 
+// Admin authentication interfaces
+export interface AdminCredentials {
+  email: string;
+  password: string;
+}
+
+export interface AdminSession {
+  authenticated: boolean;
+  email: string;
+  expiresAt: number;
+}
+
 // Helper function to convert database row to Movie
 const convertToMovie = (row: any): Movie => {
   return {
@@ -51,6 +63,62 @@ const convertToDbFormat = (movie: Partial<Movie>) => {
   return dbData;
 };
 
+// Generate slug from movie title
+export const generateSlug = (title: string): string => {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .trim();
+};
+
+// Admin authentication functions
+export const adminLogin = async (credentials: AdminCredentials): Promise<void> => {
+  const { data, error } = await supabase
+    .from('admins')
+    .select('*')
+    .eq('email', credentials.email)
+    .eq('password', credentials.password)
+    .single();
+
+  if (error || !data) {
+    throw new Error('Invalid credentials');
+  }
+
+  // Store session in localStorage
+  const session: AdminSession = {
+    authenticated: true,
+    email: data.email,
+    expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+  };
+
+  localStorage.setItem('adminSession', JSON.stringify(session));
+};
+
+export const getAdminSession = (): AdminSession | null => {
+  try {
+    const sessionStr = localStorage.getItem('adminSession');
+    if (!sessionStr) return null;
+
+    const session: AdminSession = JSON.parse(sessionStr);
+    
+    // Check if session is expired
+    if (Date.now() > session.expiresAt) {
+      localStorage.removeItem('adminSession');
+      return null;
+    }
+
+    return session;
+  } catch {
+    return null;
+  }
+};
+
+export const adminLogout = (): void => {
+  localStorage.removeItem('adminSession');
+};
+
 export const fetchMovies = async (searchTerm: string = ''): Promise<Movie[]> => {
   let query = supabase
     .from('movies')
@@ -63,6 +131,20 @@ export const fetchMovies = async (searchTerm: string = ''): Promise<Movie[]> => 
   
   const { data, error } = await query;
   
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  return (data || []).map(convertToMovie);
+};
+
+export const fetchMostViewedMovies = async (): Promise<Movie[]> => {
+  const { data, error } = await supabase
+    .from('most_viewed_movies')
+    .select('*')
+    .order('view_count', { ascending: false })
+    .limit(20);
+    
   if (error) {
     throw new Error(error.message);
   }
@@ -157,8 +239,14 @@ export const getTotalMoviesCount = async (): Promise<number> => {
 };
 
 export const recordMovieView = async (movieId: string): Promise<void> => {
+  // Insert a new view record instead of using RPC function
   const { error } = await supabase
-    .rpc('increment_movie_views', { movie_id: movieId });
+    .from('movie_views')
+    .insert({
+      movie_id: movieId,
+      ip_address: '127.0.0.1', // Default IP for now
+      viewed_at: new Date().toISOString()
+    });
     
   if (error) {
     console.error("Error recording movie view:", error);
@@ -169,9 +257,6 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
   if (!genres || genres.length === 0) {
     return [];
   }
-
-  // Construct the filter string for genres
-  const genreFilter = genres.map(genre => `'${genre}'`).join(',');
 
   const { data, error } = await supabase
     .from('movies')
@@ -185,7 +270,7 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
     return [];
   }
 
-  return data.map(convertToMovie);
+  return (data || []).map(convertToMovie);
 };
 
 // Función para buscar por IMDB ID
