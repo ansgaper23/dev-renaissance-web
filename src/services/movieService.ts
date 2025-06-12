@@ -253,30 +253,39 @@ export const recordMovieView = async (movieId: string): Promise<void> => {
   }
 };
 
+// Simplified related movies function to avoid type inference issues
 export const fetchRelatedMovies = async (movieId: string, genres: string[]): Promise<Movie[]> => {
   if (!genres || genres.length === 0) {
     return [];
   }
 
-  // Use a simpler approach to avoid type inference issues
-  const { data, error } = await supabase
-    .from('movies')
-    .select('*')
-    .neq('id', movieId)
-    .limit(10);
+  try {
+    const { data, error } = await supabase
+      .from('movies')
+      .select('*')
+      .neq('id', movieId)
+      .limit(10);
 
-  if (error) {
-    console.error("Error fetching related movies:", error);
+    if (error) {
+      console.error("Error fetching related movies:", error);
+      return [];
+    }
+
+    if (!data) {
+      return [];
+    }
+
+    // Filter by genres in JavaScript to avoid complex SQL type issues
+    const filteredMovies = data.filter((movie: any) => {
+      if (!movie.genres || !Array.isArray(movie.genres)) return false;
+      return movie.genres.some((genre: string) => genres.includes(genre));
+    });
+
+    return filteredMovies.map(convertToMovie);
+  } catch (error) {
+    console.error("Error in fetchRelatedMovies:", error);
     return [];
   }
-
-  // Filter by genres in JavaScript to avoid complex SQL type issues
-  const relatedMovies = (data || []).filter(movie => {
-    if (!movie.genres || !Array.isArray(movie.genres)) return false;
-    return movie.genres.some((genre: string) => genres.includes(genre));
-  });
-
-  return relatedMovies.map(convertToMovie);
 };
 
 // Simplified IMDB search function with explicit typing
