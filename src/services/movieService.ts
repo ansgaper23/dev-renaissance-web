@@ -288,8 +288,26 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
   }
 };
 
+// Define explicit interface for TMDB response to avoid type inference issues
+interface TMDBMovieResult {
+  id: number;
+  title: string;
+  original_title: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  overview: string;
+  release_date: string;
+  genre_ids: number[];
+  vote_average: number;
+  runtime?: number;
+}
+
+interface TMDBSearchResponse {
+  movie_results: TMDBMovieResult[];
+}
+
 // Simplified IMDB search function with explicit typing
-export const searchMovieByIMDBId = async (imdbId: string): Promise<any> => {
+export const searchMovieByIMDBId = async (imdbId: string): Promise<TMDBMovieResult & { imdb_id: string; type: string }> => {
   try {
     console.log("Searching for IMDB ID:", imdbId);
     
@@ -302,15 +320,15 @@ export const searchMovieByIMDBId = async (imdbId: string): Promise<any> => {
       throw new Error('Error al buscar en TMDB');
     }
     
-    const data: any = await response.json();
+    const data: TMDBSearchResponse = await response.json();
     console.log("TMDB search result:", data);
     
     if (data.movie_results && data.movie_results.length > 0) {
-      const movie: any = data.movie_results[0];
+      const movie = data.movie_results[0];
       
       const detailsUrl = `https://api.themoviedb.org/3/movie/${movie.id}?api_key=${tmdbApiKey}&append_to_response=videos,external_ids&language=es-ES`;
       const detailsResponse = await fetch(detailsUrl);
-      const movieDetails: any = await detailsResponse.json();
+      const movieDetails: TMDBMovieResult = await detailsResponse.json();
       
       return {
         ...movieDetails,
@@ -349,7 +367,7 @@ const TMDB_GENRES: { [key: number]: string } = {
   37: "Western"
 };
 
-export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
+export const importMovieFromTMDB = async (tmdbMovie: TMDBMovieResult & { imdb_id?: string; type?: string }, streamServers: Array<{
   name: string;
   url: string;
   quality?: string;
@@ -374,7 +392,6 @@ export const importMovieFromTMDB = async (tmdbMovie: any, streamServers: Array<{
     genre_ids: tmdbMovie.genre_ids,
     rating: tmdbMovie.vote_average,
     runtime: tmdbMovie.runtime,
-    trailer_url: tmdbMovie.trailer_url,
     stream_servers: streamServers.filter(server => server.url.trim() !== '')
   };
 
