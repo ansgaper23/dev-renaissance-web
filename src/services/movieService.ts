@@ -158,18 +158,22 @@ export const fetchMovieById = async (id: string): Promise<Movie> => {
 
 export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
   try {
-    const query = supabase.from('movies').select('*').eq('slug', slug);
-    const { data, error } = await query.maybeSingle();
+    // Use explicit type annotation to avoid type inference issues
+    const response = await supabase
+      .from('movies')
+      .select('*')
+      .eq('slug', slug)
+      .limit(1);
     
-    if (error) {
-      throw new Error(error.message);
+    if (response.error) {
+      throw new Error(response.error.message);
     }
     
-    if (!data) {
+    if (!response.data || response.data.length === 0) {
       throw new Error('Movie not found');
     }
     
-    return convertToMovie(data);
+    return convertToMovie(response.data[0]);
   } catch (error) {
     throw error instanceof Error ? error : new Error('Failed to fetch movie');
   }
