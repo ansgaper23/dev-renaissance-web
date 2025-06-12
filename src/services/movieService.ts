@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -53,16 +54,27 @@ const convertToMovie = (row: any): Movie => {
 };
 
 // Simplified helper function to convert Movie to database format
-const convertToDbFormat = (movie: Partial<Movie>) => {
-  // Create a simple copy without complex type operations
-  const dbData = { ...movie };
-  
-  // Handle stream_servers specifically
-  if (movie.stream_servers && Array.isArray(movie.stream_servers)) {
-    dbData.stream_servers = movie.stream_servers;
-  }
-  
-  return dbData;
+const convertToDbFormat = (movie: any) => {
+  // Simple object spread without complex type operations
+  return {
+    id: movie.id,
+    tmdb_id: movie.tmdb_id,
+    title: movie.title,
+    original_title: movie.original_title,
+    poster_path: movie.poster_path,
+    backdrop_path: movie.backdrop_path,
+    overview: movie.overview,
+    release_date: movie.release_date,
+    genres: movie.genres,
+    genre_ids: movie.genre_ids,
+    rating: movie.rating,
+    runtime: movie.runtime,
+    trailer_url: movie.trailer_url,
+    stream_url: movie.stream_url,
+    stream_servers: movie.stream_servers,
+    created_at: movie.created_at,
+    updated_at: movie.updated_at
+  };
 };
 
 // Generate slug from movie title
@@ -183,11 +195,27 @@ export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
 };
 
 export const addMovie = async (movie: MovieCreate): Promise<Movie> => {
-  const dbData = convertToDbFormat(movie);
+  // Create a simple object with only the fields we need
+  const movieData = {
+    title: movie.title,
+    tmdb_id: movie.tmdb_id || null,
+    original_title: movie.original_title || null,
+    poster_path: movie.poster_path || null,
+    backdrop_path: movie.backdrop_path || null,
+    overview: movie.overview || null,
+    release_date: movie.release_date || null,
+    genres: movie.genres || null,
+    genre_ids: movie.genre_ids || null,
+    rating: movie.rating || null,
+    runtime: movie.runtime || null,
+    trailer_url: movie.trailer_url || null,
+    stream_url: movie.stream_url || null,
+    stream_servers: movie.stream_servers || []
+  };
   
   const { data, error } = await supabase
     .from('movies')
-    .insert(dbData)
+    .insert(movieData)
     .select()
     .single();
     
@@ -199,11 +227,14 @@ export const addMovie = async (movie: MovieCreate): Promise<Movie> => {
 };
 
 export const updateMovie = async (id: string, updates: Partial<Movie>): Promise<Movie> => {
-  const dbData = convertToDbFormat({ ...updates, updated_at: new Date().toISOString() });
+  const updateData = {
+    ...updates,
+    updated_at: new Date().toISOString()
+  };
   
   const { data, error } = await supabase
     .from('movies')
-    .update(dbData)
+    .update(updateData)
     .eq('id', id)
     .select()
     .single();
