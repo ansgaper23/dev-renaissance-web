@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -275,13 +276,20 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
       return [];
     }
 
-    // Filter by genres in JavaScript to avoid complex SQL type issues
-    const filteredMovies = data.filter((movie: any) => {
-      if (!movie.genres || !Array.isArray(movie.genres)) return false;
-      return movie.genres.some((genre: string) => genres.includes(genre));
-    });
+    // Use a simple for loop to avoid complex type inference
+    const relatedMovies: Movie[] = [];
+    for (const movieData of data) {
+      if (movieData.genres && Array.isArray(movieData.genres)) {
+        for (const genre of movieData.genres) {
+          if (genres.includes(genre)) {
+            relatedMovies.push(convertToMovie(movieData));
+            break; // Only add once per movie
+          }
+        }
+      }
+    }
 
-    return filteredMovies.map(convertToMovie);
+    return relatedMovies;
   } catch (error) {
     console.error("Error in fetchRelatedMovies:", error);
     return [];
