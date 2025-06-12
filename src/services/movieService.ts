@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -254,16 +255,17 @@ export const recordMovieView = async (movieId: string): Promise<void> => {
   }
 };
 
-// Simplified related movies function with explicit typing
+// Fixed related movies function with proper typing
 export const fetchRelatedMovies = async (movieId: string, genres: string[]): Promise<Movie[]> => {
   if (!genres || genres.length === 0) {
     return [];
   }
 
   try {
+    // Use specific column selection to avoid type inference issues
     const { data, error } = await supabase
       .from('movies')
-      .select('*')
+      .select('id, title, poster_path, genres, rating, release_date')
       .neq('id', movieId)
       .limit(10);
 
@@ -276,19 +278,26 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
       return [];
     }
 
-    // Explicit type casting and filtering
+    // Simple filtering with explicit typing
     const relatedMovies: Movie[] = [];
     
-    for (const row of data) {
+    data.forEach((row) => {
       if (row.genres && Array.isArray(row.genres)) {
         const movieGenres = row.genres as string[];
         const hasMatchingGenre = movieGenres.some(genre => genres.includes(genre));
         
         if (hasMatchingGenre) {
-          relatedMovies.push(convertToMovie(row));
+          relatedMovies.push({
+            id: row.id,
+            title: row.title,
+            poster_path: row.poster_path,
+            genres: row.genres,
+            rating: row.rating,
+            release_date: row.release_date
+          } as Movie);
         }
       }
-    }
+    });
 
     return relatedMovies;
   } catch (error) {
