@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -280,12 +281,14 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
 };
 
 // Simplified IMDB search function to avoid type inference issues
-export const searchMovieByIMDBId = async (imdbId: string): Promise<any> => {
+export const searchMovieByIMDBId = async (imdbId: string) => {
   try {
     console.log("Searching for IMDB ID:", imdbId);
     
     const tmdbApiKey = '4a29f0dd1dfdbd0a8b506c7b9e35c506';
-    const response = await fetch(`https://api.themoviedb.org/3/find/${imdbId}?api_key=${tmdbApiKey}&external_source=imdb_id&language=es-ES`);
+    const url = `https://api.themoviedb.org/3/find/${imdbId}?api_key=${tmdbApiKey}&external_source=imdb_id&language=es-ES`;
+    
+    const response = await fetch(url);
     
     if (!response.ok) {
       throw new Error('Error al buscar en TMDB');
@@ -297,7 +300,8 @@ export const searchMovieByIMDBId = async (imdbId: string): Promise<any> => {
     if (data.movie_results && data.movie_results.length > 0) {
       const movie = data.movie_results[0];
       
-      const detailsResponse = await fetch(`https://api.themoviedb.org/3/movie/${movie.id}?api_key=${tmdbApiKey}&append_to_response=videos,external_ids&language=es-ES`);
+      const detailsUrl = `https://api.themoviedb.org/3/movie/${movie.id}?api_key=${tmdbApiKey}&append_to_response=videos,external_ids&language=es-ES`;
+      const detailsResponse = await fetch(detailsUrl);
       const movieDetails = await detailsResponse.json();
       
       return {
