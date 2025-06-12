@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -31,6 +30,16 @@ export interface Movie {
 // For creating a new movie, title is required
 export interface MovieCreate extends Omit<Partial<Movie>, 'title'> {
   title: string; // Title is required
+}
+
+// Simple interface for related movies to avoid type complexity
+interface RelatedMovie {
+  id: string;
+  title: string;
+  poster_path?: string | null;
+  genres?: string[] | null;
+  rating?: number | null;
+  release_date?: string | null;
 }
 
 // Admin authentication interfaces
@@ -279,27 +288,22 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
     }
 
     // Simple filtering with explicit typing
-    const relatedMovies: Movie[] = [];
-    
-    data.forEach((row) => {
-      if (row.genres && Array.isArray(row.genres)) {
-        const movieGenres = row.genres as string[];
-        const hasMatchingGenre = movieGenres.some(genre => genres.includes(genre));
-        
-        if (hasMatchingGenre) {
-          relatedMovies.push({
-            id: row.id,
-            title: row.title,
-            poster_path: row.poster_path,
-            genres: row.genres,
-            rating: row.rating,
-            release_date: row.release_date
-          } as Movie);
-        }
-      }
-    });
+    const relatedMovies: RelatedMovie[] = data
+      .filter((row): row is RelatedMovie => {
+        return row.genres && 
+               Array.isArray(row.genres) && 
+               row.genres.some((genre: string) => genres.includes(genre));
+      });
 
-    return relatedMovies;
+    // Convert to Movie format
+    return relatedMovies.map((movie): Movie => ({
+      id: movie.id,
+      title: movie.title,
+      poster_path: movie.poster_path,
+      genres: movie.genres,
+      rating: movie.rating,
+      release_date: movie.release_date
+    }));
   } catch (error) {
     console.error("Error in fetchRelatedMovies:", error);
     return [];
