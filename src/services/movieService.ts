@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -49,30 +50,6 @@ const convertToMovie = (row: any): Movie => {
   return {
     ...row,
     stream_servers: Array.isArray(row.stream_servers) ? row.stream_servers : [],
-  };
-};
-
-// Simplified helper function to convert Movie to database format
-const convertToDbFormat = (movie: any) => {
-  // Simple object spread without complex type operations
-  return {
-    id: movie.id,
-    tmdb_id: movie.tmdb_id,
-    title: movie.title,
-    original_title: movie.original_title,
-    poster_path: movie.poster_path,
-    backdrop_path: movie.backdrop_path,
-    overview: movie.overview,
-    release_date: movie.release_date,
-    genres: movie.genres,
-    genre_ids: movie.genre_ids,
-    rating: movie.rating,
-    runtime: movie.runtime,
-    trailer_url: movie.trailer_url,
-    stream_url: movie.stream_url,
-    stream_servers: movie.stream_servers,
-    created_at: movie.created_at,
-    updated_at: movie.updated_at
   };
 };
 
@@ -180,21 +157,22 @@ export const fetchMovieById = async (id: string): Promise<Movie> => {
 };
 
 export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
-  const { data, error } = await supabase
-    .from('movies')
-    .select('*')
-    .eq('slug', slug)
-    .maybeSingle();
+  try {
+    const query = supabase.from('movies').select('*').eq('slug', slug);
+    const { data, error } = await query.maybeSingle();
     
-  if (error) {
-    throw new Error(error.message);
+    if (error) {
+      throw new Error(error.message);
+    }
+    
+    if (!data) {
+      throw new Error('Movie not found');
+    }
+    
+    return convertToMovie(data);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('Failed to fetch movie');
   }
-  
-  if (!data) {
-    throw new Error('Movie not found');
-  }
-  
-  return convertToMovie(data);
 };
 
 export const addMovie = async (movie: MovieCreate): Promise<Movie> => {
