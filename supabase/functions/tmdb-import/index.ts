@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -38,8 +37,47 @@ serve(async (req) => {
     }
 
     const apiKey = secretsData.tmdb_api_key;
-    const { movieIds, seriesIds, type = 'movie' } = await req.json();
+    const { movieIds, seriesIds, type = 'movie', tmdb_id } = await req.json();
     
+    // Handle single movie/series import by TMDB ID
+    if (tmdb_id) {
+      try {
+        const detailsUrl = type === 'tv' ? 
+          `https://api.themoviedb.org/3/tv/${tmdb_id}?api_key=${apiKey}&language=es-ES&append_to_response=videos,credits` :
+          `https://api.themoviedb.org/3/movie/${tmdb_id}?api_key=${apiKey}&language=es-ES&append_to_response=videos,credits`;
+        
+        const detailsResponse = await fetch(detailsUrl);
+        const details = await detailsResponse.json();
+        
+        if (details.success === false) {
+          return new Response(
+            JSON.stringify({ error: details.status_message }),
+            { 
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 400 
+            }
+          );
+        }
+
+        return new Response(
+          JSON.stringify(details),
+          { 
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200 
+          }
+        );
+      } catch (error) {
+        console.error("Error fetching details:", error);
+        return new Response(
+          JSON.stringify({ error: error.message }),
+          { 
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 500 
+          }
+        );
+      }
+    }
+
     // Handle series import
     if (type === 'tv' && seriesIds && Array.isArray(seriesIds)) {
       const importedSeries = [];

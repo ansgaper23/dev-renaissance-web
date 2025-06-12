@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,8 @@ interface ServerEntry {
 
 const QuickAddMovie = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [imdbId, setImdbId] = useState('');
+  const [searchMode, setSearchMode] = useState<'tmdb' | 'imdb'>('tmdb');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<any>(null);
@@ -52,30 +53,55 @@ const QuickAddMovie = () => {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
     
-    setIsSearching(true);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('tmdb-search', {
-        body: { query: searchQuery }
-      });
+    if (searchMode === 'tmdb') {
+      if (!searchQuery.trim()) return;
       
-      if (error) {
-        throw new Error(error.message);
+      setIsSearching(true);
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('tmdb-search', {
+          body: { query: searchQuery }
+        });
+        
+        if (error) {
+          throw new Error(error.message);
+        }
+        
+        console.log("TMDB Search results:", data);
+        setSearchResults(data.results || []);
+      } catch (error) {
+        console.error('Error searching TMDB:', error);
+        toast({
+          title: "Error de búsqueda",
+          description: "No se pudo conectar a la API de TMDB. Intente más tarde.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsSearching(false);
       }
+    } else {
+      // IMDB search
+      if (!imdbId.trim()) return;
       
-      console.log("TMDB Search results:", data);
-      setSearchResults(data.results || []);
-    } catch (error) {
-      console.error('Error searching TMDB:', error);
-      toast({
-        title: "Error de búsqueda",
-        description: "No se pudo conectar a la API de TMDB. Intente más tarde.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSearching(false);
+      setIsSearching(true);
+      
+      try {
+        const { searchMovieByIMDBId } = await import('@/services/movieService');
+        const movieData = await searchMovieByIMDBId(imdbId);
+        console.log("IMDB Search result:", movieData);
+        setSelectedMovie(movieData);
+        setImdbId('');
+      } catch (error) {
+        console.error('Error searching IMDB:', error);
+        toast({
+          title: "Error de búsqueda IMDB",
+          description: "No se pudo encontrar la película con ese IMDB ID. Verifique el ID e intente nuevamente.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsSearching(false);
+      }
     }
   };
 
@@ -142,28 +168,61 @@ const QuickAddMovie = () => {
         
         {!selectedMovie ? (
           <>
+            {/* Search Mode Toggle */}
+            <div className="flex gap-2 mb-4">
+              <Button
+                type="button"
+                onClick={() => setSearchMode('tmdb')}
+                className={`${searchMode === 'tmdb' ? 'bg-cuevana-blue' : 'bg-gray-700'} hover:bg-cuevana-blue/90`}
+              >
+                Buscar en TMDB
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setSearchMode('imdb')}
+                className={`${searchMode === 'imdb' ? 'bg-cuevana-blue' : 'bg-gray-700'} hover:bg-cuevana-blue/90`}
+              >
+                Importar por IMDB ID
+              </Button>
+            </div>
+
             <form onSubmit={handleSearch} className="mb-6">
               <div className="flex gap-3">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Buscar película en TMDB..."
-                    className="pl-10 bg-gray-800 border-gray-700 text-white"
-                  />
+                  {searchMode === 'tmdb' ? (
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Buscar película en TMDB..."
+                      className="pl-10 bg-gray-800 border-gray-700 text-white"
+                    />
+                  ) : (
+                    <Input
+                      value={imdbId}
+                      onChange={(e) => setImdbId(e.target.value)}
+                      placeholder="Ej: tt5950044"
+                      className="pl-10 bg-gray-800 border-gray-700 text-white"
+                    />
+                  )}
                 </div>
                 <Button 
                   type="submit" 
                   className="bg-cuevana-blue hover:bg-cuevana-blue/90"
-                  disabled={!searchQuery.trim() || isSearching}
+                  disabled={searchMode === 'tmdb' ? (!searchQuery.trim() || isSearching) : (!imdbId.trim() || isSearching)}
                 >
-                  {isSearching ? 'Buscando...' : 'Buscar'}
+                  {isSearching ? 'Buscando...' : (searchMode === 'tmdb' ? 'Buscar' : 'Importar')}
                 </Button>
               </div>
+              {searchMode === 'imdb' && (
+                <p className="text-gray-400 text-xs mt-2">
+                  Ingrese el ID de IMDB (ejemplo: tt5950044)
+                </p>
+              )}
             </form>
 
-            {searchResults.length > 0 && (
+            {/* Search Results - solo para TMDB */}
+            {searchMode === 'tmdb' && searchResults.length > 0 && (
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 <h4 className="text-white font-medium">Resultados:</h4>
                 {searchResults.slice(0, 5).map((movie) => (

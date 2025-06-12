@@ -19,7 +19,6 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import DMCANotice from "./pages/DMCANotice";
 import AdminLogin from "./components/AdminLogin";
 import AdminRoute from "./components/AdminRoute";
-import Footer from "./components/Footer";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,7 +55,6 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
-          <Footer />
         </div>
       </BrowserRouter>
     </TooltipProvider>
