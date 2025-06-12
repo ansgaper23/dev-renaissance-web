@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -280,8 +279,8 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
   return relatedMovies.map(convertToMovie);
 };
 
-// Simplified IMDB search function to avoid type inference issues
-export const searchMovieByIMDBId = async (imdbId: string) => {
+// Simplified IMDB search function with explicit typing
+export const searchMovieByIMDBId = async (imdbId: string): Promise<any> => {
   try {
     console.log("Searching for IMDB ID:", imdbId);
     
@@ -294,15 +293,15 @@ export const searchMovieByIMDBId = async (imdbId: string) => {
       throw new Error('Error al buscar en TMDB');
     }
     
-    const data = await response.json();
+    const data: any = await response.json();
     console.log("TMDB search result:", data);
     
     if (data.movie_results && data.movie_results.length > 0) {
-      const movie = data.movie_results[0];
+      const movie: any = data.movie_results[0];
       
       const detailsUrl = `https://api.themoviedb.org/3/movie/${movie.id}?api_key=${tmdbApiKey}&append_to_response=videos,external_ids&language=es-ES`;
       const detailsResponse = await fetch(detailsUrl);
-      const movieDetails = await detailsResponse.json();
+      const movieDetails: any = await detailsResponse.json();
       
       return {
         ...movieDetails,
