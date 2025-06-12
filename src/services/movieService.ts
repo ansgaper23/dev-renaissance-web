@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -30,16 +31,6 @@ export interface Movie {
 // For creating a new movie, title is required
 export interface MovieCreate extends Omit<Partial<Movie>, 'title'> {
   title: string; // Title is required
-}
-
-// Simple interface for related movies to avoid type complexity
-interface RelatedMovie {
-  id: string;
-  title: string;
-  poster_path?: string | null;
-  genres?: string[] | null;
-  rating?: number | null;
-  release_date?: string | null;
 }
 
 // Admin authentication interfaces
@@ -264,66 +255,78 @@ export const recordMovieView = async (movieId: string): Promise<void> => {
   }
 };
 
-// Fixed related movies function with simplified typing
+// Simplified related movies function that avoids type inference issues
 export const fetchRelatedMovies = async (movieId: string, genres: string[]): Promise<Movie[]> => {
   if (!genres || genres.length === 0) {
     return [];
   }
 
   try {
-    // Use basic query without complex type inference
-    const { data, error } = await supabase
-      .from('movies')
-      .select('id, title, poster_path, genres, rating, release_date')
-      .neq('id', movieId)
-      .limit(10);
-
-    if (error) {
-      console.error("Error fetching related movies:", error);
-      return [];
-    }
-
-    if (!data) {
-      return [];
-    }
-
-    // Create result array with explicit typing
-    const result: Movie[] = [];
-    
-    // Process each row without complex type inference
-    data.forEach((row: any) => {
-      if (row.genres && Array.isArray(row.genres)) {
-        const hasMatch = row.genres.some((g: string) => genres.includes(g));
-        if (hasMatch) {
-          // Create simple movie object
-          const movie: Movie = {
-            id: row.id,
-            title: row.title,
-            poster_path: row.poster_path || null,
-            genres: row.genres || null,
-            rating: row.rating || null,
-            release_date: row.release_date || null,
-            // Required fields with defaults
-            original_title: null,
-            slug: null,
-            backdrop_path: null,
-            overview: null,
-            genre_ids: null,
-            runtime: null,
-            trailer_url: null,
-            stream_url: null,
-            stream_servers: null,
-            created_at: null,
-            updated_at: null,
-            imdb_id: null,
-            tmdb_id: null
-          };
-          result.push(movie);
-        }
-      }
+    // Use raw query without complex type inference
+    const response = await supabase.rpc('get_related_movies', {
+      p_movie_id: movieId,
+      p_genres: genres
     });
 
-    return result;
+    if (response.error) {
+      console.error("Error fetching related movies:", response.error);
+      return [];
+    }
+
+    // If RPC function doesn't exist, fall back to simple approach
+    if (!response.data) {
+      // Simple fallback query with explicit typing
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('movies')
+        .select('id, title, poster_path, genres, rating, release_date')
+        .neq('id', movieId)
+        .limit(10);
+
+      if (fallbackError || !fallbackData) {
+        return [];
+      }
+
+      // Manual filtering without complex types
+      const filtered: Movie[] = [];
+      for (let i = 0; i < fallbackData.length; i++) {
+        const row = fallbackData[i];
+        if (row.genres && Array.isArray(row.genres)) {
+          let hasMatch = false;
+          for (let j = 0; j < row.genres.length; j++) {
+            if (genres.includes(row.genres[j])) {
+              hasMatch = true;
+              break;
+            }
+          }
+          if (hasMatch) {
+            filtered.push({
+              id: row.id,
+              title: row.title,
+              poster_path: row.poster_path || null,
+              genres: row.genres || null,
+              rating: row.rating || null,
+              release_date: row.release_date || null,
+              original_title: null,
+              slug: null,
+              backdrop_path: null,
+              overview: null,
+              genre_ids: null,
+              runtime: null,
+              trailer_url: null,
+              stream_url: null,
+              stream_servers: null,
+              created_at: null,
+              updated_at: null,
+              imdb_id: null,
+              tmdb_id: null
+            });
+          }
+        }
+      }
+      return filtered;
+    }
+
+    return response.data.map((row: any) => convertToMovie(row));
   } catch (error) {
     console.error("Error in fetchRelatedMovies:", error);
     return [];
