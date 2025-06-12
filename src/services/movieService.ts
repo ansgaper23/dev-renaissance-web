@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -280,27 +279,24 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
   return relatedMovies.map(convertToMovie);
 };
 
-// Función para buscar por IMDB ID
+// Simplified IMDB search function to avoid type inference issues
 export const searchMovieByIMDBId = async (imdbId: string): Promise<any> => {
   try {
     console.log("Searching for IMDB ID:", imdbId);
     
-    // Buscar en TMDB usando el IMDB ID
     const tmdbApiKey = '4a29f0dd1dfdbd0a8b506c7b9e35c506';
-    const tmdbResponse = await fetch(`https://api.themoviedb.org/3/find/${imdbId}?api_key=${tmdbApiKey}&external_source=imdb_id&language=es-ES`);
+    const response = await fetch(`https://api.themoviedb.org/3/find/${imdbId}?api_key=${tmdbApiKey}&external_source=imdb_id&language=es-ES`);
     
-    if (!tmdbResponse.ok) {
+    if (!response.ok) {
       throw new Error('Error al buscar en TMDB');
     }
     
-    const tmdbData = await tmdbResponse.json();
-    console.log("TMDB search result:", tmdbData);
+    const data = await response.json();
+    console.log("TMDB search result:", data);
     
-    // Verificar si encontramos resultados
-    if (tmdbData.movie_results && tmdbData.movie_results.length > 0) {
-      const movie = tmdbData.movie_results[0];
+    if (data.movie_results && data.movie_results.length > 0) {
+      const movie = data.movie_results[0];
       
-      // Obtener detalles completos de la película
       const detailsResponse = await fetch(`https://api.themoviedb.org/3/movie/${movie.id}?api_key=${tmdbApiKey}&append_to_response=videos,external_ids&language=es-ES`);
       const movieDetails = await detailsResponse.json();
       
