@@ -118,6 +118,7 @@ export type Database = {
           rating: number | null
           release_date: string | null
           runtime: number | null
+          slug: string | null
           stream_servers: Json | null
           stream_url: string | null
           title: string
@@ -137,6 +138,7 @@ export type Database = {
           rating?: number | null
           release_date?: string | null
           runtime?: number | null
+          slug?: string | null
           stream_servers?: Json | null
           stream_url?: string | null
           title: string
@@ -156,6 +158,7 @@ export type Database = {
           rating?: number | null
           release_date?: string | null
           runtime?: number | null
+          slug?: string | null
           stream_servers?: Json | null
           stream_url?: string | null
           title?: string

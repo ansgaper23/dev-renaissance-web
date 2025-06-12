@@ -156,19 +156,14 @@ export const fetchMovieById = async (id: string): Promise<Movie> => {
 };
 
 export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
-  // Simplified query without complex type inference
   const { data, error } = await supabase
     .from('movies')
     .select('*')
     .eq('slug', slug)
-    .maybeSingle();
+    .single();
   
   if (error) {
     throw new Error(error.message);
-  }
-  
-  if (!data) {
-    throw new Error('Movie not found');
   }
   
   return convertToMovie(data);
@@ -178,6 +173,7 @@ export const addMovie = async (movie: MovieCreate): Promise<Movie> => {
   // Create a simple object with only the fields we need
   const movieData = {
     title: movie.title,
+    slug: movie.slug || generateSlug(movie.title),
     tmdb_id: movie.tmdb_id || null,
     original_title: movie.original_title || null,
     poster_path: movie.poster_path || null,
