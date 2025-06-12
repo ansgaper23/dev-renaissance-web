@@ -168,16 +168,19 @@ export type Database = {
       secrets: {
         Row: {
           id: number
+          omdb_api_key: string | null
           tmdb_api_key: string
           updated_at: string | null
         }
         Insert: {
           id?: number
+          omdb_api_key?: string | null
           tmdb_api_key: string
           updated_at?: string | null
         }
         Update: {
           id?: number
+          omdb_api_key?: string | null
           tmdb_api_key?: string
           updated_at?: string | null
         }

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -24,6 +25,7 @@ export interface Movie {
   }> | null;
   created_at?: string | null;
   updated_at?: string | null;
+  imdb_id?: string | null;
 }
 
 // For creating a new movie, title is required
@@ -281,7 +283,7 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
         return false;
       }
       
-      return movie.genres.some(genre => genres.includes(genre));
+      return movie.genres.some((genre: string) => genres.includes(genre));
     }).map(convertToMovie);
 
     return relatedMovies;
