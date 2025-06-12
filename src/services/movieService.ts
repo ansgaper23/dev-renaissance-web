@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -287,23 +288,26 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
       return [];
     }
 
-    // Simple filtering with explicit typing
-    const relatedMovies: RelatedMovie[] = data
-      .filter((row): row is RelatedMovie => {
-        return row.genres && 
-               Array.isArray(row.genres) && 
-               row.genres.some((genre: string) => genres.includes(genre));
-      });
+    // Simple filtering without complex type predicates
+    const relatedMovies: Movie[] = [];
+    
+    for (const row of data) {
+      if (row.genres && Array.isArray(row.genres)) {
+        const hasMatchingGenre = row.genres.some((genre: string) => genres.includes(genre));
+        if (hasMatchingGenre) {
+          relatedMovies.push({
+            id: row.id,
+            title: row.title,
+            poster_path: row.poster_path,
+            genres: row.genres,
+            rating: row.rating,
+            release_date: row.release_date
+          } as Movie);
+        }
+      }
+    }
 
-    // Convert to Movie format
-    return relatedMovies.map((movie): Movie => ({
-      id: movie.id,
-      title: movie.title,
-      poster_path: movie.poster_path,
-      genres: movie.genres,
-      rating: movie.rating,
-      release_date: movie.release_date
-    }));
+    return relatedMovies;
   } catch (error) {
     console.error("Error in fetchRelatedMovies:", error);
     return [];
