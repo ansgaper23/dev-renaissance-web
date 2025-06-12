@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -254,7 +253,7 @@ export const recordMovieView = async (movieId: string): Promise<void> => {
   }
 };
 
-// Simplified related movies function with explicit typing
+// Simplified related movies function with basic implementation
 export const fetchRelatedMovies = async (movieId: string, genres: string[]): Promise<Movie[]> => {
   if (!genres || genres.length === 0) {
     return [];
@@ -276,28 +275,14 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
       return [];
     }
 
-    // Explicit typing to avoid inference issues
-    const relatedMovies: Movie[] = [];
-    
-    for (let i = 0; i < data.length; i++) {
-      const movieData = data[i];
-      const movieGenres = movieData.genres;
-      
-      if (movieGenres && Array.isArray(movieGenres)) {
-        let hasMatchingGenre = false;
-        
-        for (let j = 0; j < movieGenres.length; j++) {
-          if (genres.includes(movieGenres[j])) {
-            hasMatchingGenre = true;
-            break;
-          }
-        }
-        
-        if (hasMatchingGenre) {
-          relatedMovies.push(convertToMovie(movieData));
-        }
+    // Simple filtering without complex type inference
+    const relatedMovies = data.filter(movie => {
+      if (!movie.genres || !Array.isArray(movie.genres)) {
+        return false;
       }
-    }
+      
+      return movie.genres.some(genre => genres.includes(genre));
+    }).map(convertToMovie);
 
     return relatedMovies;
   } catch (error) {
@@ -306,7 +291,7 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
   }
 };
 
-// Define explicit interface for TMDB response to avoid type inference issues
+// TMDB interfaces and functions
 interface TMDBMovieResult {
   id: number;
   title: string;
@@ -324,7 +309,7 @@ interface TMDBSearchResponse {
   movie_results: TMDBMovieResult[];
 }
 
-// Simplified IMDB search function with explicit typing
+// TMDB search function
 export const searchMovieByIMDBId = async (imdbId: string): Promise<TMDBMovieResult & { imdb_id: string; type: string }> => {
   try {
     console.log("Searching for IMDB ID:", imdbId);
@@ -416,7 +401,7 @@ export const importMovieFromTMDB = async (tmdbMovie: TMDBMovieResult & { imdb_id
   return addMovie(movieData);
 };
 
-// Import from IMDB ID
+// Import from IMDB ID using TMDB
 export const importMovieFromIMDB = async (imdbId: string, streamServers: Array<{
   name: string;
   url: string;
@@ -434,4 +419,31 @@ export const importMovieFromIMDB = async (imdbId: string, streamServers: Array<{
   
   // Usar la función existente para importar desde TMDB
   return importMovieFromTMDB(tmdbData, streamServers);
+};
+
+// Import from IMDB ID using OMDb
+export const importMovieFromIMDBWithOMDb = async (imdbId: string, streamServers: Array<{
+  name: string;
+  url: string;
+  quality?: string;
+  language?: string;
+}>): Promise<Movie> => {
+  console.log("Importing movie from IMDB ID using OMDb:", imdbId);
+  
+  const { searchMovieByIMDBIdOMDb, convertOMDbToMovie } = await import('./omdbService');
+  
+  // Buscar datos en OMDb usando IMDB ID
+  const omdbData = await searchMovieByIMDBIdOMDb(imdbId);
+  
+  if (!omdbData || omdbData.Response === "False") {
+    throw new Error('No se encontró la película en OMDb con este IMDB ID');
+  }
+  
+  // Convertir datos de OMDb al formato de Movie
+  const movieData: MovieCreate = {
+    ...convertOMDbToMovie(omdbData),
+    stream_servers: streamServers.filter(server => server.url.trim() !== '')
+  };
+  
+  return addMovie(movieData);
 };

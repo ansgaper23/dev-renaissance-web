@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { importMovieFromTMDB } from '@/services/movieService';
+import { importMovieFromTMDB, importMovieFromIMDBWithOMDb } from '@/services/movieService';
 import { toast } from '@/hooks/use-toast';
 import { Search, Download, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,7 +20,7 @@ interface ServerEntry {
 const QuickAddMovie = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [imdbId, setImdbId] = useState('');
-  const [searchMode, setSearchMode] = useState<'tmdb' | 'imdb'>('tmdb');
+  const [searchMode, setSearchMode] = useState<'tmdb' | 'imdb-tmdb' | 'imdb-omdb'>('tmdb');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<any>(null);
@@ -46,6 +46,27 @@ const QuickAddMovie = () => {
       toast({
         title: "Error",
         description: `No se pudo agregar la película: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const addMovieFromOMDbMutation = useMutation({
+    mutationFn: ({ imdbId, streamServers }: { imdbId: string, streamServers: ServerEntry[] }) => 
+      importMovieFromIMDBWithOMDb(imdbId, streamServers),
+    onSuccess: () => {
+      toast({
+        title: "Película agregada desde OMDb",
+        description: "La película se ha agregado correctamente usando OMDb",
+      });
+      setSelectedMovie(null);
+      setServers([{ name: 'Servidor 1', url: '', quality: 'HD', language: 'Latino' }]);
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `No se pudo agregar la película desde OMDb: ${error.message}`,
         variant: "destructive"
       });
     }
@@ -80,8 +101,8 @@ const QuickAddMovie = () => {
       } finally {
         setIsSearching(false);
       }
-    } else {
-      // IMDB search
+    } else if (searchMode === 'imdb-tmdb') {
+      // IMDB search via TMDB
       if (!imdbId.trim()) return;
       
       setIsSearching(true);
@@ -89,14 +110,37 @@ const QuickAddMovie = () => {
       try {
         const { searchMovieByIMDBId } = await import('@/services/movieService');
         const movieData = await searchMovieByIMDBId(imdbId);
-        console.log("IMDB Search result:", movieData);
+        console.log("IMDB Search result via TMDB:", movieData);
         setSelectedMovie(movieData);
         setImdbId('');
       } catch (error) {
-        console.error('Error searching IMDB:', error);
+        console.error('Error searching IMDB via TMDB:', error);
         toast({
-          title: "Error de búsqueda IMDB",
-          description: "No se pudo encontrar la película con ese IMDB ID. Verifique el ID e intente nuevamente.",
+          title: "Error de búsqueda IMDB (TMDB)",
+          description: "No se pudo encontrar la película con ese IMDB ID en TMDB. Verifique el ID e intente nuevamente.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsSearching(false);
+      }
+    } else if (searchMode === 'imdb-omdb') {
+      // IMDB search via OMDb
+      if (!imdbId.trim()) return;
+      
+      setIsSearching(true);
+      
+      try {
+        const { searchMovieByIMDBIdOMDb, convertOMDbToMovie } = await import('@/services/omdbService');
+        const omdbData = await searchMovieByIMDBIdOMDb(imdbId);
+        const movieData = convertOMDbToMovie(omdbData);
+        console.log("IMDB Search result via OMDb:", movieData);
+        setSelectedMovie({ ...movieData, source: 'omdb' });
+        setImdbId('');
+      } catch (error) {
+        console.error('Error searching IMDB via OMDb:', error);
+        toast({
+          title: "Error de búsqueda IMDB (OMDb)",
+          description: "No se pudo encontrar la película con ese IMDB ID en OMDb. Verifique el ID e intente nuevamente.",
           variant: "destructive"
         });
       } finally {
@@ -136,10 +180,20 @@ const QuickAddMovie = () => {
     const validServers = servers.filter(server => server.url.trim() !== '');
     console.log("Adding movie with servers:", validServers);
 
-    addMovieMutation.mutate({ 
-      movie: selectedMovie, 
-      streamServers: validServers 
-    });
+    if (selectedMovie.source === 'omdb') {
+      // Use OMDb import
+      const imdbIdFromSelection = selectedMovie.imdb_id || imdbId;
+      addMovieFromOMDbMutation.mutate({ 
+        imdbId: imdbIdFromSelection, 
+        streamServers: validServers 
+      });
+    } else {
+      // Use TMDB import
+      addMovieMutation.mutate({ 
+        movie: selectedMovie, 
+        streamServers: validServers 
+      });
+    }
   };
 
   const addServer = () => {
@@ -169,7 +223,7 @@ const QuickAddMovie = () => {
         {!selectedMovie ? (
           <>
             {/* Search Mode Toggle */}
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-2 mb-4 flex-wrap">
               <Button
                 type="button"
                 onClick={() => setSearchMode('tmdb')}
@@ -179,10 +233,17 @@ const QuickAddMovie = () => {
               </Button>
               <Button
                 type="button"
-                onClick={() => setSearchMode('imdb')}
-                className={`${searchMode === 'imdb' ? 'bg-cuevana-blue' : 'bg-gray-700'} hover:bg-cuevana-blue/90`}
+                onClick={() => setSearchMode('imdb-tmdb')}
+                className={`${searchMode === 'imdb-tmdb' ? 'bg-cuevana-blue' : 'bg-gray-700'} hover:bg-cuevana-blue/90`}
               >
-                Importar por IMDB ID
+                IMDB → TMDB
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setSearchMode('imdb-omdb')}
+                className={`${searchMode === 'imdb-omdb' ? 'bg-cuevana-blue' : 'bg-gray-700'} hover:bg-cuevana-blue/90`}
+              >
+                IMDB → OMDb
               </Button>
             </div>
 
@@ -214,9 +275,9 @@ const QuickAddMovie = () => {
                   {isSearching ? 'Buscando...' : (searchMode === 'tmdb' ? 'Buscar' : 'Importar')}
                 </Button>
               </div>
-              {searchMode === 'imdb' && (
+              {searchMode !== 'tmdb' && (
                 <p className="text-gray-400 text-xs mt-2">
-                  Ingrese el ID de IMDB (ejemplo: tt5950044)
+                  Ingrese el ID de IMDB (ejemplo: tt5950044) - {searchMode === 'imdb-tmdb' ? 'usando TMDB' : 'usando OMDb'}
                 </p>
               )}
             </form>
