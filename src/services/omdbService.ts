@@ -1,4 +1,3 @@
-
 export interface OMDbMovie {
   Title: string;
   Year: string;
@@ -58,8 +57,8 @@ export interface OMDbSeries {
   Response: string;
 }
 
-export interface OMDbError {
-  Response: string;
+export interface OMDbErrorResponse {
+  Response: "False";
   Error: string;
 }
 
@@ -73,7 +72,7 @@ export const searchMovieByIMDBIdOMDb = async (imdbId: string): Promise<OMDbMovie
       .from('secrets')
       .select('omdb_api_key')
       .eq('id', 1)
-      .single();
+      .maybeSingle();
     
     if (secretsError) {
       console.error('Error fetching secrets:', secretsError);
@@ -96,11 +95,11 @@ export const searchMovieByIMDBIdOMDb = async (imdbId: string): Promise<OMDbMovie
       throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
     }
     
-    const data: OMDbMovie | OMDbError = await response.json();
+    const data: OMDbMovie | OMDbErrorResponse = await response.json();
     console.log("OMDb search result:", data);
     
     if (data.Response === "False") {
-      const errorData = data as OMDbError;
+      const errorData = data as OMDbErrorResponse;
       throw new Error(`No se encontraron películas para este IMDB ID en OMDb: ${errorData.Error || 'Error desconocido'}`);
     }
     
@@ -121,7 +120,7 @@ export const searchSeriesByIMDBIdOMDb = async (imdbId: string): Promise<OMDbSeri
       .from('secrets')
       .select('omdb_api_key')
       .eq('id', 1)
-      .single();
+      .maybeSingle();
     
     if (secretsError) {
       console.error('Error fetching secrets:', secretsError);
@@ -144,11 +143,11 @@ export const searchSeriesByIMDBIdOMDb = async (imdbId: string): Promise<OMDbSeri
       throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
     }
     
-    const data: OMDbSeries | OMDbError = await response.json();
+    const data: OMDbSeries | OMDbErrorResponse = await response.json();
     console.log("OMDb series search result:", data);
     
     if (data.Response === "False") {
-      const errorData = data as OMDbError;
+      const errorData = data as OMDbErrorResponse;
       throw new Error(`No se encontraron series para este IMDB ID en OMDb: ${errorData.Error || 'Error desconocido'}`);
     }
     
