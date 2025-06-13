@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface SeriesEpisode {
@@ -272,4 +271,31 @@ export const importSeriesFromIMDB = async (imdbId: string, streamServers: Array<
   
   // Usar la función existente para importar desde TMDB
   return importSeriesFromTMDB(tmdbData, streamServers);
+};
+
+// Import from IMDB ID using OMDb
+export const importSeriesFromIMDBWithOMDb = async (imdbId: string, streamServers: Array<{
+  name: string;
+  url: string;
+  quality?: string;
+  language?: string;
+}>): Promise<Series> => {
+  console.log("Importing series from IMDB ID using OMDb:", imdbId);
+  
+  const { searchSeriesByIMDBIdOMDb, convertOMDbToSeries } = await import('./omdbService');
+  
+  // Buscar datos en OMDb usando IMDB ID
+  const omdbData = await searchSeriesByIMDBIdOMDb(imdbId);
+  
+  if (!omdbData || omdbData.Response === "False") {
+    throw new Error('No se encontró la serie en OMDb con este IMDB ID');
+  }
+  
+  // Convertir datos de OMDb al formato de Series
+  const seriesData: SeriesCreate = {
+    ...convertOMDbToSeries(omdbData),
+    stream_servers: streamServers.filter(server => server.url.trim() !== '')
+  };
+  
+  return addSeries(seriesData);
 };

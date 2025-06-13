@@ -1,3 +1,4 @@
+
 export interface OMDbMovie {
   Title: string;
   Year: string;
@@ -26,6 +27,34 @@ export interface OMDbMovie {
   BoxOffice: string;
   Production: string;
   Website: string;
+  Response: string;
+}
+
+export interface OMDbSeries {
+  Title: string;
+  Year: string;
+  Rated: string;
+  Released: string;
+  Runtime: string;
+  Genre: string;
+  Director: string;
+  Writer: string;
+  Actors: string;
+  Plot: string;
+  Language: string;
+  Country: string;
+  Awards: string;
+  Poster: string;
+  Ratings: Array<{
+    Source: string;
+    Value: string;
+  }>;
+  Metascore: string;
+  imdbRating: string;
+  imdbVotes: string;
+  imdbID: string;
+  Type: string;
+  totalSeasons: string;
   Response: string;
 }
 
@@ -82,6 +111,61 @@ export const searchMovieByIMDBIdOMDb = async (imdbId: string): Promise<OMDbMovie
   }
 };
 
+export const searchSeriesByIMDBIdOMDb = async (imdbId: string): Promise<OMDbSeries> => {
+  try {
+    console.log("Searching OMDb for series IMDB ID:", imdbId);
+    
+    // Get API key from Supabase secrets
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { data: secretsData, error: secretsError } = await supabase
+      .from('secrets')
+      .select('omdb_api_key')
+      .eq('id', 1)
+      .single();
+    
+    if (secretsError) {
+      console.error('Error fetching secrets:', secretsError);
+      throw new Error('Error al obtener la configuración de API');
+    }
+    
+    if (!secretsData?.omdb_api_key) {
+      console.error('OMDb API key not found in secrets');
+      throw new Error('Clave de API de OMDb no configurada. Por favor, configúrala en los ajustes.');
+    }
+
+    const apiKey = secretsData.omdb_api_key;
+    const url = `https://www.omdbapi.com/?i=${imdbId}&apikey=${apiKey}&plot=full`;
+    
+    console.log("Fetching series from OMDb with URL:", url.replace(apiKey, '[API_KEY]'));
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+    }
+    
+    const data: OMDbSeries | OMDbError = await response.json();
+    console.log("OMDb series search result:", data);
+    
+    if (data.Response === "False") {
+      const errorData = data as OMDbError;
+      throw new Error(`No se encontraron series para este IMDB ID en OMDb: ${errorData.Error || 'Error desconocido'}`);
+    }
+    
+    const seriesData = data as OMDbSeries;
+    
+    // Verify it's actually a series/TV show
+    if (seriesData.Type !== "series") {
+      throw new Error(`El IMDB ID proporcionado no corresponde a una serie (Tipo: ${seriesData.Type})`);
+    }
+    
+    return seriesData;
+  } catch (error) {
+    console.error("Error searching series by IMDB ID in OMDb:", error);
+    throw error;
+  }
+};
+
 export const convertOMDbToMovie = (omdbMovie: OMDbMovie) => {
   // Convert OMDb genres string to array
   const genres = omdbMovie.Genre ? omdbMovie.Genre.split(', ') : [];
@@ -107,5 +191,34 @@ export const convertOMDbToMovie = (omdbMovie: OMDbMovie) => {
     poster_path: omdbMovie.Poster !== 'N/A' ? omdbMovie.Poster : null,
     backdrop_path: null, // OMDb doesn't provide backdrop images
     imdb_id: omdbMovie.imdbID
+  };
+};
+
+export const convertOMDbToSeries = (omdbSeries: OMDbSeries) => {
+  // Convert OMDb genres string to array
+  const genres = omdbSeries.Genre ? omdbSeries.Genre.split(', ') : [];
+  
+  // Convert IMDB rating to number
+  const rating = omdbSeries.imdbRating && omdbSeries.imdbRating !== 'N/A' ? parseFloat(omdbSeries.imdbRating) : null;
+  
+  // Convert first air date
+  const firstAirDate = omdbSeries.Released && omdbSeries.Released !== 'N/A' ? 
+    new Date(omdbSeries.Released).toISOString().split('T')[0] : null;
+
+  // Convert total seasons to number
+  const numberOfSeasons = omdbSeries.totalSeasons && omdbSeries.totalSeasons !== 'N/A' ? 
+    parseInt(omdbSeries.totalSeasons) : null;
+
+  return {
+    title: omdbSeries.Title,
+    original_title: omdbSeries.Title,
+    overview: omdbSeries.Plot !== 'N/A' ? omdbSeries.Plot : null,
+    first_air_date: firstAirDate,
+    genres,
+    rating,
+    number_of_seasons: numberOfSeasons,
+    poster_path: omdbSeries.Poster !== 'N/A' ? omdbSeries.Poster : null,
+    backdrop_path: null, // OMDb doesn't provide backdrop images
+    imdb_id: omdbSeries.imdbID
   };
 };
