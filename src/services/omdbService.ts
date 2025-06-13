@@ -39,26 +39,35 @@ export const searchMovieByIMDBIdOMDb = async (imdbId: string): Promise<OMDbMovie
     const { data: secretsData, error: secretsError } = await supabase
       .from('secrets')
       .select('omdb_api_key')
+      .eq('id', 1)
       .single();
     
-    if (secretsError || !secretsData?.omdb_api_key) {
-      throw new Error('OMDb API key not configured');
+    if (secretsError) {
+      console.error('Error fetching secrets:', secretsError);
+      throw new Error('Error al obtener la configuración de API');
+    }
+    
+    if (!secretsData?.omdb_api_key) {
+      console.error('OMDb API key not found in secrets');
+      throw new Error('Clave de API de OMDb no configurada. Por favor, configúrala en los ajustes.');
     }
 
     const apiKey = secretsData.omdb_api_key;
     const url = `https://www.omdbapi.com/?i=${imdbId}&apikey=${apiKey}&plot=full`;
     
+    console.log("Fetching from OMDb with URL:", url.replace(apiKey, '[API_KEY]'));
+    
     const response = await fetch(url);
     
     if (!response.ok) {
-      throw new Error('Error al buscar en OMDb');
+      throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
     }
     
     const data: OMDbMovie = await response.json();
     console.log("OMDb search result:", data);
     
     if (data.Response === "False") {
-      throw new Error('No se encontraron películas para este IMDB ID en OMDb');
+      throw new Error(`No se encontraron películas para este IMDB ID en OMDb: ${data.Error || 'Error desconocido'}`);
     }
     
     return data;
