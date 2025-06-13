@@ -1,4 +1,3 @@
-
 export interface OMDbMovie {
   Title: string;
   Year: string;
@@ -28,6 +27,11 @@ export interface OMDbMovie {
   Production: string;
   Website: string;
   Response: string;
+}
+
+export interface OMDbError {
+  Response: string;
+  Error: string;
 }
 
 export const searchMovieByIMDBIdOMDb = async (imdbId: string): Promise<OMDbMovie> => {
@@ -63,14 +67,15 @@ export const searchMovieByIMDBIdOMDb = async (imdbId: string): Promise<OMDbMovie
       throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
     }
     
-    const data: OMDbMovie = await response.json();
+    const data: OMDbMovie | OMDbError = await response.json();
     console.log("OMDb search result:", data);
     
     if (data.Response === "False") {
-      throw new Error(`No se encontraron películas para este IMDB ID en OMDb: ${data.Error || 'Error desconocido'}`);
+      const errorData = data as OMDbError;
+      throw new Error(`No se encontraron películas para este IMDB ID en OMDb: ${errorData.Error || 'Error desconocido'}`);
     }
     
-    return data;
+    return data as OMDbMovie;
   } catch (error) {
     console.error("Error searching movie by IMDB ID in OMDb:", error);
     throw error;
