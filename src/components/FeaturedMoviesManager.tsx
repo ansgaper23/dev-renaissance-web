@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,14 @@ interface FeaturedMovie {
 const FeaturedMoviesManager = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const queryClient = useQueryClient();
+
+  // Helper function to get correct poster URL
+  const getPosterUrl = (posterPath: string | null) => {
+    if (!posterPath) return null;
+    return posterPath.startsWith('http') 
+      ? posterPath  // OMDb URL (full URL)
+      : `https://image.tmdb.org/t/p/w92${posterPath}`; // TMDB path
+  };
 
   // Fetch featured movies
   const { data: featuredMovies = [], isLoading: loadingFeatured } = useQuery({
@@ -144,9 +151,7 @@ const FeaturedMoviesManager = () => {
                 <div key={featured.id} className="flex items-center gap-3 p-3 bg-gray-800 rounded">
                   {featured.movies?.poster_path && (
                     <img
-                      src={featured.movies.poster_path.startsWith('http') 
-                        ? featured.movies.poster_path 
-                        : `https://image.tmdb.org/t/p/w92${featured.movies.poster_path}`}
+                      src={getPosterUrl(featured.movies.poster_path) || '/placeholder.svg'}
                       alt={featured.movies?.title}
                       className="w-12 h-18 rounded object-cover"
                     />
@@ -199,9 +204,7 @@ const FeaturedMoviesManager = () => {
                     <div key={movie.id} className="flex items-center gap-3 p-3 bg-gray-800 rounded">
                       {movie.poster_path && (
                         <img
-                          src={movie.poster_path.startsWith('http') 
-                            ? movie.poster_path 
-                            : `https://image.tmdb.org/t/p/w92${movie.poster_path}`}
+                          src={getPosterUrl(movie.poster_path) || '/placeholder.svg'}
                           alt={movie.title}
                           className="w-12 h-18 rounded object-cover"
                         />

@@ -63,6 +63,47 @@ export interface OMDbErrorResponse {
   Error: string;
 }
 
+// Diccionario de géneros en inglés a español
+const GENRE_TRANSLATIONS: { [key: string]: string } = {
+  "Action": "Acción",
+  "Adventure": "Aventura", 
+  "Animation": "Animación",
+  "Biography": "Biografía",
+  "Comedy": "Comedia",
+  "Crime": "Crimen",
+  "Documentary": "Documental",
+  "Drama": "Drama",
+  "Family": "Familia",
+  "Fantasy": "Fantasía",
+  "Film-Noir": "Cine Negro",
+  "History": "Historia",
+  "Horror": "Terror",
+  "Music": "Música",
+  "Musical": "Musical",
+  "Mystery": "Misterio",
+  "News": "Noticias",
+  "Reality-TV": "Reality TV",
+  "Romance": "Romance",
+  "Sci-Fi": "Ciencia Ficción",
+  "Sport": "Deportes",
+  "Thriller": "Suspense",
+  "War": "Guerra",
+  "Western": "Western",
+  "Short": "Cortometraje",
+  "Talk-Show": "Talk Show",
+  "Game-Show": "Concurso"
+};
+
+// Función para traducir géneros
+const translateGenres = (genresString: string): string[] => {
+  if (!genresString || genresString === 'N/A') return [];
+  
+  return genresString.split(', ').map(genre => {
+    const trimmedGenre = genre.trim();
+    return GENRE_TRANSLATIONS[trimmedGenre] || trimmedGenre;
+  });
+};
+
 export const searchMovieByIMDBIdOMDb = async (imdbId: string): Promise<OMDbMovie> => {
   try {
     console.log("Searching OMDb for IMDB ID:", imdbId);
@@ -171,8 +212,8 @@ export const searchSeriesByIMDBIdOMDb = async (imdbId: string): Promise<OMDbSeri
 };
 
 export const convertOMDbToMovie = (omdbMovie: OMDbMovie) => {
-  // Convert OMDb genres string to array
-  const genres = omdbMovie.Genre ? omdbMovie.Genre.split(', ') : [];
+  // Convert OMDb genres string to array and translate to Spanish
+  const genres = translateGenres(omdbMovie.Genre);
   
   // Convert runtime string to number (e.g., "142 min" -> 142)
   const runtime = omdbMovie.Runtime ? parseInt(omdbMovie.Runtime.replace(' min', '')) : null;
@@ -184,6 +225,9 @@ export const convertOMDbToMovie = (omdbMovie: OMDbMovie) => {
   const releaseDate = omdbMovie.Released && omdbMovie.Released !== 'N/A' ? 
     new Date(omdbMovie.Released).toISOString().split('T')[0] : null;
 
+  // Use OMDb poster URL directly (it's already a full URL)
+  const posterPath = omdbMovie.Poster !== 'N/A' ? omdbMovie.Poster : null;
+
   return {
     title: omdbMovie.Title,
     original_title: omdbMovie.Title,
@@ -192,15 +236,15 @@ export const convertOMDbToMovie = (omdbMovie: OMDbMovie) => {
     genres,
     rating,
     runtime,
-    poster_path: omdbMovie.Poster !== 'N/A' ? omdbMovie.Poster : null,
+    poster_path: posterPath,
     backdrop_path: null, // OMDb doesn't provide backdrop images
     imdb_id: omdbMovie.imdbID
   };
 };
 
 export const convertOMDbToSeries = (omdbSeries: OMDbSeries) => {
-  // Convert OMDb genres string to array
-  const genres = omdbSeries.Genre ? omdbSeries.Genre.split(', ') : [];
+  // Convert OMDb genres string to array and translate to Spanish
+  const genres = translateGenres(omdbSeries.Genre);
   
   // Convert IMDB rating to number
   const rating = omdbSeries.imdbRating && omdbSeries.imdbRating !== 'N/A' ? parseFloat(omdbSeries.imdbRating) : null;
@@ -213,6 +257,9 @@ export const convertOMDbToSeries = (omdbSeries: OMDbSeries) => {
   const numberOfSeasons = omdbSeries.totalSeasons && omdbSeries.totalSeasons !== 'N/A' ? 
     parseInt(omdbSeries.totalSeasons) : null;
 
+  // Use OMDb poster URL directly (it's already a full URL)
+  const posterPath = omdbSeries.Poster !== 'N/A' ? omdbSeries.Poster : null;
+
   return {
     title: omdbSeries.Title,
     original_title: omdbSeries.Title,
@@ -221,7 +268,7 @@ export const convertOMDbToSeries = (omdbSeries: OMDbSeries) => {
     genres,
     rating,
     number_of_seasons: numberOfSeasons,
-    poster_path: omdbSeries.Poster !== 'N/A' ? omdbSeries.Poster : null,
+    poster_path: posterPath,
     backdrop_path: null, // OMDb doesn't provide backdrop images
     imdb_id: omdbSeries.imdbID
   };

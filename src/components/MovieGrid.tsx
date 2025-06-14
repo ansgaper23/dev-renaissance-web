@@ -46,8 +46,11 @@ const MovieGrid = ({ movies, isLoading }: MovieGridProps) => {
 const MovieCard = ({ movie }: { movie: Movie }) => {
   const [isHovered, setIsHovered] = useState(false);
 
+  // Handle both TMDB and OMDb poster URLs
   const posterUrl = movie.poster_path 
-    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+    ? (movie.poster_path.startsWith('http') 
+        ? movie.poster_path  // OMDb URL (full URL)
+        : `https://image.tmdb.org/t/p/w500${movie.poster_path}`) // TMDB path
     : '/placeholder.svg';
 
   // Generar slug para la URL basado en el título de la película
