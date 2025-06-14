@@ -126,19 +126,20 @@ const MovieDetail = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-cuevana-bg via-cuevana-bg/80 to-transparent" />
         </div>
 
+        {/* --- MOBILE CARD SOBRE EL BANNER --- */}
         <div className="container mx-auto px-1 sm:px-4">
-          {/* MOBILE CARD */}
-          <div className="block md:hidden bg-[rgba(20,25,35,0.88)] rounded-2xl shadow-xl px-4 pt-2 pb-4 -mt-10 relative z-20">
+          <div
+            className="block md:hidden absolute left-1/2 -translate-x-1/2 top-[calc(62px-1.5rem)] w-[95%] bg-[rgba(20,25,35,0.94)] rounded-2xl shadow-xl px-4 pt-2 pb-4 z-30"
+            style={{ maxWidth: 420 }}
+          >
+            {/* Resto igual - Mobile card content */}
             <div className="flex gap-4">
-              {/* Póster */}
               <img
                 src={posterUrl}
                 alt={movie.title}
                 className="w-24 h-36 object-cover rounded-lg shadow-lg flex-shrink-0"
               />
-              {/* Info textual */}
               <div className="flex flex-col flex-1 justify-center">
-                {/* Título y subtítulo */}
                 <div className="flex items-center gap-2 mb-1">
                   <h1 className="text-xl font-bold leading-tight">{movie.title}</h1>
                 </div>
@@ -147,7 +148,6 @@ const MovieDetail = () => {
                     {movie.original_title}
                   </div>
                 )}
-                {/* Fila: Calificación, duración y año */}
                 <div className="flex items-center gap-4 mb-1">
                   {movie.rating && (
                     <div className="w-10 h-10 rounded-full border-2 border-yellow-400 flex items-center justify-center bg-cuevana-bg text-yellow-300 font-bold text-xs">
@@ -157,7 +157,6 @@ const MovieDetail = () => {
                   <span className="text-cuevana-white/80 text-xs">{movie.runtime ? Math.floor(movie.runtime / 60) + "h " + (movie.runtime % 60) + "min" : "Duración no disponible"}</span>
                   <span className="text-cuevana-white/80 text-xs">{releaseYear}</span>
                 </div>
-                {/* Botones compartir */}
                 <div className="flex items-center gap-2 mt-1">
                   <ShareButton
                     title={movie.title}
@@ -187,17 +186,19 @@ const MovieDetail = () => {
                 </div>
               </div>
             </div>
-            {/* Sinopsis */}
             {movie.overview && (
               <div className="mt-3 text-cuevana-white/90 text-sm">{movie.overview}</div>
             )}
-            {/* Géneros (y actores si existieran) */}
             <div className="mt-2">
               <span className="font-semibold text-cuevana-white/80 text-sm">Género: </span>
               <span className="text-cuevana-white/60 text-sm">{genres}</span>
             </div>
             {/* Si hubiera actores agregar aquí */}
           </div>
+
+          {/* --- ESPACIADOR para que el contenido principal arranque después de la card --- */}
+          <div className="block md:hidden" style={{ height: 220 }} />
+
           {/* DESKTOP LAYOUT sigue igual */}
           <div className="hidden md:flex flex-row gap-8">
             {/* Poster */}
