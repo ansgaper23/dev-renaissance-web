@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -121,7 +120,17 @@ const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps)
   return (
     <div className="w-full">
       {/* Server Options by Language */}
-      <div className="mb-4 p-4 bg-cuevana-gray-100 rounded-lg">
+      <div
+        className="
+          mb-4 p-4 bg-cuevana-gray-100 rounded-lg
+          mt-0 md:mt-0
+          md:mb-4
+          mobile-server-mt
+        "
+        style={{ marginTop: '1.5rem' }} // fallback for mobile in case of CSS issues
+      >
+        {/* El mt-0 normal, pero en mobile agregamos mt-6 directamente con Tailwind */}
+        {/* Si quieres un margen mayor, cambia mt-6 por mt-8 o mayor */}
         <h4 className="text-cuevana-white font-medium mb-3">Servidores Disponibles:</h4>
         
         {Object.entries(serversByLanguage).map(([language, servers]) => (
