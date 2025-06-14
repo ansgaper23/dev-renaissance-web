@@ -101,21 +101,6 @@ const MovieDetail = () => {
   const genres = Array.isArray(movie.genres) ? movie.genres.join(', ') : 'Sin género';
   const runtime = movie.runtime ? `${movie.runtime} min` : 'Duración no disponible';
 
-  // Transformar películas relacionadas para MovieSection - CORREGIDO
-  const transformedRelatedMovies = relatedMovies.map(relatedMovie => ({
-    id: relatedMovie.id,
-    title: relatedMovie.title,
-    posterUrl: relatedMovie.poster_path ? 
-      (relatedMovie.poster_path.startsWith('http') ? relatedMovie.poster_path : `https://image.tmdb.org/t/p/w500${relatedMovie.poster_path}`) : 
-      '/placeholder.svg',
-    rating: relatedMovie.rating || 0,
-    year: relatedMovie.release_date ? new Date(relatedMovie.release_date).getFullYear() : null,
-    genre: (relatedMovie.genres && relatedMovie.genres.length > 0) ? relatedMovie.genres[0] : null,
-    // Mantener datos originales para el slug
-    release_date: relatedMovie.release_date,
-    poster_path: relatedMovie.poster_path
-  }));
-
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
       <Navbar />
@@ -207,11 +192,11 @@ const MovieDetail = () => {
           </div>
 
           {/* Related Movies */}
-          {transformedRelatedMovies.length > 0 && (
+          {relatedMovies.length > 0 && (
             <div className="mt-16">
               <MovieSection 
                 title="Películas Relacionadas"
-                movies={transformedRelatedMovies}
+                movies={relatedMovies}
                 isLoading={false}
               />
             </div>
