@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -54,13 +53,20 @@ const convertToMovie = (row: any): Movie => {
 };
 
 // Generate slug from movie title
-export const generateSlug = (title: string): string => {
-  return title
+export const generateSlug = (title: string, year?: string): string => {
+  let slug = title
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
     .trim();
+  
+  // Add year if provided
+  if (year) {
+    slug += `-${year}`;
+  }
+  
+  return slug;
 };
 
 // Admin authentication functions
@@ -159,7 +165,7 @@ export const fetchMovieById = async (id: string): Promise<Movie> => {
 export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
   console.log("Searching for movie with slug:", slug);
   
-  // Check if slug looks like a UUID (movies without proper slugs)
+  // Check if slug looks like a UUID (old movies without proper slugs)
   const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
   
   if (isUUID) {
@@ -169,7 +175,7 @@ export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
       .from('movies')
       .select('*')
       .eq('id', slug)
-      .single();
+      .maybeSingle();
     
     if (!idError && movieById) {
       console.log("Found movie by ID:", movieById.title);
@@ -234,8 +240,9 @@ export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
 };
 
 export const addMovie = async (movie: MovieCreate): Promise<Movie> => {
-  // Generate slug if not provided
-  const slug = movie.slug || generateSlug(movie.title);
+  // Generate slug based on title and year
+  const year = movie.release_date ? new Date(movie.release_date).getFullYear().toString() : undefined;
+  const slug = movie.slug || generateSlug(movie.title, year);
   
   // Create a simple object with only the fields we need
   const movieData = {
