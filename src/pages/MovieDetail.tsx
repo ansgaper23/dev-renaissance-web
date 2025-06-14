@@ -196,7 +196,7 @@ const MovieDetail = () => {
         </div>
 
         {/* -- SPACER PARA QUE LOS SERVIDORES NO QUEDEN TAPADOS (solo en mobile, hidden en desktop) -- */}
-        <div className="block md:hidden" style={{ height: 200 }} />
+        <div className="block md:hidden" style={{ height: 80 }} />
 
         {/* DESKTOP LAYOUT sigue igual */}
         <div className="hidden md:flex flex-row gap-8">
