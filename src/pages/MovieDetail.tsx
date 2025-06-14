@@ -117,7 +117,7 @@ const MovieDetail = () => {
       />
 
       <div className="relative">
-        {/* Backdrop - Hidden on mobile */}
+        {/* Backdrop */}
         <div className="relative h-[30vh] md:h-[50vh] overflow-hidden">
           <img
             src={backdropUrl}
@@ -132,7 +132,7 @@ const MovieDetail = () => {
           className="block md:hidden absolute left-1/2 -translate-x-1/2 top-[calc(62px-1.5rem)] w-[95%] bg-[rgba(20,25,35,0.6)] rounded-2xl shadow-xl px-4 pt-2 pb-4 z-30"
           style={{ maxWidth: 420 }}
         >
-          {/* Resto igual - Mobile card content */}
+          {/* Mobile card content */}
           <div className="flex gap-4">
             <img
               src={posterUrl}
@@ -199,8 +199,8 @@ const MovieDetail = () => {
         {/* -- SPACER PARA QUE LOS SERVIDORES NO QUEDEN TAPADOS (solo en mobile, hidden en desktop) -- */}
         <div className="block md:hidden" style={{ height: 80 }} />
 
-        {/* DESKTOP LAYOUT with transparent card */}
-        <div className="hidden md:block container mx-auto px-4 relative">
+        {/* DESKTOP AND TABLET LAYOUT with transparent card - Now positioned absolutely over the backdrop */}
+        <div className="hidden md:block absolute inset-x-0 top-[20vh] container mx-auto px-4 z-30">
           <div className="bg-[rgba(20,25,35,0.6)] rounded-2xl shadow-xl p-8 mx-auto max-w-6xl">
             <div className="flex flex-row gap-8">
               {/* Poster */}
@@ -269,6 +269,9 @@ const MovieDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* Spacer for desktop to push content below the overlay */}
+        <div className="hidden md:block" style={{ height: '25vh' }} />
 
         {/* Video Player y servidores */}
         <div className="mt-8">
