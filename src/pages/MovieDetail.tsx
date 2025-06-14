@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -246,23 +247,21 @@ const MovieDetail = () => {
                   </div>
                 )}
 
-                {/* Year and Duration in separate lines */}
-                <div className="space-y-1">
+                {/* Duration and Share Button in the same line */}
+                <div className="flex items-center gap-4">
                   <div className="text-cuevana-white/90 text-lg">
                     <span>{movie.runtime ? Math.floor(movie.runtime / 60) + "h " + (movie.runtime % 60) + "min" : "Duración no disponible"}</span>
                   </div>
-                  <div className="text-cuevana-white/90 text-lg">
-                    <span>{releaseYear}</span>
-                  </div>
-                </div>
-
-                {/* Share Button - Moved inside the card */}
-                <div className="flex items-center gap-3">
                   <ShareButton 
                     title={movie.title}
                     variant="outline"
                     className="text-cuevana-blue border-cuevana-blue hover:bg-cuevana-blue hover:text-white"
                   />
+                </div>
+
+                {/* Year in separate line */}
+                <div className="text-cuevana-white/90 text-lg">
+                  <span>{releaseYear}</span>
                 </div>
               </div>
             </div>
