@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -25,29 +26,21 @@ const MovieDetail = () => {
     enabled: !!slug,
     retry: (failureCount, error) => {
       console.error(`Attempt ${failureCount + 1} failed:`, error);
-      return failureCount < 2; // Retry up to 2 times
+      return failureCount < 2;
     }
   });
 
-  // Query para películas relacionadas
   const { data: relatedMovies = [] } = useQuery({
     queryKey: ['relatedMovies', movie?.id, movie?.genres],
     queryFn: () => fetchRelatedMovies(movie!.id, movie?.genres || []),
     enabled: !!movie,
   });
 
-  // Registrar vista cuando se carga la película
   useEffect(() => {
     if (movie?.id) {
       recordMovieView(movie.id);
     }
   }, [movie?.id]);
-
-  // Debug log for related movies
-  useEffect(() => {
-    console.log("Related movies data:", relatedMovies);
-    console.log("Related movies count:", relatedMovies.length);
-  }, [relatedMovies]);
 
   if (isLoading) {
     return (
@@ -132,8 +125,8 @@ const MovieDetail = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-cuevana-bg via-cuevana-bg/80 to-transparent" />
         </div>
 
-        {/* Movie Info - Reorganized Layout */}
-        <div className="container mx-auto px-4 -mt-24 relative z-10">
+        {/* Movie Info - Layout like reference image */}
+        <div className="container mx-auto px-4 -mt-32 relative z-10">
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Poster */}
             <div className="flex-shrink-0">
@@ -144,67 +137,63 @@ const MovieDetail = () => {
               />
             </div>
 
-            {/* Movie Details */}
-            <div className="flex-1 space-y-4">
-              {/* Title and Year */}
+            {/* Movie Details - Right side of poster */}
+            <div className="flex-1 space-y-3 pt-8">
+              {/* Title and Original Title */}
               <div>
-                <h1 className="text-3xl lg:text-4xl font-bold">{movie.title}</h1>
-                <p className="text-cuevana-white/70 text-lg">{movie.original_title || movie.title}</p>
+                <h1 className="text-3xl lg:text-4xl font-bold text-cuevana-white">{movie.title}</h1>
+                <p className="text-cuevana-white/70 text-lg mt-1">{movie.original_title || movie.title}</p>
               </div>
 
-              {/* Rating Badge */}
-              {movie.rating && (
-                <div className="inline-flex items-center bg-cuevana-gold/20 text-cuevana-gold px-3 py-1 rounded-full">
-                  <Star className="h-4 w-4 mr-1 fill-current" />
-                  <span className="font-semibold">{movie.rating}%</span>
-                </div>
-              )}
-
-              {/* Metadata Row */}
-              <div className="flex flex-wrap items-center gap-4 text-sm text-cuevana-white/80">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>{releaseYear}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  <span>{runtime}</span>
-                </div>
+              {/* Rating, Year, Duration in one line */}
+              <div className="flex items-center gap-4 text-cuevana-white/90">
+                {movie.rating && (
+                  <div className="inline-flex items-center bg-cuevana-gold/20 text-cuevana-gold px-2 py-1 rounded">
+                    <Star className="h-4 w-4 mr-1 fill-current" />
+                    <span className="font-semibold text-sm">{movie.rating}%</span>
+                  </div>
+                )}
+                <span className="text-sm">{releaseYear}</span>
+                <span className="text-sm">{runtime}</span>
               </div>
 
-              {/* Genres */}
-              <div className="flex items-center gap-2">
-                <Tag className="h-4 w-4 text-cuevana-blue" />
-                <span className="text-cuevana-white/90">{genres}</span>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap gap-3 pt-2">
-                <Button className="bg-cuevana-blue hover:bg-cuevana-blue/90 flex items-center gap-2">
-                  <Play className="h-4 w-4" />
-                  Ver Película
-                </Button>
+              {/* Share Buttons */}
+              <div className="flex items-center gap-2 pt-2">
                 <ShareButton 
                   title={movie.title}
                   variant="outline"
+                  className="text-cuevana-blue border-cuevana-blue hover:bg-cuevana-blue hover:text-white"
                 />
-                <Button variant="outline" className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10">
-                  <Heart className="h-4 w-4 mr-2" />
-                  Favoritos
-                </Button>
               </div>
-
-              {/* Synopsis */}
-              {movie.overview && (
-                <div className="pt-4">
-                  <h3 className="text-lg font-semibold mb-2 text-cuevana-blue">Sinopsis</h3>
-                  <p className="text-cuevana-white/90 leading-relaxed">
-                    {movie.overview}
-                  </p>
-                </div>
-              )}
             </div>
           </div>
+
+          {/* Synopsis - Full width below poster and details */}
+          {movie.overview && (
+            <div className="mt-8">
+              <p className="text-cuevana-white/90 leading-relaxed text-base max-w-4xl">
+                {movie.overview}
+              </p>
+            </div>
+          )}
+
+          {/* Genres */}
+          <div className="mt-4">
+            <div className="flex items-center gap-2">
+              <span className="text-cuevana-white/70 text-sm font-medium">Género:</span>
+              <span className="text-cuevana-white/90 text-sm">{genres}</span>
+            </div>
+          </div>
+
+          {/* Actors section if available */}
+          {movie.cast && movie.cast.length > 0 && (
+            <div className="mt-4">
+              <div className="flex items-start gap-2">
+                <span className="text-cuevana-white/70 text-sm font-medium">Actores:</span>
+                <span className="text-cuevana-white/90 text-sm">{movie.cast.slice(0, 5).join(', ')}</span>
+              </div>
+            </div>
+          )}
 
           {/* Video Player */}
           <div className="mt-12">
