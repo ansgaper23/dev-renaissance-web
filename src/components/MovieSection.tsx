@@ -66,8 +66,13 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
     ? (movie.poster_path.startsWith('http') ? movie.poster_path : `https://image.tmdb.org/t/p/w500${movie.poster_path}`)
     : '/placeholder.svg';
 
-  // Use the stored slug if available, otherwise generate one
-  const movieSlug = movie.slug || generateSlug(movie.title);
+  // Use the stored slug if available and valid, otherwise use movie ID
+  let movieSlug = movie.slug;
+  
+  // If no slug exists or slug looks like a UUID, use the movie ID
+  if (!movieSlug || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(movieSlug)) {
+    movieSlug = movie.id;
+  }
 
   return (
     <div

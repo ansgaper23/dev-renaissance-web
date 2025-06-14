@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Movie {
@@ -158,15 +159,33 @@ export const fetchMovieById = async (id: string): Promise<Movie> => {
 export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
   console.log("Searching for movie with slug:", slug);
   
+  // Check if slug looks like a UUID (movies without proper slugs)
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+  
+  if (isUUID) {
+    console.log("Slug appears to be a UUID, searching by ID:", slug);
+    // Try to find by ID first
+    const { data: movieById, error: idError } = await supabase
+      .from('movies')
+      .select('*')
+      .eq('id', slug)
+      .single();
+    
+    if (!idError && movieById) {
+      console.log("Found movie by ID:", movieById.title);
+      return convertToMovie(movieById);
+    }
+  }
+  
   // First try to find by exact slug match
   let { data, error } = await supabase
     .from('movies')
     .select('*')
     .eq('slug', slug)
-    .single();
+    .maybeSingle();
   
   // If not found and slug contains a year, try without the year
-  if (error && slug.includes('-')) {
+  if (!data && slug.includes('-')) {
     const parts = slug.split('-');
     const lastPart = parts[parts.length - 1];
     
@@ -179,7 +198,7 @@ export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
         .from('movies')
         .select('*')
         .eq('slug', slugWithoutYear)
-        .single();
+        .maybeSingle();
       
       if (!errorWithoutYear && dataWithoutYear) {
         data = dataWithoutYear;
@@ -189,7 +208,7 @@ export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
   }
   
   // If still not found, try to find by title
-  if (error) {
+  if (!data) {
     console.log("Movie not found by slug, trying by title");
     const titleFromSlug = slug.replace(/-/g, ' ').replace(/\s+\d{4}$/, '');
     
@@ -215,10 +234,13 @@ export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
 };
 
 export const addMovie = async (movie: MovieCreate): Promise<Movie> => {
+  // Generate slug if not provided
+  const slug = movie.slug || generateSlug(movie.title);
+  
   // Create a simple object with only the fields we need
   const movieData = {
     title: movie.title,
-    slug: movie.slug || generateSlug(movie.title),
+    slug: slug,
     tmdb_id: movie.tmdb_id || null,
     original_title: movie.original_title || null,
     poster_path: movie.poster_path || null,
