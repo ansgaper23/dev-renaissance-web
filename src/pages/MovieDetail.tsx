@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -257,8 +256,8 @@ const MovieDetail = () => {
                   </div>
                 </div>
 
-                {/* Share Buttons */}
-                <div className="flex items-center gap-3 pt-4">
+                {/* Share Button - Moved inside the card */}
+                <div className="flex items-center gap-3">
                   <ShareButton 
                     title={movie.title}
                     variant="outline"
