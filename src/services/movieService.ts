@@ -338,59 +338,93 @@ export const recordMovieView = async (movieId: string): Promise<void> => {
 
 // Simplified related movies function without RPC calls
 export const fetchRelatedMovies = async (movieId: string, genres: string[]): Promise<Movie[]> => {
+  console.log("Fetching related movies for:", movieId, "with genres:", genres);
+  
   if (!genres || genres.length === 0) {
-    return [];
-  }
-
-  try {
-    // Simple query without RPC
+    console.log("No genres provided, fetching recent movies instead");
+    // If no genres, return recent movies
     const { data, error } = await supabase
       .from('movies')
-      .select('id, title, poster_path, genres, rating, release_date')
+      .select('*')
       .neq('id', movieId)
-      .limit(10);
+      .order('created_at', { ascending: false })
+      .limit(6);
 
-    if (error || !data) {
-      console.error("Error fetching related movies:", error);
+    if (error) {
+      console.error("Error fetching recent movies:", error);
       return [];
     }
 
+    return (data || []).map(convertToMovie);
+  }
+
+  try {
+    // First, try to find movies with matching genres
+    const { data: allMovies, error } = await supabase
+      .from('movies')
+      .select('*')
+      .neq('id', movieId)
+      .not('genres', 'is', null)
+      .limit(50); // Get more movies to filter from
+
+    if (error) {
+      console.error("Error fetching movies for genre matching:", error);
+      return [];
+    }
+
+    if (!allMovies || allMovies.length === 0) {
+      console.log("No movies found, returning empty array");
+      return [];
+    }
+
+    console.log(`Found ${allMovies.length} movies to check for genre matches`);
+
     // Filter movies that share at least one genre
-    const relatedMovies: Movie[] = [];
+    const relatedMovies: any[] = [];
     
-    for (const row of data) {
-      if (row.genres && Array.isArray(row.genres)) {
-        const hasSharedGenre = row.genres.some(genre => genres.includes(genre));
+    for (const movie of allMovies) {
+      if (movie.genres && Array.isArray(movie.genres)) {
+        const hasSharedGenre = movie.genres.some((genre: string) => 
+          genres.some(currentGenre => 
+            genre.toLowerCase().trim() === currentGenre.toLowerCase().trim()
+          )
+        );
+        
         if (hasSharedGenre) {
-          relatedMovies.push({
-            id: row.id,
-            title: row.title,
-            poster_path: row.poster_path || null,
-            genres: row.genres || null,
-            rating: row.rating || null,
-            release_date: row.release_date || null,
-            original_title: null,
-            slug: null,
-            backdrop_path: null,
-            overview: null,
-            genre_ids: null,
-            runtime: null,
-            trailer_url: null,
-            stream_url: null,
-            stream_servers: null,
-            created_at: null,
-            updated_at: null,
-            imdb_id: null,
-            tmdb_id: null
-          });
+          relatedMovies.push(movie);
         }
       }
     }
 
-    return relatedMovies;
+    console.log(`Found ${relatedMovies.length} movies with matching genres`);
+
+    // If we found related movies by genre, return them (limit to 6)
+    if (relatedMovies.length > 0) {
+      return relatedMovies.slice(0, 6).map(convertToMovie);
+    }
+
+    // If no movies share genres, return recent movies as fallback
+    console.log("No genre matches found, returning recent movies as fallback");
+    const recentMovies = allMovies.slice(0, 6);
+    return recentMovies.map(convertToMovie);
+
   } catch (error) {
     console.error("Error in fetchRelatedMovies:", error);
-    return [];
+    
+    // Final fallback: get any recent movies
+    try {
+      const { data: fallbackData } = await supabase
+        .from('movies')
+        .select('*')
+        .neq('id', movieId)
+        .order('created_at', { ascending: false })
+        .limit(6);
+      
+      return (fallbackData || []).map(convertToMovie);
+    } catch (fallbackError) {
+      console.error("Fallback query also failed:", fallbackError);
+      return [];
+    }
   }
 };
 
