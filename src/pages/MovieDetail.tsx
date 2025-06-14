@@ -128,7 +128,7 @@ const MovieDetail = () => {
 
         {/* --- MOBILE CARD SOBRE EL BANNER --- */}
         <div
-          className="block md:hidden absolute left-1/2 -translate-x-1/2 top-[calc(62px-1.5rem)] w-[95%] bg-[rgba(20,25,35,0.94)] rounded-2xl shadow-xl px-4 pt-2 pb-4 z-30"
+          className="block md:hidden absolute left-1/2 -translate-x-1/2 top-[calc(62px-1.5rem)] w-[95%] bg-[rgba(20,25,35,0.6)] rounded-2xl shadow-xl px-4 pt-2 pb-4 z-30"
           style={{ maxWidth: 420 }}
         >
           {/* Resto igual - Mobile card content */}
