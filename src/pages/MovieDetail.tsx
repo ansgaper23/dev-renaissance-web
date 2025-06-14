@@ -195,8 +195,8 @@ const MovieDetail = () => {
           {/* Si hubiera actores agregar aquí */}
         </div>
 
-        {/* --- ELIMINAMOS ESPACIADOR para que los servidores y el reproductor estén pegados */}
-        <div className="block md:hidden" style={{ height: 0 }} />
+        {/* -- SPACER PARA QUE LOS SERVIDORES NO QUEDEN TAPADOS (solo en mobile, hidden en desktop) -- */}
+        <div className="block md:hidden" style={{ height: 200 }} />
 
         {/* DESKTOP LAYOUT sigue igual */}
         <div className="hidden md:flex flex-row gap-8">
@@ -251,8 +251,8 @@ const MovieDetail = () => {
             </div>
           </div>
         </div>
-        {/* Video Player */}
-        <div className="mt-6">
+        {/* Video Player y servidores */}
+        <div className="mt-0">
           <VideoPlayer
             title={movie.title}
             streamServers={movie.stream_servers || []}
