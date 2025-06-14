@@ -125,9 +125,9 @@ const MovieDetail = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-cuevana-bg via-cuevana-bg/80 to-transparent" />
         </div>
 
-        {/* Movie Info - Layout like reference image */}
+        {/* Movie Info - Layout exactly like reference image */}
         <div className="container mx-auto px-4 -mt-40 relative z-10">
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex flex-col lg:flex-row gap-8">
             {/* Poster */}
             <div className="flex-shrink-0">
               <img 
@@ -137,28 +137,41 @@ const MovieDetail = () => {
               />
             </div>
 
-            {/* Movie Details - Right side of poster */}
-            <div className="flex-1 space-y-3 pt-8">
-              {/* Title and Original Title */}
-              <div>
-                <h1 className="text-3xl lg:text-4xl font-bold text-cuevana-white">{movie.title}</h1>
-                <p className="text-cuevana-white/70 text-lg mt-1">{movie.original_title || movie.title}</p>
-              </div>
+            {/* Movie Details - Right side of poster, exactly like image */}
+            <div className="flex-1 space-y-4 pt-8">
+              {/* Title */}
+              <h1 className="text-4xl lg:text-5xl font-bold text-cuevana-white leading-tight">
+                {movie.title}
+              </h1>
+              
+              {/* Original Title */}
+              <p className="text-cuevana-white/70 text-xl">
+                {movie.original_title || movie.title}
+              </p>
 
-              {/* Rating, Year, Duration in one line */}
-              <div className="flex items-center gap-4 text-cuevana-white/90">
-                {movie.rating && (
-                  <div className="inline-flex items-center bg-cuevana-gold/20 text-cuevana-gold px-2 py-1 rounded">
-                    <Star className="h-4 w-4 mr-1 fill-current" />
-                    <span className="font-semibold text-sm">{movie.rating}%</span>
+              {/* Rating with circle and percentage */}
+              {movie.rating && (
+                <div className="flex items-center gap-2">
+                  <div className="relative w-12 h-12">
+                    <div className="w-12 h-12 rounded-full border-4 border-cuevana-gold flex items-center justify-center bg-cuevana-bg">
+                      <span className="text-cuevana-gold font-bold text-sm">{movie.rating}%</span>
+                    </div>
                   </div>
-                )}
-                <span className="text-sm">{releaseYear}</span>
-                <span className="text-sm">{runtime}</span>
+                </div>
+              )}
+
+              {/* Year and Duration in separate lines */}
+              <div className="space-y-1">
+                <div className="text-cuevana-white/90 text-lg">
+                  <span>1h 51min</span>
+                </div>
+                <div className="text-cuevana-white/90 text-lg">
+                  <span>{releaseYear}</span>
+                </div>
               </div>
 
               {/* Share Buttons */}
-              <div className="flex items-center gap-2 pt-2">
+              <div className="flex items-center gap-3 pt-4">
                 <ShareButton 
                   title={movie.title}
                   variant="outline"
@@ -168,18 +181,18 @@ const MovieDetail = () => {
             </div>
           </div>
 
-          {/* Synopsis - Full width below poster and details */}
+          {/* Synopsis - Full width below */}
           {movie.overview && (
-            <div className="mt-8">
-              <p className="text-cuevana-white/90 leading-relaxed text-base max-w-4xl">
+            <div className="mt-8 max-w-4xl">
+              <p className="text-cuevana-white/90 leading-relaxed text-base">
                 {movie.overview}
               </p>
             </div>
           )}
 
           {/* Genres */}
-          <div className="mt-4">
-            <div className="flex items-center gap-2">
+          <div className="mt-6">
+            <div className="flex flex-wrap items-start gap-2">
               <span className="text-cuevana-white/70 text-sm font-medium">Género:</span>
               <span className="text-cuevana-white/90 text-sm">{genres}</span>
             </div>
