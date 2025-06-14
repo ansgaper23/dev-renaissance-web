@@ -196,8 +196,8 @@ const MovieDetail = () => {
             {/* Si hubiera actores agregar aquí */}
           </div>
 
-          {/* --- ESPACIADOR para que el contenido principal arranque después de la card --- */}
-          <div className="block md:hidden" style={{ height: 220 }} />
+          {/* --- ESPACIADOR para dejar el resto del contenido más arriba --- */}
+          <div className="block md:hidden" style={{ height: 40 }} />
 
           {/* DESKTOP LAYOUT sigue igual */}
           <div className="hidden md:flex flex-row gap-8">
