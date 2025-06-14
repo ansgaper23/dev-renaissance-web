@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +23,7 @@ const manualMovieSchema = z.object({
   runtime: z.string().optional(),
   poster_path: z.string().url('Debe ser una URL válida').optional().or(z.literal('')),
   backdrop_path: z.string().url('Debe ser una URL válida').optional().or(z.literal('')),
-  trailer_url: z.string().url('Debe ser una URL válida').optional().or(z.literal(''))),
+  trailer_url: z.string().url('Debe ser una URL válida').optional().or(z.literal('')),
   genres: z.string().optional(),
 });
 
