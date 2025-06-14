@@ -10,6 +10,7 @@ import AdminDashboard from '@/components/AdminDashboard';
 import ImportFromTMDB from '@/components/ImportFromTMDB';
 import QuickAddMovie from '@/components/QuickAddMovie';
 import QuickAddSeries from '@/components/QuickAddSeries';
+import ManualAddMovie from '@/components/ManualAddMovie';
 import SeriesTable from '@/components/SeriesTable';
 
 const Admin = () => {
