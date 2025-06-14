@@ -11,11 +11,13 @@ import { Play, Star, Calendar, Clock, Tag, Heart, ArrowLeft } from 'lucide-react
 import ShareButton from '@/components/ShareButton';
 import MovieSection from '@/components/MovieSection';
 import { recordMovieView, fetchRelatedMovies } from '@/services/movieService';
+import { useSettings } from '@/hooks/useSettings';
 
 const MovieDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [selectedServer, setSelectedServer] = useState(0);
+  const { data: settings } = useSettings();
 
   const { data: movie, isLoading, error } = useQuery({
     queryKey: ['movie', slug],
@@ -117,6 +119,9 @@ const MovieDetail = () => {
         description={movie.overview || `Mira ${movie.title} online gratis`}
         image={posterUrl}
         type="movie"
+        siteName={settings?.site_name}
+        logoUrl={settings?.logo_url}
+        adsCode={settings?.ads_code}
       />
       
       <div className="relative">

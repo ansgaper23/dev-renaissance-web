@@ -6,15 +6,21 @@ import FeaturedCarousel from '@/components/FeaturedCarousel';
 import MostViewedMoviesSection from '@/components/MostViewedMoviesSection';
 import SeriesSectionConnector from '@/components/SeriesSectionConnector';
 import MovieSectionConnector from '@/components/MovieSectionConnector';
+import { useSettings } from '@/hooks/useSettings';
 
 const Index = () => {
+  const { data: settings } = useSettings();
+
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
       <SEOHead 
         title="Ver Películas y Series Online Gratis en HD"
-        description="Disfruta de miles de películas y series online gratis en HD. Estrenos 2024, clásicos del cine y series populares. Sin registro, sin límites en Cuevana3."
+        description={settings?.site_description || "Disfruta de miles de películas y series online gratis en HD. Estrenos 2024, clásicos del cine y series populares. Sin registro, sin límites en Cuevana3."}
         keywords="cuevana3, películas online gratis, series online, ver peliculas gratis, streaming, cine online, estrenos 2024, películas HD, series HD"
         type="website"
+        siteName={settings?.site_name || "Cuevana3"}
+        logoUrl={settings?.logo_url}
+        adsCode={settings?.ads_code}
       />
       <Navbar />
       

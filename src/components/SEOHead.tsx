@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 
 interface SEOHeadProps {
@@ -15,6 +14,7 @@ interface SEOHeadProps {
   modifiedTime?: string;
   section?: string;
   tags?: string[];
+  adsCode?: string;
 }
 
 const SEOHead = ({ 
@@ -30,7 +30,8 @@ const SEOHead = ({
   publishedTime,
   modifiedTime,
   section = 'Entretenimiento',
-  tags = []
+  tags = [],
+  adsCode
 }: SEOHeadProps) => {
   useEffect(() => {
     const currentUrl = url || window.location.href;
@@ -164,6 +165,21 @@ const SEOHead = ({
       }
     });
 
+    // Add ads code to head if provided
+    if (adsCode) {
+      // Remove existing ads code if any
+      const existingAdsScript = document.querySelector('#ads-code-script');
+      if (existingAdsScript) {
+        existingAdsScript.remove();
+      }
+
+      // Create and append new ads code
+      const adsScript = document.createElement('script');
+      adsScript.id = 'ads-code-script';
+      adsScript.innerHTML = adsCode;
+      document.head.appendChild(adsScript);
+    }
+
     // Add JSON-LD schema for better SEO
     const existingSchema = document.querySelector('#seo-schema');
     if (existingSchema) {
@@ -270,7 +286,7 @@ const SEOHead = ({
     script.textContent = JSON.stringify(schema);
     document.head.appendChild(script);
 
-  }, [title, description, image, url, type, siteName, logoUrl, keywords, author, publishedTime, modifiedTime, section, tags]);
+  }, [title, description, image, url, type, siteName, logoUrl, keywords, author, publishedTime, modifiedTime, section, tags, adsCode]);
 
   return null;
 };
