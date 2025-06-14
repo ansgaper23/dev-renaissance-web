@@ -126,9 +126,9 @@ const MovieDetail = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-cuevana-bg via-cuevana-bg/80 to-transparent" />
         </div>
 
-        <div className="container mx-auto px-1 sm:px-4 -mt-16 md:-mt-40 relative z-10">
+        <div className="container mx-auto px-1 sm:px-4">
           {/* MOBILE CARD */}
-          <div className="block md:hidden bg-[rgba(20,25,35,0.88)] rounded-2xl shadow-xl px-4 py-5">
+          <div className="block md:hidden bg-[rgba(20,25,35,0.88)] rounded-2xl shadow-xl px-4 pt-2 pb-4 -mt-10 relative z-20">
             <div className="flex gap-4">
               {/* Póster */}
               <img
@@ -197,10 +197,6 @@ const MovieDetail = () => {
               <span className="text-cuevana-white/60 text-sm">{genres}</span>
             </div>
             {/* Si hubiera actores agregar aquí */}
-            {/* <div className="mt-1">
-              <span className="font-semibold text-cuevana-white/80 text-sm">Actores: </span>
-              <span className="text-cuevana-white/60 text-sm">Nombres separados por coma</span>
-            </div> */}
           </div>
           {/* DESKTOP LAYOUT sigue igual */}
           <div className="hidden md:flex flex-row gap-8">
