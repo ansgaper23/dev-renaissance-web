@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -98,13 +97,15 @@ const MovieDetail = () => {
       : posterUrl;
 
   const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : 'Sin fecha';
+  // Suponiendo que `cast` no existe en movie, mostrar solo géneros (como en tu referencia)  
   const genres = Array.isArray(movie.genres) ? movie.genres.join(', ') : 'Sin género';
-  const runtime = movie.runtime ? `${movie.runtime} min` : 'Duración no disponible';
+  // Si tuvieras un array `movie.cast`, podrías hacer: movie.cast.map(...).join(', ')
+  // Por ahora solo géneros, como en la referencia
 
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
       <Navbar />
-      <SEOHead 
+      <SEOHead
         title={movie.title}
         description={movie.overview || `Mira ${movie.title} online gratis`}
         image={posterUrl}
@@ -113,11 +114,11 @@ const MovieDetail = () => {
         logoUrl={settings?.logo_url}
         adsCode={settings?.ads_code}
       />
-      
+
       <div className="relative">
-        {/* Backdrop - Hidden on mobile to save space */}
+        {/* Backdrop - Hidden on mobile */}
         <div className="relative h-[30vh] md:h-[50vh] overflow-hidden">
-          <img 
+          <img
             src={backdropUrl}
             alt={movie.title}
             className="w-full h-full object-cover"
@@ -125,62 +126,83 @@ const MovieDetail = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-cuevana-bg via-cuevana-bg/80 to-transparent" />
         </div>
 
-        {/* Movie Info - Mobile-first responsive layout */}
-        <div className="container mx-auto px-4 -mt-20 md:-mt-40 relative z-10">
-          {/* Mobile Layout */}
-          <div className="block md:hidden">
-            {/* Poster centered on mobile */}
-            <div className="flex justify-center mb-6">
-              <img 
+        <div className="container mx-auto px-1 sm:px-4 -mt-16 md:-mt-40 relative z-10">
+          {/* MOBILE CARD */}
+          <div className="block md:hidden bg-[rgba(20,25,35,0.88)] rounded-2xl shadow-xl px-4 py-5">
+            <div className="flex gap-4">
+              {/* Póster */}
+              <img
                 src={posterUrl}
                 alt={movie.title}
-                className="w-40 h-60 object-cover rounded-lg shadow-2xl"
+                className="w-24 h-36 object-cover rounded-lg shadow-lg flex-shrink-0"
               />
-            </div>
-
-            {/* Movie info below poster on mobile */}
-            <div className="text-center space-y-4">
-              {/* Title */}
-              <h1 className="text-2xl font-bold text-cuevana-white leading-tight">
-                {movie.title}
-              </h1>
-              
-              {/* Original Title */}
-              <p className="text-cuevana-white/70 text-lg">
-                {movie.original_title || movie.title}
-              </p>
-
-              {/* Rating with circle */}
-              {movie.rating && (
-                <div className="flex justify-center">
-                  <div className="w-12 h-12 rounded-full border-4 border-cuevana-gold flex items-center justify-center bg-cuevana-bg">
-                    <span className="text-cuevana-gold font-bold text-sm">{movie.rating}%</span>
+              {/* Info textual */}
+              <div className="flex flex-col flex-1 justify-center">
+                {/* Título y subtítulo */}
+                <div className="flex items-center gap-2 mb-1">
+                  <h1 className="text-xl font-bold leading-tight">{movie.title}</h1>
+                </div>
+                {movie.original_title && movie.original_title !== movie.title && (
+                  <div className="text-cuevana-white/70 text-sm mb-2">
+                    {movie.original_title}
                   </div>
+                )}
+                {/* Fila: Calificación, duración y año */}
+                <div className="flex items-center gap-4 mb-1">
+                  {movie.rating && (
+                    <div className="w-10 h-10 rounded-full border-2 border-yellow-400 flex items-center justify-center bg-cuevana-bg text-yellow-300 font-bold text-xs">
+                      {movie.rating}%
+                    </div>
+                  )}
+                  <span className="text-cuevana-white/80 text-xs">{movie.runtime ? Math.floor(movie.runtime / 60) + "h " + (movie.runtime % 60) + "min" : "Duración no disponible"}</span>
+                  <span className="text-cuevana-white/80 text-xs">{releaseYear}</span>
                 </div>
-              )}
-
-              {/* Year and Duration */}
-              <div className="space-y-1">
-                <div className="text-cuevana-white/90 text-base">
-                  <span>1h 51min</span>
+                {/* Botones compartir */}
+                <div className="flex items-center gap-2 mt-1">
+                  <ShareButton
+                    title={movie.title}
+                    variant="outline"
+                    className="text-cuevana-blue border-cuevana-blue hover:bg-cuevana-blue hover:text-white px-3 py-1"
+                  />
+                  {/* Facebook */}
+                  <a
+                    href={`https://facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center"
+                  >
+                    <span className="sr-only">Compartir en Facebook</span>
+                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12.07C22 6.485 17.522 2 12 2S2 6.485 2 12.07c0 5.057 3.657 9.248 8.438 9.879v-6.988h-2.54v-2.89h2.54v-2.205c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.457h-1.261c-1.242 0-1.631.771-1.631 1.562v1.881h2.773l-.443 2.89h-2.33V21.95C18.343 21.317 22 17.126 22 12.07"/></svg>
+                  </a>
+                  {/* Twitter */}
+                  <a
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Mira ${movie.title} en Cuevana3`)}&url=${encodeURIComponent(window.location.href)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-full bg-blue-400 hover:bg-blue-500 flex items-center"
+                  >
+                    <span className="sr-only">Compartir en Twitter</span>
+                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M22 5.924c-.793.352-1.647.59-2.543.697a4.462 4.462 0 0 0 1.97-2.466 8.862 8.862 0 0 1-2.826 1.084C17.052 4.443 16.072 4 15.01 4c-2.053 0-3.715 1.698-3.715 3.792 0 .297.033.587.099.866C7.597 8.496 4.926 7.028 2.98 4.846c-.325.573-.511 1.234-.511 1.942 0 1.338.663 2.522 1.672 3.215-.616-.019-1.195-.198-1.701-.47v.048c0 1.87 1.288 3.428 2.995 3.783-.327.093-.673.143-1.03.143-.251 0-.494-.026-.731-.07.494 1.579 1.922 2.727 3.617 2.757A8.989 8.989 0 0 1 2 19.083a12.825 12.825 0 0 0 6.995 2.084c8.395 0 12.99-7.1 12.99-13.26 0-.202-.004-.403-.014-.604.892-.651 1.668-1.464 2.279-2.388z"/></svg>
+                  </a>
                 </div>
-                <div className="text-cuevana-white/90 text-base">
-                  <span>{releaseYear}</span>
-                </div>
-              </div>
-
-              {/* Share Buttons */}
-              <div className="flex justify-center pt-4">
-                <ShareButton 
-                  title={movie.title}
-                  variant="outline"
-                  className="text-cuevana-blue border-cuevana-blue hover:bg-cuevana-blue hover:text-white"
-                />
               </div>
             </div>
+            {/* Sinopsis */}
+            {movie.overview && (
+              <div className="mt-3 text-cuevana-white/90 text-sm">{movie.overview}</div>
+            )}
+            {/* Géneros (y actores si existieran) */}
+            <div className="mt-2">
+              <span className="font-semibold text-cuevana-white/80 text-sm">Género: </span>
+              <span className="text-cuevana-white/60 text-sm">{genres}</span>
+            </div>
+            {/* Si hubiera actores agregar aquí */}
+            {/* <div className="mt-1">
+              <span className="font-semibold text-cuevana-white/80 text-sm">Actores: </span>
+              <span className="text-cuevana-white/60 text-sm">Nombres separados por coma</span>
+            </div> */}
           </div>
-
-          {/* Desktop Layout */}
+          {/* DESKTOP LAYOUT sigue igual */}
           <div className="hidden md:flex flex-row gap-8">
             {/* Poster */}
             <div className="flex-shrink-0">
@@ -234,46 +256,22 @@ const MovieDetail = () => {
               </div>
             </div>
           </div>
-
-          {/* Synopsis - Full width below */}
-          {movie.overview && (
-            <div className="mt-8 max-w-4xl">
-              <p className="text-cuevana-white/90 leading-relaxed text-sm md:text-base text-center md:text-left">
-                {movie.overview}
-              </p>
-            </div>
-          )}
-
-          {/* Genres */}
-          <div className="mt-6">
-            <div className="flex flex-wrap items-start justify-center md:justify-start gap-2">
-              <span className="text-cuevana-white/70 text-sm font-medium">Género:</span>
-              <span className="text-cuevana-white/90 text-sm">{genres}</span>
-            </div>
-          </div>
-
           {/* Video Player */}
-          <div className="mt-12">
-            <VideoPlayer 
+          <div className="mt-6">
+            <VideoPlayer
               title={movie.title}
               streamServers={movie.stream_servers || []}
               streamUrl={movie.stream_url || undefined}
             />
           </div>
-
-          {/* Related Movies */}
+          {/* Related Movies (sigue igual) */}
           {relatedMovies.length > 0 && (
             <div className="mt-16">
-              <MovieSection 
-                title="Películas Relacionadas"
-                movies={relatedMovies}
-                isLoading={false}
-              />
+              <MovieSection title="Películas Relacionadas" movies={relatedMovies} isLoading={false} />
             </div>
           )}
         </div>
       </div>
-
       <Footer />
     </div>
   );
