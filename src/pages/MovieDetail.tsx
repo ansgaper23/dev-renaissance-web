@@ -115,8 +115,8 @@ const MovieDetail = () => {
       />
       
       <div className="relative">
-        {/* Backdrop */}
-        <div className="relative h-[50vh] overflow-hidden">
+        {/* Backdrop - Hidden on mobile to save space */}
+        <div className="relative h-[30vh] md:h-[50vh] overflow-hidden">
           <img 
             src={backdropUrl}
             alt={movie.title}
@@ -125,15 +125,69 @@ const MovieDetail = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-cuevana-bg via-cuevana-bg/80 to-transparent" />
         </div>
 
-        {/* Movie Info - Layout exactly like reference image */}
-        <div className="container mx-auto px-4 -mt-40 relative z-10">
-          <div className="flex flex-col lg:flex-row gap-8">
+        {/* Movie Info - Mobile-first responsive layout */}
+        <div className="container mx-auto px-4 -mt-20 md:-mt-40 relative z-10">
+          {/* Mobile Layout */}
+          <div className="block md:hidden">
+            {/* Poster centered on mobile */}
+            <div className="flex justify-center mb-6">
+              <img 
+                src={posterUrl}
+                alt={movie.title}
+                className="w-40 h-60 object-cover rounded-lg shadow-2xl"
+              />
+            </div>
+
+            {/* Movie info below poster on mobile */}
+            <div className="text-center space-y-4">
+              {/* Title */}
+              <h1 className="text-2xl font-bold text-cuevana-white leading-tight">
+                {movie.title}
+              </h1>
+              
+              {/* Original Title */}
+              <p className="text-cuevana-white/70 text-lg">
+                {movie.original_title || movie.title}
+              </p>
+
+              {/* Rating with circle */}
+              {movie.rating && (
+                <div className="flex justify-center">
+                  <div className="w-12 h-12 rounded-full border-4 border-cuevana-gold flex items-center justify-center bg-cuevana-bg">
+                    <span className="text-cuevana-gold font-bold text-sm">{movie.rating}%</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Year and Duration */}
+              <div className="space-y-1">
+                <div className="text-cuevana-white/90 text-base">
+                  <span>1h 51min</span>
+                </div>
+                <div className="text-cuevana-white/90 text-base">
+                  <span>{releaseYear}</span>
+                </div>
+              </div>
+
+              {/* Share Buttons */}
+              <div className="flex justify-center pt-4">
+                <ShareButton 
+                  title={movie.title}
+                  variant="outline"
+                  className="text-cuevana-blue border-cuevana-blue hover:bg-cuevana-blue hover:text-white"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden md:flex flex-row gap-8">
             {/* Poster */}
             <div className="flex-shrink-0">
               <img 
                 src={posterUrl}
                 alt={movie.title}
-                className="w-48 h-72 object-cover rounded-lg shadow-2xl mx-auto lg:mx-0"
+                className="w-48 h-72 object-cover rounded-lg shadow-2xl"
               />
             </div>
 
@@ -184,7 +238,7 @@ const MovieDetail = () => {
           {/* Synopsis - Full width below */}
           {movie.overview && (
             <div className="mt-8 max-w-4xl">
-              <p className="text-cuevana-white/90 leading-relaxed text-base">
+              <p className="text-cuevana-white/90 leading-relaxed text-sm md:text-base text-center md:text-left">
                 {movie.overview}
               </p>
             </div>
@@ -192,7 +246,7 @@ const MovieDetail = () => {
 
           {/* Genres */}
           <div className="mt-6">
-            <div className="flex flex-wrap items-start gap-2">
+            <div className="flex flex-wrap items-start justify-center md:justify-start gap-2">
               <span className="text-cuevana-white/70 text-sm font-medium">Género:</span>
               <span className="text-cuevana-white/90 text-sm">{genres}</span>
             </div>
