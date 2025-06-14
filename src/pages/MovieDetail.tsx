@@ -127,147 +127,144 @@ const MovieDetail = () => {
         </div>
 
         {/* --- MOBILE CARD SOBRE EL BANNER --- */}
-        <div className="container mx-auto px-1 sm:px-4">
-          <div
-            className="block md:hidden absolute left-1/2 -translate-x-1/2 top-[calc(62px-1.5rem)] w-[95%] bg-[rgba(20,25,35,0.94)] rounded-2xl shadow-xl px-4 pt-2 pb-4 z-30"
-            style={{ maxWidth: 420 }}
-          >
-            {/* Resto igual - Mobile card content */}
-            <div className="flex gap-4">
-              <img
-                src={posterUrl}
-                alt={movie.title}
-                className="w-24 h-36 object-cover rounded-lg shadow-lg flex-shrink-0"
-              />
-              <div className="flex flex-col flex-1 justify-center">
-                <div className="flex items-center gap-2 mb-1">
-                  <h1 className="text-xl font-bold leading-tight">{movie.title}</h1>
-                </div>
-                {movie.original_title && movie.original_title !== movie.title && (
-                  <div className="text-cuevana-white/70 text-sm mb-2">
-                    {movie.original_title}
-                  </div>
-                )}
-                <div className="flex items-center gap-4 mb-1">
-                  {movie.rating && (
-                    <div className="w-10 h-10 rounded-full border-2 border-yellow-400 flex items-center justify-center bg-cuevana-bg text-yellow-300 font-bold text-xs">
-                      {movie.rating}%
-                    </div>
-                  )}
-                  <span className="text-cuevana-white/80 text-xs">{movie.runtime ? Math.floor(movie.runtime / 60) + "h " + (movie.runtime % 60) + "min" : "Duración no disponible"}</span>
-                  <span className="text-cuevana-white/80 text-xs">{releaseYear}</span>
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <ShareButton
-                    title={movie.title}
-                    variant="outline"
-                    className="text-cuevana-blue border-cuevana-blue hover:bg-cuevana-blue hover:text-white px-3 py-1"
-                  />
-                  {/* Facebook */}
-                  <a
-                    href={`https://facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center"
-                  >
-                    <span className="sr-only">Compartir en Facebook</span>
-                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12.07C22 6.485 17.522 2 12 2S2 6.485 2 12.07c0 5.057 3.657 9.248 8.438 9.879v-6.988h-2.54v-2.89h2.54v-2.205c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.457h-1.261c-1.242 0-1.631.771-1.631 1.562v1.881h2.773l-.443 2.89h-2.33V21.95C18.343 21.317 22 17.126 22 12.07"/></svg>
-                  </a>
-                  {/* Twitter */}
-                  <a
-                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Mira ${movie.title} en Cuevana3`)}&url=${encodeURIComponent(window.location.href)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 rounded-full bg-blue-400 hover:bg-blue-500 flex items-center"
-                  >
-                    <span className="sr-only">Compartir en Twitter</span>
-                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M22 5.924c-.793.352-1.647.59-2.543.697a4.462 4.462 0 0 0 1.97-2.466 8.862 8.862 0 0 1-2.826 1.084C17.052 4.443 16.072 4 15.01 4c-2.053 0-3.715 1.698-3.715 3.792 0 .297.033.587.099.866C7.597 8.496 4.926 7.028 2.98 4.846c-.325.573-.511 1.234-.511 1.942 0 1.338.663 2.522 1.672 3.215-.616-.019-1.195-.198-1.701-.47v.048c0 1.87 1.288 3.428 2.995 3.783-.327.093-.673.143-1.03.143-.251 0-.494-.026-.731-.07.494 1.579 1.922 2.727 3.617 2.757A8.989 8.989 0 0 1 2 19.083a12.825 12.825 0 0 0 6.995 2.084c8.395 0 12.99-7.1 12.99-13.26 0-.202-.004-.403-.014-.604.892-.651 1.668-1.464 2.279-2.388z"/></svg>
-                  </a>
-                </div>
+        <div
+          className="block md:hidden absolute left-1/2 -translate-x-1/2 top-[calc(62px-1.5rem)] w-[95%] bg-[rgba(20,25,35,0.94)] rounded-2xl shadow-xl px-4 pt-2 pb-4 z-30"
+          style={{ maxWidth: 420 }}
+        >
+          {/* Resto igual - Mobile card content */}
+          <div className="flex gap-4">
+            <img
+              src={posterUrl}
+              alt={movie.title}
+              className="w-24 h-36 object-cover rounded-lg shadow-lg flex-shrink-0"
+            />
+            <div className="flex flex-col flex-1 justify-center">
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-xl font-bold leading-tight">{movie.title}</h1>
               </div>
-            </div>
-            {movie.overview && (
-              <div className="mt-3 text-cuevana-white/90 text-sm">{movie.overview}</div>
-            )}
-            <div className="mt-2">
-              <span className="font-semibold text-cuevana-white/80 text-sm">Género: </span>
-              <span className="text-cuevana-white/60 text-sm">{genres}</span>
-            </div>
-            {/* Si hubiera actores agregar aquí */}
-          </div>
-
-          {/* --- ESPACIADOR para dejar el resto del contenido más arriba --- */}
-          <div className="block md:hidden" style={{ height: 40 }} />
-
-          {/* DESKTOP LAYOUT sigue igual */}
-          <div className="hidden md:flex flex-row gap-8">
-            {/* Poster */}
-            <div className="flex-shrink-0">
-              <img 
-                src={posterUrl}
-                alt={movie.title}
-                className="w-48 h-72 object-cover rounded-lg shadow-2xl"
-              />
-            </div>
-
-            {/* Movie Details - Right side of poster, exactly like image */}
-            <div className="flex-1 space-y-4 pt-8">
-              {/* Title */}
-              <h1 className="text-4xl lg:text-5xl font-bold text-cuevana-white leading-tight">
-                {movie.title}
-              </h1>
-              
-              {/* Original Title */}
-              <p className="text-cuevana-white/70 text-xl">
-                {movie.original_title || movie.title}
-              </p>
-
-              {/* Rating with circle and percentage */}
-              {movie.rating && (
-                <div className="flex items-center gap-2">
-                  <div className="relative w-12 h-12">
-                    <div className="w-12 h-12 rounded-full border-4 border-cuevana-gold flex items-center justify-center bg-cuevana-bg">
-                      <span className="text-cuevana-gold font-bold text-sm">{movie.rating}%</span>
-                    </div>
-                  </div>
+              {movie.original_title && movie.original_title !== movie.title && (
+                <div className="text-cuevana-white/70 text-sm mb-2">
+                  {movie.original_title}
                 </div>
               )}
-
-              {/* Year and Duration in separate lines */}
-              <div className="space-y-1">
-                <div className="text-cuevana-white/90 text-lg">
-                  <span>1h 51min</span>
-                </div>
-                <div className="text-cuevana-white/90 text-lg">
-                  <span>{releaseYear}</span>
-                </div>
+              <div className="flex items-center gap-4 mb-1">
+                {movie.rating && (
+                  <div className="w-10 h-10 rounded-full border-2 border-yellow-400 flex items-center justify-center bg-cuevana-bg text-yellow-300 font-bold text-xs">
+                    {movie.rating}%
+                  </div>
+                )}
+                <span className="text-cuevana-white/80 text-xs">{movie.runtime ? Math.floor(movie.runtime / 60) + "h " + (movie.runtime % 60) + "min" : "Duración no disponible"}</span>
+                <span className="text-cuevana-white/80 text-xs">{releaseYear}</span>
               </div>
-
-              {/* Share Buttons */}
-              <div className="flex items-center gap-3 pt-4">
-                <ShareButton 
+              <div className="flex items-center gap-2 mt-1">
+                <ShareButton
                   title={movie.title}
                   variant="outline"
-                  className="text-cuevana-blue border-cuevana-blue hover:bg-cuevana-blue hover:text-white"
+                  className="text-cuevana-blue border-cuevana-blue hover:bg-cuevana-blue hover:text-white px-3 py-1"
                 />
+                {/* Facebook */}
+                <a
+                  href={`https://facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center"
+                >
+                  <span className="sr-only">Compartir en Facebook</span>
+                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12.07C22 6.485 17.522 2 12 2S2 6.485 2 12.07c0 5.057 3.657 9.248 8.438 9.879v-6.988h-2.54v-2.89h2.54v-2.205c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.457h-1.261c-1.242 0-1.631.771-1.631 1.562v1.881h2.773l-.443 2.89h-2.33V21.95C18.343 21.317 22 17.126 22 12.07"/></svg>
+                </a>
+                {/* Twitter */}
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Mira ${movie.title} en Cuevana3`)}&url=${encodeURIComponent(window.location.href)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-full bg-blue-400 hover:bg-blue-500 flex items-center"
+                >
+                  <span className="sr-only">Compartir en Twitter</span>
+                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M22 5.924c-.793.352-1.647.59-2.543.697a4.462 4.462 0 0 0 1.97-2.466 8.862 8.862 0 0 1-2.826 1.084C17.052 4.443 16.072 4 15.01 4c-2.053 0-3.715 1.698-3.715 3.792 0 .297.033.587.099.866C7.597 8.496 4.926 7.028 2.98 4.846c-.325.573-.511 1.234-.511 1.942 0 1.338.663 2.522 1.672 3.215-.616-.019-1.195-.198-1.701-.47v.048c0 1.87 1.288 3.428 2.995 3.783-.327.093-.673.143-1.03.143-.251 0-.494-.026-.731-.07.494 1.579 1.922 2.727 3.617 2.757A8.989 8.989 0 0 1 2 19.083a12.825 12.825 0 0 0 6.995 2.084c8.395 0 12.99-7.1 12.99-13.26 0-.202-.004-.403-.014-.604.892-.651 1.668-1.464 2.279-2.388z"/></svg>
+                </a>
               </div>
             </div>
           </div>
-          {/* Video Player */}
-          <div className="mt-6">
-            <VideoPlayer
-              title={movie.title}
-              streamServers={movie.stream_servers || []}
-              streamUrl={movie.stream_url || undefined}
+          {movie.overview && (
+            <div className="mt-3 text-cuevana-white/90 text-sm">{movie.overview}</div>
+          )}
+          <div className="mt-2">
+            <span className="font-semibold text-cuevana-white/80 text-sm">Género: </span>
+            <span className="text-cuevana-white/60 text-sm">{genres}</span>
+          </div>
+          {/* Si hubiera actores agregar aquí */}
+        </div>
+
+        {/* --- ELIMINAMOS ESPACIADOR para que los servidores y el reproductor estén pegados */}
+        <div className="block md:hidden" style={{ height: 0 }} />
+
+        {/* DESKTOP LAYOUT sigue igual */}
+        <div className="hidden md:flex flex-row gap-8">
+          {/* Poster */}
+          <div className="flex-shrink-0">
+            <img 
+              src={posterUrl}
+              alt={movie.title}
+              className="w-48 h-72 object-cover rounded-lg shadow-2xl"
             />
           </div>
-          {/* Related Movies (sigue igual) */}
-          {relatedMovies.length > 0 && (
-            <div className="mt-16">
-              <MovieSection title="Películas Relacionadas" movies={relatedMovies} isLoading={false} />
+
+          {/* Movie Details - Right side of poster, exactly like image */}
+          <div className="flex-1 space-y-4 pt-8">
+            {/* Title */}
+            <h1 className="text-4xl lg:text-5xl font-bold text-cuevana-white leading-tight">
+              {movie.title}
+            </h1>
+            {/* Original Title */}
+            <p className="text-cuevana-white/70 text-xl">
+              {movie.original_title || movie.title}
+            </p>
+
+            {/* Rating with circle and percentage */}
+            {movie.rating && (
+              <div className="flex items-center gap-2">
+                <div className="relative w-12 h-12">
+                  <div className="w-12 h-12 rounded-full border-4 border-cuevana-gold flex items-center justify-center bg-cuevana-bg">
+                    <span className="text-cuevana-gold font-bold text-sm">{movie.rating}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Year and Duration in separate lines */}
+            <div className="space-y-1">
+              <div className="text-cuevana-white/90 text-lg">
+                <span>1h 51min</span>
+              </div>
+              <div className="text-cuevana-white/90 text-lg">
+                <span>{releaseYear}</span>
+              </div>
             </div>
-          )}
+
+            {/* Share Buttons */}
+            <div className="flex items-center gap-3 pt-4">
+              <ShareButton 
+                title={movie.title}
+                variant="outline"
+                className="text-cuevana-blue border-cuevana-blue hover:bg-cuevana-blue hover:text-white"
+              />
+            </div>
+          </div>
         </div>
+        {/* Video Player */}
+        <div className="mt-6">
+          <VideoPlayer
+            title={movie.title}
+            streamServers={movie.stream_servers || []}
+            streamUrl={movie.stream_url || undefined}
+          />
+        </div>
+        {/* Related Movies (sigue igual) */}
+        {relatedMovies.length > 0 && (
+          <div className="mt-16">
+            <MovieSection title="Películas Relacionadas" movies={relatedMovies} isLoading={false} />
+          </div>
+        )}
       </div>
       <Footer />
     </div>
