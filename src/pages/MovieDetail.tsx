@@ -32,10 +32,7 @@ const MovieDetail = () => {
   // Query para películas relacionadas
   const { data: relatedMovies = [] } = useQuery({
     queryKey: ['relatedMovies', movie?.id, movie?.genres],
-    queryFn: () => {
-      console.log("Fetching related movies for movie:", movie?.title, "with genres:", movie?.genres);
-      return fetchRelatedMovies(movie!.id, movie?.genres || []);
-    },
+    queryFn: () => fetchRelatedMovies(movie!.id, movie?.genres || []),
     enabled: !!movie,
   });
 
@@ -212,16 +209,6 @@ const MovieDetail = () => {
                 movies={relatedMovies}
                 isLoading={false}
               />
-            </div>
-          )}
-          
-          {/* Debug info - remove this after testing */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-8 p-4 bg-gray-800 rounded text-xs">
-              <p>Debug Info:</p>
-              <p>Movie genres: {JSON.stringify(movie.genres)}</p>
-              <p>Related movies count: {relatedMovies.length}</p>
-              <p>Related movies: {relatedMovies.map(m => m.title).join(', ')}</p>
             </div>
           )}
         </div>
