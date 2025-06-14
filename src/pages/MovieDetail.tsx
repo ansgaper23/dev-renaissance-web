@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -124,72 +123,86 @@ const MovieDetail = () => {
       
       <div className="relative">
         {/* Backdrop */}
-        <div className="relative h-[60vh] overflow-hidden">
+        <div className="relative h-[50vh] overflow-hidden">
           <img 
             src={backdropUrl}
             alt={movie.title}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-cuevana-bg via-cuevana-bg/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-cuevana-bg via-cuevana-bg/80 to-transparent" />
         </div>
 
-        {/* Movie Info */}
-        <div className="container mx-auto px-4 -mt-40 relative z-10">
-          <div className="flex flex-col lg:flex-row gap-8">
+        {/* Movie Info - Reorganized Layout */}
+        <div className="container mx-auto px-4 -mt-24 relative z-10">
+          <div className="flex flex-col lg:flex-row gap-6">
             {/* Poster */}
             <div className="flex-shrink-0">
               <img 
                 src={posterUrl}
                 alt={movie.title}
-                className="w-64 h-96 object-cover rounded-lg shadow-2xl mx-auto lg:mx-0"
+                className="w-48 h-72 object-cover rounded-lg shadow-2xl mx-auto lg:mx-0"
               />
             </div>
 
-            {/* Details */}
-            <div className="flex-1 lg:ml-8">
-              <h1 className="text-4xl lg:text-5xl font-bold mb-4">{movie.title}</h1>
-              
-              {/* Sinopsis debajo del título */}
-              {movie.overview && (
-                <p className="text-cuevana-white/90 text-lg leading-relaxed mb-6">
-                  {movie.overview}
-                </p>
+            {/* Movie Details */}
+            <div className="flex-1 space-y-4">
+              {/* Title and Year */}
+              <div>
+                <h1 className="text-3xl lg:text-4xl font-bold">{movie.title}</h1>
+                <p className="text-cuevana-white/70 text-lg">{movie.original_title || movie.title}</p>
+              </div>
+
+              {/* Rating Badge */}
+              {movie.rating && (
+                <div className="inline-flex items-center bg-cuevana-gold/20 text-cuevana-gold px-3 py-1 rounded-full">
+                  <Star className="h-4 w-4 mr-1 fill-current" />
+                  <span className="font-semibold">{movie.rating}%</span>
+                </div>
               )}
 
-              <div className="flex flex-wrap items-center gap-6 mb-6">
-                {movie.rating && (
-                  <div className="flex items-center gap-2">
-                    <Star className="h-5 w-5 text-cuevana-gold fill-current" />
-                    <span className="text-lg font-semibold">{movie.rating}/10</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-cuevana-blue" />
+              {/* Metadata Row */}
+              <div className="flex flex-wrap items-center gap-4 text-sm text-cuevana-white/80">
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
                   <span>{releaseYear}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-cuevana-blue" />
+                <div className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
                   <span>{runtime}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Tag className="h-5 w-5 text-cuevana-blue" />
-                  <span>{genres}</span>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-4 mb-8">
+              {/* Genres */}
+              <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4 text-cuevana-blue" />
+                <span className="text-cuevana-white/90">{genres}</span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-3 pt-2">
                 <Button className="bg-cuevana-blue hover:bg-cuevana-blue/90 flex items-center gap-2">
-                  <Play className="h-5 w-5" />
+                  <Play className="h-4 w-4" />
                   Ver Película
                 </Button>
                 <ShareButton 
                   title={movie.title}
+                  variant="outline"
                 />
                 <Button variant="outline" className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10">
-                  <Heart className="h-5 w-5 mr-2" />
+                  <Heart className="h-4 w-4 mr-2" />
                   Favoritos
                 </Button>
               </div>
+
+              {/* Synopsis */}
+              {movie.overview && (
+                <div className="pt-4">
+                  <h3 className="text-lg font-semibold mb-2 text-cuevana-blue">Sinopsis</h3>
+                  <p className="text-cuevana-white/90 leading-relaxed">
+                    {movie.overview}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
