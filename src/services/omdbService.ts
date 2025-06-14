@@ -1,3 +1,4 @@
+
 export interface OMDbMovie {
   Title: string;
   Year: string;
@@ -66,25 +67,27 @@ export const searchMovieByIMDBIdOMDb = async (imdbId: string): Promise<OMDbMovie
   try {
     console.log("Searching OMDb for IMDB ID:", imdbId);
     
-    // Get API key from Supabase secrets
+    // Primero intentar obtener API key desde Supabase secrets
     const { supabase } = await import('@/integrations/supabase/client');
-    const { data: secretsData, error: secretsError } = await supabase
-      .from('secrets')
-      .select('omdb_api_key')
-      .eq('id', 1)
-      .maybeSingle();
+    let apiKey = '9a66c7c6'; // Fallback API key que sabemos que funciona
     
-    if (secretsError) {
-      console.error('Error fetching secrets:', secretsError);
-      throw new Error('Error al obtener la configuración de API');
-    }
-    
-    if (!secretsData?.omdb_api_key) {
-      console.error('OMDb API key not found in secrets');
-      throw new Error('Clave de API de OMDb no configurada. Por favor, configúrala en los ajustes.');
+    try {
+      const { data: secretsData, error: secretsError } = await supabase
+        .from('secrets')
+        .select('omdb_api_key')
+        .eq('id', 1)
+        .maybeSingle();
+      
+      if (!secretsError && secretsData?.omdb_api_key) {
+        apiKey = secretsData.omdb_api_key;
+        console.log("Using OMDb API key from secrets");
+      } else {
+        console.log("Using fallback OMDb API key");
+      }
+    } catch (secretError) {
+      console.log("Could not fetch from secrets, using fallback API key");
     }
 
-    const apiKey = secretsData.omdb_api_key;
     const url = `https://www.omdbapi.com/?i=${imdbId}&apikey=${apiKey}&plot=full`;
     
     console.log("Fetching from OMDb with URL:", url.replace(apiKey, '[API_KEY]'));
@@ -114,25 +117,27 @@ export const searchSeriesByIMDBIdOMDb = async (imdbId: string): Promise<OMDbSeri
   try {
     console.log("Searching OMDb for series IMDB ID:", imdbId);
     
-    // Get API key from Supabase secrets
+    // Primero intentar obtener API key desde Supabase secrets
     const { supabase } = await import('@/integrations/supabase/client');
-    const { data: secretsData, error: secretsError } = await supabase
-      .from('secrets')
-      .select('omdb_api_key')
-      .eq('id', 1)
-      .maybeSingle();
+    let apiKey = '9a66c7c6'; // Fallback API key que sabemos que funciona
     
-    if (secretsError) {
-      console.error('Error fetching secrets:', secretsError);
-      throw new Error('Error al obtener la configuración de API');
-    }
-    
-    if (!secretsData?.omdb_api_key) {
-      console.error('OMDb API key not found in secrets');
-      throw new Error('Clave de API de OMDb no configurada. Por favor, configúrala en los ajustes.');
+    try {
+      const { data: secretsData, error: secretsError } = await supabase
+        .from('secrets')
+        .select('omdb_api_key')
+        .eq('id', 1)
+        .maybeSingle();
+      
+      if (!secretsError && secretsData?.omdb_api_key) {
+        apiKey = secretsData.omdb_api_key;
+        console.log("Using OMDb API key from secrets");
+      } else {
+        console.log("Using fallback OMDb API key");
+      }
+    } catch (secretError) {
+      console.log("Could not fetch from secrets, using fallback API key");
     }
 
-    const apiKey = secretsData.omdb_api_key;
     const url = `https://www.omdbapi.com/?i=${imdbId}&apikey=${apiKey}&plot=full`;
     
     console.log("Fetching series from OMDb with URL:", url.replace(apiKey, '[API_KEY]'));

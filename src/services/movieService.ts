@@ -343,6 +343,28 @@ export const searchMovieByIMDBId = async (imdbId: string): Promise<TMDBMovieResu
   try {
     console.log("Searching for IMDB ID:", imdbId);
     
+    // Usar el endpoint de supabase functions en lugar del API directo
+    const { supabase } = await import('@/integrations/supabase/client');
+    
+    // Intentar buscar usando la función de supabase
+    try {
+      const { data, error } = await supabase.functions.invoke('tmdb-search', {
+        body: { imdb_id: imdbId }
+      });
+      
+      if (!error && data) {
+        console.log("TMDB search result via Supabase:", data);
+        return {
+          ...data,
+          imdb_id: imdbId,
+          type: 'movie'
+        };
+      }
+    } catch (supabaseError) {
+      console.log("Supabase function failed, trying direct API");
+    }
+    
+    // Fallback: usar API directo con el hardcoded key (temporal)
     const tmdbApiKey = '4a29f0dd1dfdbd0a8b506c7b9e35c506';
     const url = `https://api.themoviedb.org/3/find/${imdbId}?api_key=${tmdbApiKey}&external_source=imdb_id&language=es-ES`;
     
