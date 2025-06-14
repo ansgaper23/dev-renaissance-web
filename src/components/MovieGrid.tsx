@@ -60,7 +60,7 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
   // Crear slug completo con año si está disponible
   const fullSlug = releaseYear ? `${movieSlug}-${releaseYear}` : movieSlug;
 
-  console.log(`Movie: ${movie.title}, Generated slug: ${fullSlug}`);
+  console.log(`Movie: ${movie.title}, Generated slug: ${fullSlug}, Poster URL: ${posterUrl}`);
 
   return (
     <motion.div
@@ -79,6 +79,10 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
               alt={movie.title}
               className="w-full h-full object-cover transition-transform duration-300"
               style={{ transform: isHovered ? 'scale(1.05)' : 'scale(1)' }}
+              onError={(e) => {
+                console.log(`Error loading image for ${movie.title}:`, posterUrl);
+                e.currentTarget.src = '/placeholder.svg';
+              }}
             />
             {isHovered && (
               <div className="absolute inset-0 bg-cuevana-bg/70 flex items-center justify-center">

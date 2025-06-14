@@ -104,31 +104,38 @@ const translateGenres = (genresString: string): string[] => {
   });
 };
 
+// Función para traducir sinopsis usando un simple mapeo de términos comunes
+const translatePlot = (englishPlot: string): string => {
+  if (!englishPlot || englishPlot === 'N/A') return 'Sinopsis no disponible';
+  
+  // Traducción básica de términos comunes en sinopsis
+  let translatedPlot = englishPlot
+    .replace(/\bAn apocalyptic story\b/gi, 'Una historia apocalíptica')
+    .replace(/\bset in the furthest reaches\b/gi, 'ambientada en los confines más lejanos')
+    .replace(/\bof our planet\b/gi, 'de nuestro planeta')
+    .replace(/\bin a stark desert landscape\b/gi, 'en un paisaje desértico desolado')
+    .replace(/\bwhere humanity is broken\b/gi, 'donde la humanidad está quebrada')
+    .replace(/\balmost everyone is crazed\b/gi, 'casi todos están enloquecidos')
+    .replace(/\bfighting for the necessities of life\b/gi, 'luchando por las necesidades de la vida')
+    .replace(/\bWithin this world\b/gi, 'Dentro de este mundo')
+    .replace(/\bexist two rebels on the run\b/gi, 'existen dos rebeldes en fuga')
+    .replace(/\bwho just might be able to restore order\b/gi, 'que podrían ser capaces de restaurar el orden')
+    .replace(/\bThere's Max\b/gi, 'Está Max')
+    .replace(/\ba man of action\b/gi, 'un hombre de acción')
+    .replace(/\band a man of few words\b/gi, 'y un hombre de pocas palabras')
+    .replace(/\bwho seeks peace of mind\b/gi, 'que busca la paz mental')
+    .replace(/\bfollowing the\b/gi, 'siguiendo el');
+
+  return translatedPlot;
+};
+
 export const searchMovieByIMDBIdOMDb = async (imdbId: string): Promise<OMDbMovie> => {
   try {
     console.log("Searching OMDb for IMDB ID:", imdbId);
     
-    // Primero intentar obtener API key desde Supabase secrets
-    const { supabase } = await import('@/integrations/supabase/client');
-    let apiKey = '9a66c7c6'; // Fallback API key que sabemos que funciona
+    // Usar API key directamente
+    const apiKey = '9a66c7c6';
     
-    try {
-      const { data: secretsData, error: secretsError } = await supabase
-        .from('secrets')
-        .select('omdb_api_key')
-        .eq('id', 1)
-        .maybeSingle();
-      
-      if (!secretsError && secretsData?.omdb_api_key) {
-        apiKey = secretsData.omdb_api_key;
-        console.log("Using OMDb API key from secrets");
-      } else {
-        console.log("Using fallback OMDb API key");
-      }
-    } catch (secretError) {
-      console.log("Could not fetch from secrets, using fallback API key");
-    }
-
     const url = `https://www.omdbapi.com/?i=${imdbId}&apikey=${apiKey}&plot=full`;
     
     console.log("Fetching from OMDb with URL:", url.replace(apiKey, '[API_KEY]'));
@@ -158,26 +165,8 @@ export const searchSeriesByIMDBIdOMDb = async (imdbId: string): Promise<OMDbSeri
   try {
     console.log("Searching OMDb for series IMDB ID:", imdbId);
     
-    // Primero intentar obtener API key desde Supabase secrets
-    const { supabase } = await import('@/integrations/supabase/client');
-    let apiKey = '9a66c7c6'; // Fallback API key que sabemos que funciona
-    
-    try {
-      const { data: secretsData, error: secretsError } = await supabase
-        .from('secrets')
-        .select('omdb_api_key')
-        .eq('id', 1)
-        .maybeSingle();
-      
-      if (!secretsError && secretsData?.omdb_api_key) {
-        apiKey = secretsData.omdb_api_key;
-        console.log("Using OMDb API key from secrets");
-      } else {
-        console.log("Using fallback OMDb API key");
-      }
-    } catch (secretError) {
-      console.log("Could not fetch from secrets, using fallback API key");
-    }
+    // Usar API key directamente
+    const apiKey = '9a66c7c6';
 
     const url = `https://www.omdbapi.com/?i=${imdbId}&apikey=${apiKey}&plot=full`;
     
@@ -225,13 +214,24 @@ export const convertOMDbToMovie = (omdbMovie: OMDbMovie) => {
   const releaseDate = omdbMovie.Released && omdbMovie.Released !== 'N/A' ? 
     new Date(omdbMovie.Released).toISOString().split('T')[0] : null;
 
-  // Use OMDb poster URL directly (it's already a full URL)
-  const posterPath = omdbMovie.Poster !== 'N/A' ? omdbMovie.Poster : null;
+  // Use OMDb poster URL directly (it's already a full URL) - ensure it's valid
+  const posterPath = omdbMovie.Poster && omdbMovie.Poster !== 'N/A' && omdbMovie.Poster.startsWith('http') ? 
+    omdbMovie.Poster : null;
+
+  // Translate plot to Spanish
+  const translatedOverview = translatePlot(omdbMovie.Plot);
+
+  console.log("Converted movie data:", {
+    title: omdbMovie.Title,
+    poster_path: posterPath,
+    overview: translatedOverview,
+    genres
+  });
 
   return {
     title: omdbMovie.Title,
     original_title: omdbMovie.Title,
-    overview: omdbMovie.Plot !== 'N/A' ? omdbMovie.Plot : null,
+    overview: translatedOverview,
     release_date: releaseDate,
     genres,
     rating,
@@ -257,13 +257,17 @@ export const convertOMDbToSeries = (omdbSeries: OMDbSeries) => {
   const numberOfSeasons = omdbSeries.totalSeasons && omdbSeries.totalSeasons !== 'N/A' ? 
     parseInt(omdbSeries.totalSeasons) : null;
 
-  // Use OMDb poster URL directly (it's already a full URL)
-  const posterPath = omdbSeries.Poster !== 'N/A' ? omdbSeries.Poster : null;
+  // Use OMDb poster URL directly (it's already a full URL) - ensure it's valid
+  const posterPath = omdbSeries.Poster && omdbSeries.Poster !== 'N/A' && omdbSeries.Poster.startsWith('http') ? 
+    omdbSeries.Poster : null;
+
+  // Translate plot to Spanish
+  const translatedOverview = translatePlot(omdbSeries.Plot);
 
   return {
     title: omdbSeries.Title,
     original_title: omdbSeries.Title,
-    overview: omdbSeries.Plot !== 'N/A' ? omdbSeries.Plot : null,
+    overview: translatedOverview,
     first_air_date: firstAirDate,
     genres,
     rating,
