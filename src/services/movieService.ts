@@ -156,16 +156,61 @@ export const fetchMovieById = async (id: string): Promise<Movie> => {
 };
 
 export const fetchMovieBySlug = async (slug: string): Promise<Movie> => {
-  const { data, error } = await supabase
+  console.log("Searching for movie with slug:", slug);
+  
+  // First try to find by exact slug match
+  let { data, error } = await supabase
     .from('movies')
     .select('*')
     .eq('slug', slug)
     .single();
   
-  if (error) {
-    throw new Error(error.message);
+  // If not found and slug contains a year, try without the year
+  if (error && slug.includes('-')) {
+    const parts = slug.split('-');
+    const lastPart = parts[parts.length - 1];
+    
+    // Check if last part is a year (4 digits)
+    if (/^\d{4}$/.test(lastPart)) {
+      const slugWithoutYear = parts.slice(0, -1).join('-');
+      console.log("Trying slug without year:", slugWithoutYear);
+      
+      const { data: dataWithoutYear, error: errorWithoutYear } = await supabase
+        .from('movies')
+        .select('*')
+        .eq('slug', slugWithoutYear)
+        .single();
+      
+      if (!errorWithoutYear && dataWithoutYear) {
+        data = dataWithoutYear;
+        error = null;
+      }
+    }
   }
   
+  // If still not found, try to find by title
+  if (error) {
+    console.log("Movie not found by slug, trying by title");
+    const titleFromSlug = slug.replace(/-/g, ' ').replace(/\s+\d{4}$/, '');
+    
+    const { data: moviesByTitle, error: titleError } = await supabase
+      .from('movies')
+      .select('*')
+      .ilike('title', `%${titleFromSlug}%`)
+      .limit(1);
+    
+    if (!titleError && moviesByTitle && moviesByTitle.length > 0) {
+      data = moviesByTitle[0];
+      error = null;
+    }
+  }
+  
+  if (error || !data) {
+    console.error("Movie not found:", error);
+    throw new Error(error?.message || 'Movie not found');
+  }
+  
+  console.log("Found movie:", data.title);
   return convertToMovie(data);
 };
 
