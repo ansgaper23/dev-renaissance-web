@@ -66,9 +66,9 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
     ? (movie.poster_path.startsWith('http') ? movie.poster_path : `https://image.tmdb.org/t/p/w500${movie.poster_path}`)
     : '/placeholder.svg';
 
-  // Generate proper slug from title and year
+  // Use the slug from database if available, otherwise generate one
   const year = movie.release_date ? new Date(movie.release_date).getFullYear().toString() : undefined;
-  const movieSlug = movie.slug || generateSlug(movie.title, year);
+  const movieSlug = movie.slug && movie.slug.trim() !== '' ? movie.slug : generateSlug(movie.title, year);
 
   return (
     <div
