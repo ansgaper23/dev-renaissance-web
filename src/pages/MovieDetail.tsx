@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -198,61 +199,79 @@ const MovieDetail = () => {
         {/* -- SPACER PARA QUE LOS SERVIDORES NO QUEDEN TAPADOS (solo en mobile, hidden en desktop) -- */}
         <div className="block md:hidden" style={{ height: 80 }} />
 
-        {/* DESKTOP LAYOUT sigue igual */}
-        <div className="hidden md:flex flex-row gap-8">
-          {/* Poster */}
-          <div className="flex-shrink-0">
-            <img 
-              src={posterUrl}
-              alt={movie.title}
-              className="w-48 h-72 object-cover rounded-lg shadow-2xl"
-            />
-          </div>
+        {/* DESKTOP LAYOUT with transparent card */}
+        <div className="hidden md:block container mx-auto px-4 relative">
+          <div className="bg-[rgba(20,25,35,0.6)] rounded-2xl shadow-xl p-8 mx-auto max-w-6xl">
+            <div className="flex flex-row gap-8">
+              {/* Poster */}
+              <div className="flex-shrink-0">
+                <img 
+                  src={posterUrl}
+                  alt={movie.title}
+                  className="w-48 h-72 object-cover rounded-lg shadow-2xl"
+                />
+              </div>
 
-          {/* Movie Details - Right side of poster, exactly like image */}
-          <div className="flex-1 space-y-4 pt-8">
-            {/* Title */}
-            <h1 className="text-4xl lg:text-5xl font-bold text-cuevana-white leading-tight">
-              {movie.title}
-            </h1>
-            {/* Original Title */}
-            <p className="text-cuevana-white/70 text-xl">
-              {movie.original_title || movie.title}
-            </p>
+              {/* Movie Details - Right side of poster */}
+              <div className="flex-1 space-y-4 pt-8">
+                {/* Title */}
+                <h1 className="text-4xl lg:text-5xl font-bold text-cuevana-white leading-tight">
+                  {movie.title}
+                </h1>
+                {/* Original Title */}
+                <p className="text-cuevana-white/70 text-xl">
+                  {movie.original_title || movie.title}
+                </p>
 
-            {/* Rating with circle and percentage */}
-            {movie.rating && (
-              <div className="flex items-center gap-2">
-                <div className="relative w-12 h-12">
-                  <div className="w-12 h-12 rounded-full border-4 border-cuevana-gold flex items-center justify-center bg-cuevana-bg">
-                    <span className="text-cuevana-gold font-bold text-sm">{movie.rating}%</span>
+                {/* Overview */}
+                {movie.overview && (
+                  <div className="text-cuevana-white/90 text-lg leading-relaxed">
+                    {movie.overview}
+                  </div>
+                )}
+
+                {/* Genres */}
+                <div className="text-cuevana-white/80">
+                  <span className="font-semibold">Género: </span>
+                  <span className="text-cuevana-white/70">{genres}</span>
+                </div>
+
+                {/* Rating with circle and percentage */}
+                {movie.rating && (
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-12 h-12">
+                      <div className="w-12 h-12 rounded-full border-4 border-cuevana-gold flex items-center justify-center bg-cuevana-bg">
+                        <span className="text-cuevana-gold font-bold text-sm">{movie.rating}%</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Year and Duration in separate lines */}
+                <div className="space-y-1">
+                  <div className="text-cuevana-white/90 text-lg">
+                    <span>{movie.runtime ? Math.floor(movie.runtime / 60) + "h " + (movie.runtime % 60) + "min" : "Duración no disponible"}</span>
+                  </div>
+                  <div className="text-cuevana-white/90 text-lg">
+                    <span>{releaseYear}</span>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* Year and Duration in separate lines */}
-            <div className="space-y-1">
-              <div className="text-cuevana-white/90 text-lg">
-                <span>1h 51min</span>
+                {/* Share Buttons */}
+                <div className="flex items-center gap-3 pt-4">
+                  <ShareButton 
+                    title={movie.title}
+                    variant="outline"
+                    className="text-cuevana-blue border-cuevana-blue hover:bg-cuevana-blue hover:text-white"
+                  />
+                </div>
               </div>
-              <div className="text-cuevana-white/90 text-lg">
-                <span>{releaseYear}</span>
-              </div>
-            </div>
-
-            {/* Share Buttons */}
-            <div className="flex items-center gap-3 pt-4">
-              <ShareButton 
-                title={movie.title}
-                variant="outline"
-                className="text-cuevana-blue border-cuevana-blue hover:bg-cuevana-blue hover:text-white"
-              />
             </div>
           </div>
         </div>
+
         {/* Video Player y servidores */}
-        <div className="mt-0">
+        <div className="mt-8">
           <VideoPlayer
             title={movie.title}
             streamServers={movie.stream_servers || []}
