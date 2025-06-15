@@ -1,9 +1,33 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+// TMDB Genre mapping to Spanish
+const TMDB_GENRES: { [key: number]: string } = {
+  28: "Acción",
+  12: "Aventura",
+  16: "Animación",
+  35: "Comedia",
+  80: "Crimen",
+  99: "Documental",
+  18: "Drama",
+  10751: "Familia",
+  14: "Fantasía",
+  36: "Historia",
+  27: "Terror",
+  10402: "Música",
+  9648: "Misterio",
+  10749: "Romance",
+  878: "Ciencia Ficción",
+  10770: "Película de TV",
+  53: "Suspense",
+  10752: "Guerra",
+  37: "Western"
 };
 
 serve(async (req) => {
@@ -95,8 +119,14 @@ serve(async (req) => {
             continue;
           }
 
-          // Extract genre names for display
-          const genreNames = seriesDetails.genres ? seriesDetails.genres.map(g => g.name) : [];
+          // Extract genre names for display - IMPROVED MAPPING
+          const genreNames = seriesDetails.genres ? 
+            seriesDetails.genres.map(g => TMDB_GENRES[g.id] || g.name) : [];
+          
+          console.log(`Series ${tmdbId} genres:`, {
+            original: seriesDetails.genres,
+            mapped: genreNames
+          });
           
           // Create series object for database
           const series = {
@@ -151,7 +181,7 @@ serve(async (req) => {
       );
     }
 
-    // Handle movie import (existing logic)
+    // Handle movie import (existing logic) - IMPROVED GENRE MAPPING
     if (!Array.isArray(movieIds) || movieIds.length === 0) {
       return new Response(
         JSON.stringify({ error: "No movie IDs provided" }),
@@ -189,9 +219,16 @@ serve(async (req) => {
           }
         }
 
-        // Extract genre names for display
-        const genreNames = movieDetails.genres ? movieDetails.genres.map(g => g.name) : [];
+        // Extract genre names for display - IMPROVED MAPPING
+        const genreNames = movieDetails.genres ? 
+          movieDetails.genres.map(g => TMDB_GENRES[g.id] || g.name) : [];
         const genreIds = movieDetails.genres ? movieDetails.genres.map(g => g.id) : [];
+        
+        console.log(`Movie ${tmdbId} genres:`, {
+          original: movieDetails.genres,
+          mapped: genreNames,
+          ids: genreIds
+        });
         
         // Create movie object for database with all required fields
         const movie = {
@@ -241,7 +278,7 @@ serve(async (req) => {
       }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200 
+      status: 200 
       }
     );
   } catch (error) {

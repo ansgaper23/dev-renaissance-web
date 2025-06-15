@@ -506,7 +506,7 @@ export const searchMovieByIMDBId = async (imdbId: string): Promise<TMDBMovieResu
   }
 };
 
-// TMDB Genre mapping
+// TMDB Genre mapping - UPDATED TO MATCH SERVER
 const TMDB_GENRES: { [key: number]: string } = {
   28: "Acción",
   12: "Aventura",
@@ -538,9 +538,14 @@ export const importMovieFromTMDB = async (tmdbMovie: TMDBMovieResult & { imdb_id
   console.log("Importing movie from TMDB:", tmdbMovie);
   console.log("Stream servers:", streamServers);
   
-  // Map genre IDs to genre names
+  // Map genre IDs to genre names - IMPROVED MAPPING
   const genreNames = tmdbMovie.genre_ids ? 
-    tmdbMovie.genre_ids.map((id: number) => TMDB_GENRES[id]).filter(Boolean) : [];
+    tmdbMovie.genre_ids.map((id: number) => TMDB_GENRES[id] || `Género ${id}`).filter(Boolean) : [];
+
+  console.log("Mapped genres:", {
+    original_ids: tmdbMovie.genre_ids,
+    mapped_names: genreNames
+  });
 
   const movieData: MovieCreate = {
     title: tmdbMovie.title,
