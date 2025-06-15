@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -128,7 +127,7 @@ const MovieDetail = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-cuevana-bg via-cuevana-bg/80 to-transparent" />
         </div>
 
-        {/* --- MOBILE CARD SOBRE EL BANNER --- */}
+        {/* MOBILE CARD SOBRE EL BANNER */}
         <div
           className="block md:hidden absolute left-1/2 -translate-x-1/2 top-[calc(62px-1.5rem)] w-[95%] bg-[rgba(20,25,35,0.6)] rounded-2xl shadow-xl px-4 pt-2 pb-4 z-30"
           style={{ maxWidth: 420 }}
@@ -196,10 +195,10 @@ const MovieDetail = () => {
           </div>
         </div>
 
-        {/* -- INCREASED DYNAMIC SPACER PARA QUE LOS SERVIDORES NO QUEDEN TAPADOS (solo en mobile, hidden en desktop) -- */}
+        {/* Spacer móvil */}
         <div className={`block md:hidden ${mobileSpacingClass}`} />
 
-        {/* DESKTOP AND TABLET LAYOUT with transparent card - Now positioned absolutely over the backdrop */}
+        {/* DESKTOP/TABLET: Tarjeta organizada igual que móvil */}
         <div className="hidden md:block absolute inset-x-0 top-[20vh] container mx-auto px-4 z-30">
           <div className="bg-[rgba(20,25,35,0.6)] rounded-2xl shadow-xl p-8 mx-auto max-w-6xl">
             <div className="flex flex-row gap-8">
@@ -211,57 +210,72 @@ const MovieDetail = () => {
                   className="w-48 h-72 object-cover rounded-lg shadow-2xl"
                 />
               </div>
-
-              {/* Movie Details - Right side of poster */}
-              <div className="flex-1 space-y-4 pt-8">
-                {/* Title */}
-                <h1 className="text-4xl lg:text-5xl font-bold text-cuevana-white leading-tight">
+              {/* Info principal */}
+              <div className="flex-1 flex flex-col justify-center">
+                {/* Título */}
+                <h1 className="text-4xl lg:text-5xl font-bold text-cuevana-white leading-tight mb-2">
                   {movie.title}
                 </h1>
-                {/* Original Title */}
-                <p className="text-cuevana-white/70 text-xl">
-                  {movie.original_title || movie.title}
-                </p>
-
+                {/* Título original */}
+                {movie.original_title && movie.original_title !== movie.title && (
+                  <div className="text-cuevana-white/70 text-lg mb-1">
+                    {movie.original_title}
+                  </div>
+                )}
                 {/* Overview */}
                 {movie.overview && (
-                  <div className="text-cuevana-white/90 text-lg leading-relaxed">
+                  <div className="text-cuevana-white/90 text-base leading-relaxed mb-3">
                     {movie.overview}
                   </div>
                 )}
-
-                {/* Genres */}
-                <div className="text-cuevana-white/80">
+                {/* Géneros */}
+                <div className="text-cuevana-white/80 mb-2">
                   <span className="font-semibold">Género: </span>
                   <span className="text-cuevana-white/70">{genres}</span>
                 </div>
-
-                {/* Rating with circle and percentage */}
-                {movie.rating && (
-                  <div className="flex items-center gap-2">
+                {/* Rating, Duración, Año */}
+                <div className="flex items-center gap-5 mb-3">
+                  {movie.rating && (
                     <div className="relative w-12 h-12">
                       <div className="w-12 h-12 rounded-full border-4 border-cuevana-gold flex items-center justify-center bg-cuevana-bg">
                         <span className="text-cuevana-gold font-bold text-sm">{movie.rating}%</span>
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {/* Duration and Share Button in the same line */}
-                <div className="flex items-center gap-4">
-                  <div className="text-cuevana-white/90 text-lg">
-                    <span>{movie.runtime ? Math.floor(movie.runtime / 60) + "h " + (movie.runtime % 60) + "min" : "Duración no disponible"}</span>
-                  </div>
-                  <ShareButton 
+                  )}
+                  <span className="text-cuevana-white/90 text-base">
+                    {movie.runtime ? Math.floor(movie.runtime / 60) + "h " + (movie.runtime % 60) + "min" : "Duración no disponible"}
+                  </span>
+                  <span className="text-cuevana-white/90 text-base">
+                    {releaseYear}
+                  </span>
+                </div>
+                {/* Botones para compartir (misma UX/mobile) */}
+                <div className="flex items-center gap-2 mb-1">
+                  <ShareButton
                     title={movie.title}
                     variant="outline"
-                    className="text-cuevana-blue border-cuevana-blue hover:bg-cuevana-blue hover:text-white"
+                    className="text-cuevana-blue border-cuevana-blue hover:bg-cuevana-blue hover:text-white px-3 py-1"
                   />
-                </div>
-
-                {/* Year in separate line */}
-                <div className="text-cuevana-white/90 text-lg">
-                  <span>{releaseYear}</span>
+                  {/* Facebook */}
+                  <a
+                    href={`https://facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center"
+                  >
+                    <span className="sr-only">Compartir en Facebook</span>
+                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12.07C22 6.485 17.522 2 12 2S2 6.485 2 12.07c0 5.057 3.657 9.248 8.438 9.879v-6.988h-2.54v-2.89h2.54v-2.205c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.457h-1.261c-1.242 0-1.631.771-1.631 1.562v1.881h2.773l-.443 2.89h-2.33V21.95C18.343 21.317 22 17.126 22 12.07"/></svg>
+                  </a>
+                  {/* Twitter */}
+                  <a
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Mira ${movie.title} en Cuevana3`)}&url=${encodeURIComponent(window.location.href)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-full bg-blue-400 hover:bg-blue-500 flex items-center"
+                  >
+                    <span className="sr-only">Compartir en Twitter</span>
+                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M22 5.924c-.793.352-1.647.59-2.543.697a4.462 4.462 0 0 0 1.97-2.466 8.862 8.862 0 0 1-2.826 1.084C17.052 4.443 16.072 4 15.01 4c-2.053 0-3.715 1.698-3.715 3.792 0 .297.033.587.099.866C7.597 8.496 4.926 7.028 2.98 4.846c-.325.573-.511 1.234-.511 1.942 0 1.338.663 2.522 1.672 3.215-.616-.019-1.195-.198-1.701-.47v.048c0 1.87 1.288 3.428 2.995 3.783-.327.093-.673.143-1.03.143-.251 0-.494-.026-.731-.07.494 1.579 1.922 2.727 3.617 2.757A8.989 8.989 0 0 1 2 19.083a12.825 12.825 0 0 0 6.995 2.084c8.395 0 12.99-7.1 12.99-13.26 0-.202-.004-.403-.014-.604.892-.651 1.668-1.464 2.279-2.388z"/></svg>
+                  </a>
                 </div>
               </div>
             </div>
@@ -271,7 +285,7 @@ const MovieDetail = () => {
         {/* Spacer for desktop to push content below the overlay */}
         <div className="hidden md:block" style={{ height: '25vh' }} />
 
-        {/* Video Player y servidores con margen superior adicional en mobile */}
+        {/* Video Player y servidores */}
         <div className="mt-8 md:mt-8">
           <VideoPlayer
             title={movie.title}
