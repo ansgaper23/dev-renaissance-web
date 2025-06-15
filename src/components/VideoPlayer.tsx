@@ -173,16 +173,16 @@ const VideoPlayer = ({
   };
 
   // Main layout: centra y no full screen, con max width y padding arriba
-  // Cambiaremos max-w-3xl a max-w-4xl y más padding para que sea más grande
+  // Ahora max-w-6xl y min-h más grande aún
   return <div className="flex flex-col items-center w-full pt-5 pb-8">
       <div className="w-full flex flex-col items-center">
-        <div className="max-w-4xl w-full mx-auto rounded-xl bg-[#101424] shadow-xl border border-cuevana-gray-300 overflow-hidden">
+        <div className="max-w-6xl w-full mx-auto rounded-xl bg-[#101424] shadow-xl border border-cuevana-gray-300 overflow-hidden">
           {/* Barra de servidores */}
           {renderServerBar()}
           {/* Mensaje amarillo arriba */}
           {renderTopInfo()}
           {/* Player centrado, aspect ratio y bordes redondeados */}
-          <div className="relative w-full aspect-video bg-black mx-auto rounded-b-xl overflow-hidden min-h-[220px] sm:min-h-[320px] md:min-h-[390px] lg:min-h-[450px]">
+          <div className="relative w-full aspect-video bg-black mx-auto rounded-b-xl overflow-hidden min-h-[300px] sm:min-h-[420px] md:min-h-[520px] lg:min-h-[640px]">
             {getVideoElement(currentStreamUrl)}
           </div>
         </div>
