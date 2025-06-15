@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
@@ -7,7 +6,8 @@ import { getTotalSeriesCount } from '@/services/seriesService';
 import { Loader2 } from 'lucide-react';
 import FeaturedMoviesManager from './FeaturedMoviesManager';
 import SiteSettings from './SiteSettings';
-import FixMissingGenres from './FixMissingGenres'; // <--- AGREGADO
+import FixMissingGenres from './FixMissingGenres';
+import ManualAddMovieDialogButton from "./ManualAddMovieDialogButton";
 
 const AdminDashboard = () => {
   const { data: totalMovies, isLoading } = useQuery({
@@ -62,6 +62,11 @@ const AdminDashboard = () => {
             <div className="text-xl font-medium">{new Date().toLocaleDateString()}</div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Botón para agregar película manualmente */}
+      <div className="flex justify-end pb-2">
+        <ManualAddMovieDialogButton />
       </div>
 
       {/* Fix Missing Genres button */}
