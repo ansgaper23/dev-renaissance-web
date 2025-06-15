@@ -112,38 +112,21 @@ const VideoPlayer = ({
   const qualityText = "uppercase text-xs pt-1 tracking-widest font-bold text-yellow-200 leading-tight drop-shadow";
 
   // Reemplaza el renderServerBar para el nuevo look minimalista y glassmorphism
-  const renderServerBar = () =>
-    <div className="w-full flex justify-center items-center gap-4 bg-transparent py-2">
-      {Object.entries(serversByLanguage).map(([language, servers], lngIdx) =>
-        servers.map((server, srvIdx) => {
-          const globalIdx = allServerList.findIndex(s => s === server);
-          const flag = LANG_FLAGS[language] || '🌐';
-          const isSelected = selectedServer === globalIdx;
-          return (
-            <div
-              key={language + srvIdx}
-              className={[
-                cardClass,
-                isSelected ? cardActive : cardInactive,
-              ].join(' ')}
-              style={{
-                maxWidth: 180,
-                boxShadow: isSelected
-                  ? '0 8px 32px 0 rgba(255,255,180,0.13)'
-                  : '0 2px 12px 0 rgba(80,110,255,0.07)',
-                borderWidth: isSelected ? 2 : 1,
-                background: isSelected
-                  ? 'linear-gradient(135deg, rgba(247,255,220,0.22) 0%, rgba(33,48,60,0.65) 100%)'
-                  : 'linear-gradient(120deg, rgba(59,130,246,0.26) 0%, rgba(51,65,85,0.31) 100%)',
-                backdropFilter: 'blur(8px)',
-                WebkitBackdropFilter: 'blur(8px)',
-                cursor: isSelected ? 'default' : 'pointer',
-                outline: isSelected ? '2px solid #FFD600' : 'none'
-              }}
-              onClick={() => !isSelected && setSelectedServer(globalIdx)}
-              tabIndex={0}
-              aria-label={`Elegir servidor ${language}`}
-            >
+  const renderServerBar = () => <div className="w-full flex justify-center items-center gap-4 bg-transparent py-0">
+      {Object.entries(serversByLanguage).map(([language, servers], lngIdx) => servers.map((server, srvIdx) => {
+      const globalIdx = allServerList.findIndex(s => s === server);
+      const flag = LANG_FLAGS[language] || '🌐';
+      const isSelected = selectedServer === globalIdx;
+      return <div key={language + srvIdx} className={[cardClass, isSelected ? cardActive : cardInactive].join(' ')} style={{
+        maxWidth: 180,
+        boxShadow: isSelected ? '0 8px 32px 0 rgba(255,255,180,0.13)' : '0 2px 12px 0 rgba(80,110,255,0.07)',
+        borderWidth: isSelected ? 2 : 1,
+        background: isSelected ? 'linear-gradient(135deg, rgba(247,255,220,0.22) 0%, rgba(33,48,60,0.65) 100%)' : 'linear-gradient(120deg, rgba(59,130,246,0.26) 0%, rgba(51,65,85,0.31) 100%)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        cursor: isSelected ? 'default' : 'pointer',
+        outline: isSelected ? '2px solid #FFD600' : 'none'
+      }} onClick={() => !isSelected && setSelectedServer(globalIdx)} tabIndex={0} aria-label={`Elegir servidor ${language}`}>
               {/* Bandera e idioma */}
               <div className="flex items-center mb-0.5 gap-1 text-lg font-medium">
                 <span>{flag}</span>
@@ -153,16 +136,12 @@ const VideoPlayer = ({
                 {server.quality || "HD"}
               </div>
               {/* Línea amarilla inferior solo si seleccionado */}
-              {isSelected && (
-                <div
-                  className="absolute bottom-0 left-0 w-full h-[3px] bg-yellow-300 rounded-b"
-                  style={{ marginBottom: '-1px', boxShadow: '0 2px 10px 0 #ffe06650' }}
-                />
-              )}
-            </div>
-          );
-        })
-      )}
+              {isSelected && <div className="absolute bottom-0 left-0 w-full h-[3px] bg-yellow-300 rounded-b" style={{
+          marginBottom: '-1px',
+          boxShadow: '0 2px 10px 0 #ffe06650'
+        }} />}
+            </div>;
+    }))}
     </div>;
 
   // Mensaje amarillo
