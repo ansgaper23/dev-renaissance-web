@@ -87,16 +87,16 @@ const VideoPlayer = ({
     relative
     border border-white/20
     backdrop-blur-md
-    bg-white/10
-    shadow-[0_4px_24px_0_rgba(150,180,255,0.08)]
-    hover:bg-white/15
+    bg-gradient-to-br from-blue-500/40 to-blue-800/40
+    shadow-[0_4px_24px_0_rgba(120,150,255,0.13)]
+    hover:bg-blue-400/25 hover:border-cuevana-blue
     hover:shadow-lg
     hover:scale-105
     active:scale-100
     font-semibold text-white
     select-none
     outline-none
-    focus-visible:ring-2 focus-visible:ring-yellow-300
+    focus-visible:ring-2 focus-visible:ring-blue-400
     overflow-hidden
   `;
   const cardActive = `
@@ -134,7 +134,7 @@ const VideoPlayer = ({
                 borderWidth: isSelected ? 2 : 1,
                 background: isSelected
                   ? 'linear-gradient(135deg, rgba(247,255,220,0.22) 0%, rgba(33,48,60,0.65) 100%)'
-                  : 'rgba(255,255,255,0.05)',
+                  : 'linear-gradient(120deg, rgba(59,130,246,0.26) 0%, rgba(51,65,85,0.31) 100%)',
                 backdropFilter: 'blur(8px)',
                 WebkitBackdropFilter: 'blur(8px)',
                 cursor: isSelected ? 'default' : 'pointer',
@@ -162,34 +162,6 @@ const VideoPlayer = ({
             </div>
           );
         })
-      )}
-      {/* Botón Descargar minimalista con efecto vidrio */}
-      {currentServer?.url && (
-        <a
-          href={currentServer.url}
-          download
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`
-            flex flex-col items-center justify-center
-            rounded-[14px] min-w-[110px] px-4 py-3 font-semibold text-white
-            bg-gradient-to-br from-blue-500/40 to-blue-800/40
-            border border-white/20 hover:bg-blue-400/25 hover:border-cuevana-blue
-            shadow-[0_4px_24px_0_rgba(120,150,255,0.13)]
-            backdrop-blur-md mx-2 cursor-pointer transition-all
-            hover:scale-105 active:scale-100
-            outline-none
-            focus-visible:ring-2 focus-visible:ring-blue-400
-          `}
-          style={{
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-          }}
-          title="Descargar video"
-        >
-          <Download className="mb-1 text-blue-200" size={22} />
-          <span className="text-xs uppercase tracking-wider">Descargar</span>
-        </a>
       )}
     </div>;
 
