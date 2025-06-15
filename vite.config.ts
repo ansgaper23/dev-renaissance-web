@@ -1,7 +1,8 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
+// import { componentTagger } from "lovable-tagger"; // Commented out for EMFILE workaround
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -11,8 +12,8 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
+    // mode === 'development' &&
+    // componentTagger(), // TEMP: Disabled to avoid "too many open files" error
   ].filter(Boolean),
   resolve: {
     alias: {
