@@ -100,9 +100,9 @@ const MovieDetail = () => {
   const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : 'Sin fecha';
   const genres = Array.isArray(movie.genres) ? movie.genres.join(', ') : 'Sin género';
 
-  // Calculate dynamic spacing based on synopsis length
+  // Calculate dynamic spacing based on synopsis length - increased spacing
   const synopsisLength = movie.overview ? movie.overview.length : 0;
-  const mobileSpacingClass = synopsisLength > 200 ? 'h-32' : synopsisLength > 100 ? 'h-24' : 'h-16';
+  const mobileSpacingClass = synopsisLength > 300 ? 'h-60' : synopsisLength > 200 ? 'h-48' : synopsisLength > 100 ? 'h-40' : 'h-32';
 
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
@@ -196,7 +196,7 @@ const MovieDetail = () => {
           </div>
         </div>
 
-        {/* -- DYNAMIC SPACER PARA QUE LOS SERVIDORES NO QUEDEN TAPADOS (solo en mobile, hidden en desktop) -- */}
+        {/* -- INCREASED DYNAMIC SPACER PARA QUE LOS SERVIDORES NO QUEDEN TAPADOS (solo en mobile, hidden en desktop) -- */}
         <div className={`block md:hidden ${mobileSpacingClass}`} />
 
         {/* DESKTOP AND TABLET LAYOUT with transparent card - Now positioned absolutely over the backdrop */}
