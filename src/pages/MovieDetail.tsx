@@ -98,10 +98,11 @@ const MovieDetail = () => {
       : posterUrl;
 
   const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : 'Sin fecha';
-  // Suponiendo que `cast` no existe en movie, mostrar solo géneros (como en tu referencia)  
   const genres = Array.isArray(movie.genres) ? movie.genres.join(', ') : 'Sin género';
-  // Si tuvieras un array `movie.cast`, podrías hacer: movie.cast.map(...).join(', ')
-  // Por ahora solo géneros, como en la referencia
+
+  // Calculate dynamic spacing based on synopsis length
+  const synopsisLength = movie.overview ? movie.overview.length : 0;
+  const mobileSpacingClass = synopsisLength > 200 ? 'h-32' : synopsisLength > 100 ? 'h-24' : 'h-16';
 
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
@@ -193,11 +194,10 @@ const MovieDetail = () => {
             <span className="font-semibold text-cuevana-white/80 text-sm">Género: </span>
             <span className="text-cuevana-white/60 text-sm">{genres}</span>
           </div>
-          {/* Si hubiera actores agregar aquí */}
         </div>
 
-        {/* -- SPACER PARA QUE LOS SERVIDORES NO QUEDEN TAPADOS (solo en mobile, hidden en desktop) -- */}
-        <div className="block md:hidden" style={{ height: 80 }} />
+        {/* -- DYNAMIC SPACER PARA QUE LOS SERVIDORES NO QUEDEN TAPADOS (solo en mobile, hidden en desktop) -- */}
+        <div className={`block md:hidden ${mobileSpacingClass}`} />
 
         {/* DESKTOP AND TABLET LAYOUT with transparent card - Now positioned absolutely over the backdrop */}
         <div className="hidden md:block absolute inset-x-0 top-[20vh] container mx-auto px-4 z-30">
@@ -271,15 +271,16 @@ const MovieDetail = () => {
         {/* Spacer for desktop to push content below the overlay */}
         <div className="hidden md:block" style={{ height: '25vh' }} />
 
-        {/* Video Player y servidores */}
-        <div className="mt-8">
+        {/* Video Player y servidores con margen superior adicional en mobile */}
+        <div className="mt-8 md:mt-8">
           <VideoPlayer
             title={movie.title}
             streamServers={movie.stream_servers || []}
             streamUrl={movie.stream_url || undefined}
           />
         </div>
-        {/* Related Movies (sigue igual) */}
+        
+        {/* Related Movies */}
         {relatedMovies.length > 0 && (
           <div className="mt-16">
             <MovieSection title="Películas Relacionadas" movies={relatedMovies} isLoading={false} />
