@@ -7,6 +7,7 @@ import { getTotalSeriesCount } from '@/services/seriesService';
 import { Loader2 } from 'lucide-react';
 import FeaturedMoviesManager from './FeaturedMoviesManager';
 import SiteSettings from './SiteSettings';
+import FixMissingGenres from './FixMissingGenres'; // <--- AGREGADO
 
 const AdminDashboard = () => {
   const { data: totalMovies, isLoading } = useQuery({
@@ -38,7 +39,6 @@ const AdminDashboard = () => {
             )}
           </CardContent>
         </Card>
-
         <Card className="bg-gray-900 border-gray-800">
           <CardHeader className="pb-2">
             <CardTitle className="text-gray-300 text-lg font-medium">Total Series</CardTitle>
@@ -54,7 +54,6 @@ const AdminDashboard = () => {
             )}
           </CardContent>
         </Card>
-
         <Card className="bg-gray-900 border-gray-800">
           <CardHeader className="pb-2">
             <CardTitle className="text-gray-300 text-lg font-medium">Última Actualización</CardTitle>
@@ -64,6 +63,9 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Fix Missing Genres button */}
+      <FixMissingGenres />
 
       {/* Site Settings */}
       <SiteSettings />
