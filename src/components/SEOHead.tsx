@@ -35,9 +35,24 @@ const SEOHead = ({
 }: SEOHeadProps) => {
   useEffect(() => {
     const currentUrl = url || window.location.href;
+
+    // Fallbacks con "ver película online"
+    const extraKeyword = "ver película online";
+    const defaultDescription =
+      (description && description.length > 30 
+        ? description
+        : "Ver películas y series online gratis en HD. Estrenos, clásicos y contenido exclusivo en Cuevana3. Sin registro, sin límites."
+      ) + " | " + siteName;
+    const metaDescription = defaultDescription.length > 210 
+      ? defaultDescription.substring(0, 210) + "..."
+      : defaultDescription;
+    const defaultKeywords = (
+      (keywords ? keywords + ", " : "") +
+      "películas online, series gratis, ver peliculas, streaming gratis, cuevana3, ver película online, cine online, estrenos, HD, sin registro"
+    );
+
+    // Título
     const fullTitle = title ? `${title} - ${siteName}` : `${siteName} - Películas y Series Online Gratis HD`;
-    const defaultDescription = description || 'Ver películas y series online gratis en HD. Estrenos, clásicos y contenido exclusivo en Cuevana3. Sin registro, sin límites.';
-    const defaultKeywords = keywords || 'películas online, series gratis, ver peliculas, streaming gratis, cuevana3, cine online, estrenos, HD, sin registro';
 
     // Update document title
     document.title = fullTitle;
@@ -73,8 +88,8 @@ const SEOHead = ({
       appleTouchIcon.href = logoUrl;
     }
 
-    // Basic SEO Meta Tags
-    updateMetaTag('description', defaultDescription);
+    // Basic SEO Meta Tags (description con sinopsis y call-to-action)
+    updateMetaTag('description', metaDescription);
     updateMetaTag('keywords', defaultKeywords);
     updateMetaTag('author', author);
     updateMetaTag('robots', 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1');
@@ -86,9 +101,9 @@ const SEOHead = ({
     updateMetaTag('rating', 'general');
     updateMetaTag('revisit-after', '1 days');
 
-    // Open Graph Meta Tags
+    // Open Graph Meta Tags: WhatsApp usa og:name, og:image, og:description
     updateMetaTag('og:title', fullTitle, true);
-    updateMetaTag('og:description', defaultDescription, true);
+    updateMetaTag('og:description', metaDescription, true);
     updateMetaTag('og:type', type === 'website' ? 'website' : (type === 'movie' ? 'video.movie' : 'video.tv_show'), true);
     updateMetaTag('og:url', currentUrl, true);
     updateMetaTag('og:site_name', siteName, true);
@@ -120,7 +135,7 @@ const SEOHead = ({
     // Twitter Card Meta Tags
     updateMetaTag('twitter:card', 'summary_large_image');
     updateMetaTag('twitter:title', fullTitle);
-    updateMetaTag('twitter:description', defaultDescription);
+    updateMetaTag('twitter:description', metaDescription);
     updateMetaTag('twitter:site', '@cuevana3');
     updateMetaTag('twitter:creator', '@cuevana3');
     
@@ -182,13 +197,9 @@ const SEOHead = ({
 
     // Add JSON-LD schema for better SEO
     const existingSchema = document.querySelector('#seo-schema');
-    if (existingSchema) {
-      existingSchema.remove();
-    }
+    if (existingSchema) existingSchema.remove();
 
-    // Create schema based on type
     let schema: any;
-
     if (type === 'website') {
       // For website, create a proper @graph structure without circular references
       const websiteSchema = {
@@ -234,15 +245,14 @@ const SEOHead = ({
         "@graph": [websiteSchema, organizationSchema]
       };
     } else {
-      // For movies and series
+      // Para movie o tvseries: description y keywords optimizados
       schema = {
         "@context": "https://schema.org",
         "@type": type === 'movie' ? "Movie" : "TVSeries",
         "name": title || siteName,
-        "description": defaultDescription,
+        "description": metaDescription,
         "url": currentUrl
       };
-
       if (image) {
         schema.image = {
           "@type": "ImageObject",
@@ -251,33 +261,25 @@ const SEOHead = ({
           "height": 630
         };
       }
-
-      if (publishedTime) {
-        schema.datePublished = publishedTime;
-      }
-      if (modifiedTime) {
-        schema.dateModified = modifiedTime;
-      }
-      if (tags.length > 0) {
-        schema.genre = tags;
-      }
-      
+      if (publishedTime) schema.datePublished = publishedTime;
+      if (modifiedTime) schema.dateModified = modifiedTime;
+      if (tags.length > 0) schema.genre = tags;
       schema.author = {
         "@type": "Organization",
         "name": siteName
       };
-      
       schema.publisher = {
         "@type": "Organization",
         "name": siteName
       };
-
       if (logoUrl) {
         schema.publisher.logo = {
           "@type": "ImageObject",
           "url": logoUrl
         };
       }
+      // Siempre incluye keyword extra
+      schema.keywords = defaultKeywords;
     }
 
     const script = document.createElement('script');
