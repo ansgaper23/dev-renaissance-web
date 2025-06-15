@@ -80,17 +80,17 @@ const VideoPlayer = ({
   // Estilo para los botones tipo card con efecto cristal/minimalista
   const cardClass = `
     flex flex-col items-center justify-center
-    rounded-[14px] 
-    min-w-[110px] px-4 py-3
+    rounded-[11px] 
+    min-w-[85px] px-2.5 py-2
     cursor-pointer
     transition-all duration-150
     relative
     border border-white/20
     backdrop-blur-md
     bg-gradient-to-br from-blue-500/40 to-blue-800/40
-    shadow-[0_4px_24px_0_rgba(120,150,255,0.13)]
-    hover:bg-blue-400/25 hover:border-cuevana-blue
-    hover:shadow-lg
+    shadow-[0_4px_18px_0_rgba(120,150,255,0.11)]
+    hover:bg-blue-400/20 hover:border-cuevana-blue
+    hover:shadow-md
     hover:scale-105
     active:scale-100
     font-semibold text-white
@@ -98,47 +98,48 @@ const VideoPlayer = ({
     outline-none
     focus-visible:ring-2 focus-visible:ring-blue-400
     overflow-hidden
+    text-xs
   `;
   const cardActive = `
-    border-yellow-300 shadow-[0_8px_32px_0_rgba(220,220,40,0.12)]
+    border-yellow-300 shadow-[0_6px_24px_0_rgba(220,220,40,0.09)]
     scale-105
     before:absolute before:inset-0 before:pointer-events-none
-    before:rounded-[14px] before:bg-white/20 before:opacity-80
+    before:rounded-[11px] before:bg-white/20 before:opacity-70
   `;
   const cardInactive = `
     border-transparent
     opacity-85
   `;
-  const qualityText = "uppercase text-xs pt-1 tracking-widest font-bold text-yellow-200 leading-tight drop-shadow";
+  const qualityText = "uppercase text-[10px] pt-[2px] tracking-widest font-bold text-yellow-200 leading-tight drop-shadow";
 
   // Reemplaza el renderServerBar para el nuevo look minimalista y glassmorphism
-  const renderServerBar = () => <div className="w-full flex justify-center items-center gap-4 bg-transparent py-0">
+  const renderServerBar = () => <div className="w-full flex justify-center items-center gap-2 bg-transparent py-0">
       {Object.entries(serversByLanguage).map(([language, servers], lngIdx) => servers.map((server, srvIdx) => {
       const globalIdx = allServerList.findIndex(s => s === server);
       const flag = LANG_FLAGS[language] || '🌐';
       const isSelected = selectedServer === globalIdx;
       return <div key={language + srvIdx} className={[cardClass, isSelected ? cardActive : cardInactive].join(' ')} style={{
-        maxWidth: 180,
-        boxShadow: isSelected ? '0 8px 32px 0 rgba(255,255,180,0.13)' : '0 2px 12px 0 rgba(80,110,255,0.07)',
+        maxWidth: 130,
+        boxShadow: isSelected ? '0 8px 22px 0 rgba(255,255,180,0.11)' : '0 1px 7px 0 rgba(80,110,255,0.06)',
         borderWidth: isSelected ? 2 : 1,
-        background: isSelected ? 'linear-gradient(135deg, rgba(247,255,220,0.22) 0%, rgba(33,48,60,0.65) 100%)' : 'linear-gradient(120deg, rgba(59,130,246,0.26) 0%, rgba(51,65,85,0.31) 100%)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
+        background: isSelected ? 'linear-gradient(135deg, rgba(247,255,220,0.17) 0%, rgba(33,48,60,0.62) 100%)' : 'linear-gradient(120deg, rgba(59,130,246,0.19) 0%, rgba(51,65,85,0.22) 100%)',
+        backdropFilter: 'blur(7px)',
+        WebkitBackdropFilter: 'blur(7px)',
         cursor: isSelected ? 'default' : 'pointer',
         outline: isSelected ? '2px solid #FFD600' : 'none'
       }} onClick={() => !isSelected && setSelectedServer(globalIdx)} tabIndex={0} aria-label={`Elegir servidor ${language}`}>
               {/* Bandera e idioma */}
-              <div className="flex items-center mb-0.5 gap-1 text-lg font-medium">
-                <span>{flag}</span>
-                <span className="text-[15px] tracking-wide">{language === "Español Latino" ? "MX Latino" : language}</span>
+              <div className="flex items-center mb-0.5 gap-1 text-base font-medium">
+                <span className="text-lg">{flag}</span>
+                <span className="text-[12px] tracking-wide">{language === "Español Latino" ? "MX Latino" : language}</span>
               </div>
               <div className={qualityText}>
                 {server.quality || "HD"}
               </div>
               {/* Línea amarilla inferior solo si seleccionado */}
-              {isSelected && <div className="absolute bottom-0 left-0 w-full h-[3px] bg-yellow-300 rounded-b" style={{
+              {isSelected && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-yellow-300 rounded-b" style={{
           marginBottom: '-1px',
-          boxShadow: '0 2px 10px 0 #ffe06650'
+          boxShadow: '0 1px 5px 0 #ffe06635'
         }} />}
             </div>;
     }))}
