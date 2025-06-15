@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { fetchMovies } from '@/services/movieService';
@@ -9,16 +9,25 @@ import { fetchSeries } from '@/services/seriesService';
 
 const Genres = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
-  const { data: movies = [] } = useQuery({
+  const { data: movies = [], refetch: refetchMovies } = useQuery({
     queryKey: ['movies'],
     queryFn: () => fetchMovies(''),
+    staleTime: 0, // Always refetch
   });
 
-  const { data: series = [] } = useQuery({
+  const { data: series = [], refetch: refetchSeries } = useQuery({
     queryKey: ['series'],
     queryFn: () => fetchSeries(''),
+    staleTime: 0, // Always refetch
   });
+
+  // Refresh data when component mounts or becomes visible
+  React.useEffect(() => {
+    refetchMovies();
+    refetchSeries();
+  }, [refetchMovies, refetchSeries]);
 
   // Combine all genres from movies and series
   const allGenres = React.useMemo(() => {

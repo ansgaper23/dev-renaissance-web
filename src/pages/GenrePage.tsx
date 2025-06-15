@@ -14,15 +14,23 @@ const GenrePage = () => {
   
   const decodedGenre = decodeURIComponent(genre || '');
 
-  const { data: movies = [], isLoading: moviesLoading } = useQuery({
+  const { data: movies = [], isLoading: moviesLoading, refetch: refetchMovies } = useQuery({
     queryKey: ['movies'],
     queryFn: () => fetchMovies(''),
+    staleTime: 0, // Always refetch
   });
 
-  const { data: series = [], isLoading: seriesLoading } = useQuery({
+  const { data: series = [], isLoading: seriesLoading, refetch: refetchSeries } = useQuery({
     queryKey: ['series'],
     queryFn: () => fetchSeries(''),
+    staleTime: 0, // Always refetch
   });
+
+  // Refresh data when component mounts or becomes visible
+  React.useEffect(() => {
+    refetchMovies();
+    refetchSeries();
+  }, [refetchMovies, refetchSeries]);
 
   // Filter content by genre
   const filteredMovies = movies.filter(movie => 
