@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -87,12 +86,27 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
             />
             {isHovered && (
               <div className="absolute inset-0 bg-cuevana-bg/70 flex items-center justify-center">
-                <div className="bg-cuevana-blue rounded-full p-3 text-white">
-                  <Play className="h-6 w-6" />
+                <div className="
+                  rounded-full
+                  p-4
+                  flex
+                  items-center
+                  justify-center
+                  backdrop-blur-md
+                  bg-white/20
+                  border
+                  border-white/30
+                  shadow-xl
+                  transition-all
+                  ring-2
+                  ring-white/30
+                  hover:ring-cuevana-blue
+                  animate-fade-in
+                ">
+                  <Play className="h-8 w-8 text-cuevana-blue drop-shadow" />
                 </div>
               </div>
             )}
-            
             {/* Rating badge */}
             {movie.rating && movie.rating > 0 && (
               <div className="absolute top-2 left-2 bg-cuevana-bg/80 text-cuevana-gold text-xs font-bold px-2 py-1 rounded flex items-center">
