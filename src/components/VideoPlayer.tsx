@@ -173,8 +173,9 @@ const VideoPlayer = ({
   };
 
   // Main layout: centra y no full screen, con max width y padding arriba
-  // Ahora max-w-6xl y min-h más grande aún
-  return <div className="flex flex-col items-center w-full pt-5 pb-8">
+  // Añadimos px-2 (padding horizontal) en mobile y px-0 en md+: da más espacio lateral en mobile
+  return (
+    <div className="flex flex-col items-center w-full pt-5 pb-8 px-2 md:px-0">
       <div className="w-full flex flex-col items-center">
         <div className="max-w-6xl w-full mx-auto rounded-xl bg-[#101424] shadow-xl border border-cuevana-gray-300 overflow-hidden">
           {/* Barra de servidores */}
@@ -187,6 +188,7 @@ const VideoPlayer = ({
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
 export default VideoPlayer;
