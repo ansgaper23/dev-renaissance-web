@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { Download } from 'lucide-react';
 
 // El mensaje que se ve en el screenshot
 const INFO_MESSAGE =
@@ -66,57 +65,88 @@ const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps)
   const currentServer = allServerList[selectedServer] || allServerList[0];
   const currentStreamUrl = currentServer?.url;
 
-  // Barra de servidores
+  // Estilo para los botones tipo card
+  const cardClass =
+    "flex flex-col items-center justify-center shadow-md bg-[#192033] rounded-[10px] min-w-[120px] px-4 py-3 text-white font-bold cursor-pointer transition-all duration-150 relative border-t border-l border-r border-[#232b43]";
+  const cardActive =
+    "shadow-lg border-b-[5px] border-yellow-400 z-10 scale-105";
+  const cardInactive =
+    "border-b-[5px] border-transparent hover:border-yellow-300/80 hover:scale-105 opacity-80 hover:opacity-100";
+
+  const qualityText =
+    "uppercase text-xs pt-1 tracking-widest font-bold text-yellow-300 leading-tight";
+
+  // Reemplaza el renderServerBar por uno visualmente similar al ejemplo
   const renderServerBar = () => (
-    <div
-      className="
-        w-full flex flex-wrap justify-center items-center gap-3 mb-0 px-4 pt-4
-      "
-    >
+    <div className="w-full flex justify-center items-center gap-5 py-6 bg-transparent">
       {Object.entries(serversByLanguage).map(([language, servers], lngIdx) =>
         servers.map((server, srvIdx) => {
           const globalIdx = allServerList.findIndex(s => s === server);
-          // Bandera/idioma
           const flag = LANG_FLAGS[language] || '🌐';
+          const isSelected = selectedServer === globalIdx;
           return (
-            <div key={language + srvIdx} className="flex flex-col items-center">
-              <Button
-                onClick={() => setSelectedServer(globalIdx)}
-                variant={selectedServer === globalIdx ? "default" : "outline"}
-                className={[
-                  "rounded-t-md rounded-b-none px-4 py-2 shadow font-semibold transition",
-                  selectedServer === globalIdx
-                    ? "bg-blue-800 text-white border-b-4 border-yellow-400"
-                    : "bg-blue-700/80 text-white border-b-4 border-transparent hover:border-yellow-200"
-                ].join(' ')}
-                style={{ minWidth: 120, fontSize: "1rem" }}
-              >
-                <div className="flex flex-col items-center leading-none">
-                  <div className="flex items-center gap-1">
-                    <span className="text-lg">{flag}</span>
-                    <span className="font-semibold">{language}</span>
-                  </div>
-                  <span className="uppercase text-xs pt-1 tracking-widest font-bold text-yellow-300">
-                    {server.quality || "CALIDAD HD"}
-                  </span>
-                </div>
-              </Button>
+            <div
+              key={language + srvIdx}
+              className={[
+                cardClass,
+                isSelected ? cardActive : cardInactive,
+                "transition-transform duration-150 text-base",
+                "hover:ring-2 hover:ring-yellow-300"
+              ].join(' ')}
+              style={{
+                boxShadow: isSelected
+                  ? '0 8px 24px 0 rgba(60,72,144,.22)'
+                  : '0 2px 8px 0 rgba(30,42,80,.06)',
+                cursor: isSelected ? 'default' : 'pointer',
+                maxWidth: 180,
+              }}
+              onClick={() => !isSelected && setSelectedServer(globalIdx)}
+              tabIndex={0}
+              aria-label={`Elegir servidor ${language}`}
+            >
+              {/* Bandera e idioma */}
+              <div className="flex items-center gap-1 mb-1 text-lg">
+                <span>{flag}</span>
+                <span className="font-semibold text-[16px]">{language === "Español Latino" ? "MX Latino" : language}</span>
+              </div>
+              <div className={qualityText}>
+                {server.quality || "HD"}
+              </div>
+              {/* Línea amarilla inferior solo si seleccionado */}
+              {isSelected && (
+                <div
+                  className="absolute bottom-0 left-0 w-full h-[4px] bg-yellow-400 rounded-b-md"
+                  style={{ marginBottom: '-5px' }}
+                />
+              )}
             </div>
           );
         })
       )}
-      {/* Botón de descarga (simulado: siempre visible, puedes personalizarlo) */}
+      {/* Botón Descargar, ahora visualmente tipo card, azul fuerte */}
       <a
         href={currentStreamUrl}
         rel="noopener noreferrer"
         target="_blank"
-        className="rounded-t-md rounded-b-none px-4 py-2 bg-blue-900 text-white font-semibold shadow border-b-4 border-blue-400 ml-2 flex flex-col items-center hover:bg-blue-950 transition"
-        style={{ minWidth: 120, fontSize: "1rem" }}
+        className={[
+          cardClass,
+          "bg-[#2653c7] flex flex-col items-center justify-center min-w-[150px]",
+          "hover:bg-[#213c7a] transition-all duration-150 group"
+        ].join(' ')}
+        style={{
+          maxWidth: 210,
+          marginLeft: 16,
+          position: "relative"
+        }}
         title="Descargar (experimental)"
       >
-        <span className="text-xl">⬇️</span>
-        <span className="text-xs font-bold uppercase">Descargar</span>
-        <span className="uppercase text-xs pt-1 tracking-widest">CALIDAD HD</span>
+        <Download className="text-white mb-1 group-hover:scale-110 transition-transform duration-100" size={28} />
+        <span className="font-bold text-[16px]">DESCARGAR</span>
+        <span className="uppercase text-xs pt-1 tracking-widest font-bold text-white">CALIDAD HD</span>
+        <div
+          className="absolute bottom-0 left-0 w-full h-[4px] bg-yellow-400 rounded-b-md"
+          style={{ marginBottom: '-5px' }}
+        />
       </a>
     </div>
   );
@@ -190,17 +220,19 @@ const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps)
     );
   };
 
-  // Main layout centrado y max-w igual screenshot
+  // Main layout: centra y no full screen, con max width y padding arriba
   return (
-    <div className="flex flex-col items-center w-full py-6">
-      <div className="w-full max-w-5xl mx-auto rounded-lg bg-cuevana-bg shadow-xl border border-cuevana-gray-300 overflow-hidden">
-        {/* Barra de servidores */}
-        {renderServerBar()}
-        {/* Mensaje amarillo arriba */}
-        {renderTopInfo()}
-        {/* Player centrado con aspect-ratio y bordes redondeados */}
-        <div className="relative w-full aspect-video bg-black mx-auto">
-          {getVideoElement(currentStreamUrl)}
+    <div className="flex flex-col items-center w-full pt-5 pb-8">
+      <div className="w-full flex flex-col items-center">
+        <div className="max-w-3xl w-full mx-auto rounded-xl bg-[#101424] shadow-xl border border-cuevana-gray-300 overflow-hidden">
+          {/* Barra de servidores */}
+          {renderServerBar()}
+          {/* Mensaje amarillo arriba */}
+          {renderTopInfo()}
+          {/* Player centrado, aspect ratio y bordes redondeados */}
+          <div className="relative w-full aspect-video bg-black mx-auto rounded-b-xl overflow-hidden">
+            {getVideoElement(currentStreamUrl)}
+          </div>
         </div>
       </div>
     </div>
@@ -208,4 +240,3 @@ const VideoPlayer = ({ title, streamServers = [], streamUrl }: VideoPlayerProps)
 };
 
 export default VideoPlayer;
-
