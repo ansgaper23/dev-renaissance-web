@@ -77,39 +77,120 @@ const VideoPlayer = ({
   const currentServer = allServerList[selectedServer] || allServerList[0];
   const currentStreamUrl = currentServer?.url;
 
-  // Estilo para los botones tipo card
-  const cardClass = "flex flex-col items-center justify-center shadow-md bg-[#192033] rounded-[10px] min-w-[120px] px-4 py-3 text-white font-bold cursor-pointer transition-all duration-150 relative border-t border-l border-r border-[#232b43]";
-  const cardActive = "shadow-lg border-b-[5px] border-yellow-400 z-10 scale-105";
-  const cardInactive = "border-b-[5px] border-transparent hover:border-yellow-300/80 hover:scale-105 opacity-80 hover:opacity-100";
-  const qualityText = "uppercase text-xs pt-1 tracking-widest font-bold text-yellow-300 leading-tight";
+  // Estilo para los botones tipo card con efecto cristal/minimalista
+  const cardClass = `
+    flex flex-col items-center justify-center
+    rounded-[14px] 
+    min-w-[110px] px-4 py-3
+    cursor-pointer
+    transition-all duration-150
+    relative
+    border border-white/20
+    backdrop-blur-md
+    bg-white/10
+    shadow-[0_4px_24px_0_rgba(150,180,255,0.08)]
+    hover:bg-white/15
+    hover:shadow-lg
+    hover:scale-105
+    active:scale-100
+    font-semibold text-white
+    select-none
+    outline-none
+    focus-visible:ring-2 focus-visible:ring-yellow-300
+    overflow-hidden
+  `;
+  const cardActive = `
+    border-yellow-300 shadow-[0_8px_32px_0_rgba(220,220,40,0.12)]
+    scale-105
+    before:absolute before:inset-0 before:pointer-events-none
+    before:rounded-[14px] before:bg-white/20 before:opacity-80
+  `;
+  const cardInactive = `
+    border-transparent
+    opacity-85
+  `;
+  const qualityText = "uppercase text-xs pt-1 tracking-widest font-bold text-yellow-200 leading-tight drop-shadow";
 
-  // Reemplaza el renderServerBar por uno visualmente similar al ejemplo
-  const renderServerBar = () => <div className="w-full flex justify-center items-center gap-5 bg-transparent py-0">
-      {Object.entries(serversByLanguage).map(([language, servers], lngIdx) => servers.map((server, srvIdx) => {
-      const globalIdx = allServerList.findIndex(s => s === server);
-      const flag = LANG_FLAGS[language] || '🌐';
-      const isSelected = selectedServer === globalIdx;
-      return <div key={language + srvIdx} className={[cardClass, isSelected ? cardActive : cardInactive, "transition-transform duration-150 text-base", "hover:ring-2 hover:ring-yellow-300"].join(' ')} style={{
-        boxShadow: isSelected ? '0 8px 24px 0 rgba(60,72,144,.22)' : '0 2px 8px 0 rgba(30,42,80,.06)',
-        cursor: isSelected ? 'default' : 'pointer',
-        maxWidth: 180
-      }} onClick={() => !isSelected && setSelectedServer(globalIdx)} tabIndex={0} aria-label={`Elegir servidor ${language}`}>
+  // Reemplaza el renderServerBar para el nuevo look minimalista y glassmorphism
+  const renderServerBar = () =>
+    <div className="w-full flex justify-center items-center gap-4 bg-transparent py-2">
+      {Object.entries(serversByLanguage).map(([language, servers], lngIdx) =>
+        servers.map((server, srvIdx) => {
+          const globalIdx = allServerList.findIndex(s => s === server);
+          const flag = LANG_FLAGS[language] || '🌐';
+          const isSelected = selectedServer === globalIdx;
+          return (
+            <div
+              key={language + srvIdx}
+              className={[
+                cardClass,
+                isSelected ? cardActive : cardInactive,
+              ].join(' ')}
+              style={{
+                maxWidth: 180,
+                boxShadow: isSelected
+                  ? '0 8px 32px 0 rgba(255,255,180,0.13)'
+                  : '0 2px 12px 0 rgba(80,110,255,0.07)',
+                borderWidth: isSelected ? 2 : 1,
+                background: isSelected
+                  ? 'linear-gradient(135deg, rgba(247,255,220,0.22) 0%, rgba(33,48,60,0.65) 100%)'
+                  : 'rgba(255,255,255,0.05)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                cursor: isSelected ? 'default' : 'pointer',
+                outline: isSelected ? '2px solid #FFD600' : 'none'
+              }}
+              onClick={() => !isSelected && setSelectedServer(globalIdx)}
+              tabIndex={0}
+              aria-label={`Elegir servidor ${language}`}
+            >
               {/* Bandera e idioma */}
-              <div className="flex items-center gap-1 mb-1 text-lg">
+              <div className="flex items-center mb-0.5 gap-1 text-lg font-medium">
                 <span>{flag}</span>
-                <span className="font-semibold text-[16px]">{language === "Español Latino" ? "MX Latino" : language}</span>
+                <span className="text-[15px] tracking-wide">{language === "Español Latino" ? "MX Latino" : language}</span>
               </div>
               <div className={qualityText}>
                 {server.quality || "HD"}
               </div>
               {/* Línea amarilla inferior solo si seleccionado */}
-              {isSelected && <div className="absolute bottom-0 left-0 w-full h-[4px] bg-yellow-400 rounded-b-md" style={{
-          marginBottom: '-5px'
-        }} />}
-            </div>;
-    }))}
-      {/* Botón Descargar, ahora visualmente tipo card, azul fuerte */}
-      
+              {isSelected && (
+                <div
+                  className="absolute bottom-0 left-0 w-full h-[3px] bg-yellow-300 rounded-b"
+                  style={{ marginBottom: '-1px', boxShadow: '0 2px 10px 0 #ffe06650' }}
+                />
+              )}
+            </div>
+          );
+        })
+      )}
+      {/* Botón Descargar minimalista con efecto vidrio */}
+      {currentServer?.url && (
+        <a
+          href={currentServer.url}
+          download
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`
+            flex flex-col items-center justify-center
+            rounded-[14px] min-w-[110px] px-4 py-3 font-semibold text-white
+            bg-gradient-to-br from-blue-500/40 to-blue-800/40
+            border border-white/20 hover:bg-blue-400/25 hover:border-cuevana-blue
+            shadow-[0_4px_24px_0_rgba(120,150,255,0.13)]
+            backdrop-blur-md mx-2 cursor-pointer transition-all
+            hover:scale-105 active:scale-100
+            outline-none
+            focus-visible:ring-2 focus-visible:ring-blue-400
+          `}
+          style={{
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+          }}
+          title="Descargar video"
+        >
+          <Download className="mb-1 text-blue-200" size={22} />
+          <span className="text-xs uppercase tracking-wider">Descargar</span>
+        </a>
+      )}
     </div>;
 
   // Mensaje amarillo
