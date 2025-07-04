@@ -3,10 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchSeriesById } from '@/services/seriesService';
-import { Play, Star, Calendar, Clock, Tag, Heart, FileText } from 'lucide-react';
+import { Star, Calendar, Clock, Tag, Heart, FileText } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import SeriesVideoPlayer from '@/components/SeriesVideoPlayer';
+import SeriesEpisodeSelector from '@/components/SeriesEpisodeSelector';
 import SEOHead from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
 import ShareButton from '@/components/ShareButton';
@@ -77,18 +78,6 @@ const SeriesDetail = () => {
   const firstAirYear = series.first_air_date ? new Date(series.first_air_date).getFullYear() : 'Sin fecha';
   const genres = Array.isArray(series.genres) ? series.genres.join(', ') : 'Sin género';
 
-  // Obtener la temporada actual
-  const currentSeason = Array.isArray(series.seasons) 
-    ? series.seasons.find((season: any) => season.season_number === selectedSeason)
-    : null;
-
-  const scrollToEpisodes = () => {
-    const episodesSection = document.getElementById('episodes-section');
-    if (episodesSection) {
-      episodesSection.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   // Transformar series relacionadas para SeriesSection
   const transformedRelatedSeries = relatedSeries.map(relatedSeriesItem => ({
     id: relatedSeriesItem.id,
@@ -114,101 +103,93 @@ const SeriesDetail = () => {
         type="series"
       />
       
-      <div className="relative">
-        {/* Backdrop */}
-        <div className="relative h-[60vh] overflow-hidden">
-          <img 
-            src={backdropUrl}
-            alt={series.title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-cuevana-bg via-cuevana-bg/60 to-transparent" />
-        </div>
-
-        {/* Series Info */}
-        <div className="container mx-auto px-4 -mt-32 relative z-10">
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Poster */}
-            <div className="flex-shrink-0">
-              <img 
-                src={posterUrl}
-                alt={series.title}
-                className="w-64 h-96 object-cover rounded-lg shadow-2xl mx-auto lg:mx-0"
-              />
-            </div>
-
-            {/* Details */}
-            <div className="flex-1 lg:ml-8">
-              <h1 className="text-4xl lg:text-5xl font-bold mb-4">{series.title}</h1>
-              
-              {/* Sinopsis debajo del título */}
-              {series.overview && (
-                <p className="text-cuevana-white/90 text-lg leading-relaxed mb-6">
-                  {series.overview}
-                </p>
-              )}
-
-              <div className="flex flex-wrap items-center gap-6 mb-6">
-                {series.rating && (
-                  <div className="flex items-center gap-2">
-                    <Star className="h-5 w-5 text-cuevana-gold fill-current" />
-                    <span className="text-lg font-semibold">{series.rating}/10</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-cuevana-blue" />
-                  <span>{firstAirYear}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-cuevana-blue" />
-                  <span>{series.number_of_seasons} temporadas</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Tag className="h-5 w-5 text-cuevana-blue" />
-                  <span>{genres}</span>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-4 mb-8">
-                <Button 
-                  onClick={scrollToEpisodes}
-                  className="bg-cuevana-blue hover:bg-cuevana-blue/90 flex items-center gap-2"
-                >
-                  <Play className="h-5 w-5" />
-                  Ver Episodios
-                </Button>
-                <ShareButton 
-                  title={series.title}
-                />
-                <Button variant="outline" className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10">
-                  <Heart className="h-5 w-5 mr-2" />
-                  Favoritos
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Episodes Section */}
-          <div id="episodes-section" className="mt-12">
-            <SeriesVideoPlayer 
-              series={series}
-              selectedSeason={selectedSeason}
-              selectedEpisode={selectedEpisode}
-              onSeasonChange={setSelectedSeason}
-              onEpisodeChange={setSelectedEpisode}
+      <div className="container mx-auto px-4 py-8">
+        {/* Series Header */}
+        <div className="flex flex-col lg:flex-row gap-8 mb-8">
+          {/* Poster */}
+          <div className="flex-shrink-0">
+            <img 
+              src={posterUrl}
+              alt={series.title}
+              className="w-64 h-96 object-cover rounded-lg shadow-2xl mx-auto lg:mx-0"
             />
           </div>
 
-          {/* Related Series */}
-          {transformedRelatedSeries.length > 0 && (
-            <div className="mt-16">
-              <SeriesSection 
-                title="Series Relacionadas"
-                series={transformedRelatedSeries}
-              />
+          {/* Details */}
+          <div className="flex-1">
+            <h1 className="text-3xl lg:text-4xl font-bold mb-4">{series.title}</h1>
+            
+            {/* Info Row */}
+            <div className="flex flex-wrap items-center gap-6 mb-4">
+              {series.rating && (
+                <div className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-cuevana-gold fill-current" />
+                  <span className="text-lg font-semibold">{series.rating}/10</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-cuevana-blue" />
+                <span>{firstAirYear}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-cuevana-blue" />
+                <span>{series.number_of_seasons} temporadas</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Tag className="h-5 w-5 text-cuevana-blue" />
+                <span>{genres}</span>
+              </div>
             </div>
-          )}
+
+            {/* Synopsis */}
+            {series.overview && (
+              <p className="text-cuevana-white/90 text-base leading-relaxed mb-6">
+                {series.overview}
+              </p>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-4">
+              <ShareButton title={series.title} />
+              <Button variant="outline" className="border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10">
+                <Heart className="h-4 w-4 mr-2" />
+                Favoritos
+              </Button>
+            </div>
+          </div>
         </div>
+
+        {/* Episode Selector */}
+        <div className="mb-8">
+          <SeriesEpisodeSelector
+            series={series}
+            selectedSeason={selectedSeason}
+            selectedEpisode={selectedEpisode}
+            onSeasonChange={setSelectedSeason}
+            onEpisodeChange={setSelectedEpisode}
+          />
+        </div>
+
+        {/* Video Player */}
+        <div className="mb-8">
+          <SeriesVideoPlayer 
+            series={series}
+            selectedSeason={selectedSeason}
+            selectedEpisode={selectedEpisode}
+            onSeasonChange={setSelectedSeason}
+            onEpisodeChange={setSelectedEpisode}
+          />
+        </div>
+
+        {/* Related Series */}
+        {transformedRelatedSeries.length > 0 && (
+          <div className="mt-16">
+            <SeriesSection 
+              title="Series Relacionadas"
+              series={transformedRelatedSeries}
+            />
+          </div>
+        )}
       </div>
 
       <Footer />

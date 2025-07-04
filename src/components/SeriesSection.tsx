@@ -66,8 +66,11 @@ const SeriesSection = ({ title, series, isLoading, viewAllLink }: SeriesSectionP
           const releaseYear = serie.first_air_date ? new Date(serie.first_air_date).getFullYear() : 'N/A';
           const genres = Array.isArray(serie.genres) ? serie.genres.slice(0, 2).join(', ') : 'Sin género';
 
+          // Use slug if available, otherwise fallback to id
+          const linkPath = serie.slug ? `/series/${serie.slug}` : `/series/${serie.id}`;
+
           return (
-            <Link key={serie.id} to={`/series/${serie.id}`} className="group">
+            <Link key={serie.id} to={linkPath} className="group">
               <div className="relative overflow-hidden rounded-lg bg-cuevana-gray-100 aspect-[2/3] mb-3">
                 <img 
                   src={posterUrl} 

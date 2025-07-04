@@ -37,6 +37,7 @@ export interface Series {
     language?: string;
   }> | null;
   seasons?: SeriesSeason[] | null;
+  slug?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 }
@@ -45,6 +46,15 @@ export interface Series {
 export interface SeriesCreate extends Omit<Partial<Series>, 'title'> {
   title: string; // Title is required
 }
+
+// Helper function to generate slug from title
+const generateSlug = (title: string): string => {
+  return title
+    .toLowerCase()
+    .replace(/[^a-zA-Z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .trim();
+};
 
 // Helper function to convert database row to Series
 const convertToSeries = (row: any): Series => {
@@ -58,6 +68,11 @@ const convertToSeries = (row: any): Series => {
 // Helper function to convert Series to database format
 const convertToDbFormat = (series: Partial<Series>) => {
   const dbData: any = { ...series };
+  
+  // Generate slug if title is provided and slug is not set
+  if (series.title && !series.slug) {
+    dbData.slug = generateSlug(series.title);
+  }
   
   // Convert complex objects to JSON-compatible format
   if (series.stream_servers) {
@@ -95,6 +110,20 @@ export const fetchSeriesById = async (id: string): Promise<Series> => {
     .from('series')
     .select('*')
     .eq('id', id)
+    .single();
+    
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  return convertToSeries(data);
+};
+
+export const fetchSeriesBySlug = async (slug: string): Promise<Series> => {
+  const { data, error } = await supabase
+    .from('series')
+    .select('*')
+    .eq('slug', slug)
     .single();
     
   if (error) {
