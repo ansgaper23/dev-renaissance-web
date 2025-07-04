@@ -5,9 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { importMovieFromTMDB, importMovieFromIMDBWithOMDb } from '@/services/movieService';
+import { importMovieFromTMDB, importMovieFromIMDBWithOMDb, searchTMDBMovieWithIMDB, generateAutoServers } from '@/services/movieService';
 import { toast } from '@/hooks/use-toast';
-import { Search, Download, Plus, Trash2 } from 'lucide-react';
+import { Search, Download, Plus, Trash2, Zap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ServerEntry {
@@ -27,6 +27,7 @@ const QuickAddMovie = () => {
   const [servers, setServers] = useState<ServerEntry[]>([
     { name: 'Servidor 1', url: '', quality: 'HD', language: 'Latino' }
   ]);
+  const [autoServersGenerated, setAutoServersGenerated] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -81,16 +82,10 @@ const QuickAddMovie = () => {
       setIsSearching(true);
       
       try {
-        const { data, error } = await supabase.functions.invoke('tmdb-search', {
-          body: { query: searchQuery }
-        });
-        
-        if (error) {
-          throw new Error(error.message);
-        }
-        
-        console.log("TMDB Search results:", data);
-        setSearchResults(data.results || []);
+        // Use new search function that includes IMDB ID
+        const results = await searchTMDBMovieWithIMDB(searchQuery);
+        console.log("TMDB Search results with IMDB:", results);
+        setSearchResults(results || []);
       } catch (error) {
         console.error('Error searching TMDB:', error);
         toast({
@@ -163,11 +158,30 @@ const QuickAddMovie = () => {
         setSelectedMovie(movie);
       } else {
         console.log("Detailed movie data:", detailedMovie);
-        setSelectedMovie(detailedMovie);
+        // Preserve IMDB ID from search results
+        setSelectedMovie({
+          ...detailedMovie,
+          imdb_id: movie.imdb_id
+        });
       }
     } catch (error) {
       console.error("Error getting detailed movie:", error);
       setSelectedMovie(movie);
+    }
+    
+    // Auto-generate servers if IMDB ID is available
+    if (movie.imdb_id) {
+      const autoServers = generateAutoServers(movie.imdb_id);
+      console.log("Auto-generated servers:", autoServers);
+      setServers(autoServers);
+      setAutoServersGenerated(true);
+      toast({
+        title: "Servidores generados automáticamente",
+        description: `Se generaron ${autoServers.length} servidores usando el ID de IMDB`,
+      });
+    } else {
+      setServers([{ name: 'Servidor 1', url: '', quality: 'HD', language: 'Latino' }]);
+      setAutoServersGenerated(false);
     }
     
     setSearchResults([]);
@@ -192,6 +206,18 @@ const QuickAddMovie = () => {
       addMovieMutation.mutate({ 
         movie: selectedMovie, 
         streamServers: validServers 
+      });
+    }
+  };
+
+  const regenerateAutoServers = () => {
+    if (selectedMovie?.imdb_id) {
+      const autoServers = generateAutoServers(selectedMovie.imdb_id);
+      setServers(autoServers);
+      setAutoServersGenerated(true);
+      toast({
+        title: "Servidores regenerados",
+        description: "Se regeneraron los servidores automáticamente",
       });
     }
   };
@@ -280,6 +306,12 @@ const QuickAddMovie = () => {
                   Ingrese el ID de IMDB (ejemplo: tt5950044) - {searchMode === 'imdb-tmdb' ? 'usando TMDB' : 'usando OMDb'}
                 </p>
               )}
+              {searchMode === 'tmdb' && (
+                <p className="text-gray-400 text-xs mt-2">
+                  <Zap className="inline h-3 w-3 mr-1" />
+                  Los servidores se generarán automáticamente si la película tiene ID de IMDB
+                </p>
+              )}
             </form>
 
             {/* Search Results - solo para TMDB */}
@@ -308,6 +340,12 @@ const QuickAddMovie = () => {
                       <p className="text-gray-400 text-sm">
                         {movie.release_date ? movie.release_date.split('-')[0] : 'Sin fecha'} • 
                         {movie.vote_average ? ` ${movie.vote_average} ★` : ' Sin calificación'}
+                        {movie.imdb_id && (
+                          <span className="inline-flex items-center ml-2 px-2 py-1 bg-cuevana-blue/20 text-cuevana-blue text-xs rounded">
+                            <Zap className="h-3 w-3 mr-1" />
+                            Auto-servidores
+                          </span>
+                        )}
                       </p>
                       <p className="text-gray-500 text-xs line-clamp-2">
                         {movie.overview || "Sin descripción disponible"}
@@ -340,6 +378,12 @@ const QuickAddMovie = () => {
                     {selectedMovie.genres.map((g: any) => g.name).join(', ')}
                   </p>
                 )}
+                {selectedMovie.imdb_id && (
+                  <p className="text-cuevana-blue text-sm flex items-center mt-1">
+                    <Zap className="h-3 w-3 mr-1" />
+                    IMDB: {selectedMovie.imdb_id}
+                  </p>
+                )}
                 <p className="text-gray-300 text-sm mt-2 line-clamp-3">
                   {selectedMovie.overview || "Sin descripción disponible"}
                 </p>
@@ -357,16 +401,38 @@ const QuickAddMovie = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h5 className="text-white font-medium">Enlaces de Servidores:</h5>
-                <Button
-                  type="button"
-                  onClick={addServer}
-                  className="bg-cuevana-blue hover:bg-cuevana-blue/90 text-white"
-                  size="sm"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Agregar Servidor
-                </Button>
+                <div className="flex gap-2">
+                  {selectedMovie.imdb_id && (
+                    <Button
+                      type="button"
+                      onClick={regenerateAutoServers}
+                      className="bg-cuevana-blue hover:bg-cuevana-blue/90 text-white"
+                      size="sm"
+                    >
+                      <Zap className="h-4 w-4 mr-2" />
+                      Auto-Generar
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    onClick={addServer}
+                    className="bg-gray-700 hover:bg-gray-600 text-white"
+                    size="sm"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Agregar Manual
+                  </Button>
+                </div>
               </div>
+              
+              {autoServersGenerated && (
+                <div className="bg-cuevana-blue/10 border border-cuevana-blue/30 rounded-lg p-3">
+                  <p className="text-cuevana-blue text-sm flex items-center">
+                    <Zap className="h-4 w-4 mr-2" />
+                    Servidores generados automáticamente usando el ID de IMDB
+                  </p>
+                </div>
+              )}
               
               {servers.map((server, index) => (
                 <div key={index} className="border border-gray-700 rounded-lg p-4 space-y-3">
@@ -442,7 +508,10 @@ const QuickAddMovie = () => {
               </Button>
               
               <p className="text-gray-400 text-xs text-center">
-                Agrega al menos un enlace de servidor para continuar
+                {autoServersGenerated ? 
+                  'Servidores auto-generados listos para agregar' : 
+                  'Agrega al menos un enlace de servidor para continuar'
+                }
               </p>
             </div>
           </div>

@@ -446,7 +446,7 @@ interface TMDBSearchResponse {
   movie_results: TMDBMovieResult[];
 }
 
-// TMDB search function
+// TMDB search function - Updated to get IMDB ID
 export const searchMovieByIMDBId = async (imdbId: string): Promise<TMDBMovieResult & { imdb_id: string; type: string }> => {
   try {
     console.log("Searching for IMDB ID:", imdbId);
@@ -506,6 +506,75 @@ export const searchMovieByIMDBId = async (imdbId: string): Promise<TMDBMovieResu
   }
 };
 
+// New function to search TMDB and get IMDB ID
+export const searchTMDBMovieWithIMDB = async (query: string): Promise<any[]> => {
+  try {
+    console.log("Searching TMDB with query:", query);
+    
+    const tmdbApiKey = '4a29f0dd1dfdbd0a8b506c7b9e35c506';
+    const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${tmdbApiKey}&query=${encodeURIComponent(query)}&language=es-ES`;
+    
+    const response = await fetch(searchUrl);
+    
+    if (!response.ok) {
+      throw new Error('Error al buscar en TMDB');
+    }
+    
+    const data = await response.json();
+    console.log("TMDB search results:", data);
+    
+    // Get detailed info including IMDB ID for each result
+    const moviesWithIMDB = await Promise.all(
+      data.results.slice(0, 5).map(async (movie: any) => {
+        try {
+          const detailsUrl = `https://api.themoviedb.org/3/movie/${movie.id}?api_key=${tmdbApiKey}&append_to_response=external_ids&language=es-ES`;
+          const detailsResponse = await fetch(detailsUrl);
+          const movieDetails = await detailsResponse.json();
+          
+          return {
+            ...movie,
+            imdb_id: movieDetails.external_ids?.imdb_id || null,
+            runtime: movieDetails.runtime || null
+          };
+        } catch (error) {
+          console.error("Error getting movie details:", error);
+          return { ...movie, imdb_id: null, runtime: null };
+        }
+      })
+    );
+    
+    return moviesWithIMDB;
+  } catch (error) {
+    console.error("Error searching TMDB:", error);
+    throw error;
+  }
+};
+
+// Function to generate automatic servers based on IMDB ID
+export const generateAutoServers = (imdbId: string): Array<{
+  name: string;
+  url: string;
+  quality: string;
+  language: string;
+}> => {
+  if (!imdbId) return [];
+  
+  return [
+    {
+      name: 'Servidor 1 - Embed69',
+      url: `https://embed69.org/f/${imdbId}`,
+      quality: 'HD',
+      language: 'Latino'
+    },
+    {
+      name: 'Servidor 2 - VerhLink',
+      url: `https://play.verhdlink.cam/movie/${imdbId}`,
+      quality: 'HD', 
+      language: 'Latino'
+    }
+  ];
+};
+
 // TMDB Genre mapping - UPDATED TO MATCH SERVER
 const TMDB_GENRES: { [key: number]: string } = {
   28: "Acción",
@@ -547,6 +616,13 @@ export const importMovieFromTMDB = async (tmdbMovie: TMDBMovieResult & { imdb_id
     mapped_names: genreNames
   });
 
+  // If no stream servers provided but we have IMDB ID, generate auto servers
+  let finalStreamServers = streamServers;
+  if ((!streamServers || streamServers.length === 0) && tmdbMovie.imdb_id) {
+    console.log("Auto-generating servers for IMDB ID:", tmdbMovie.imdb_id);
+    finalStreamServers = generateAutoServers(tmdbMovie.imdb_id);
+  }
+
   const movieData: MovieCreate = {
     title: tmdbMovie.title,
     original_title: tmdbMovie.original_title,
@@ -559,7 +635,8 @@ export const importMovieFromTMDB = async (tmdbMovie: TMDBMovieResult & { imdb_id
     genre_ids: tmdbMovie.genre_ids,
     rating: tmdbMovie.vote_average,
     runtime: tmdbMovie.runtime,
-    stream_servers: streamServers.filter(server => server.url.trim() !== '')
+    imdb_id: tmdbMovie.imdb_id,
+    stream_servers: finalStreamServers.filter(server => server.url.trim() !== '')
   };
   
   return addMovie(movieData);

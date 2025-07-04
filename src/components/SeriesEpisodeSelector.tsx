@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, Play } from 'lucide-react';
 import { Series, SeriesSeason } from '@/services/seriesService';
@@ -33,96 +33,88 @@ const SeriesEpisodeSelector = ({
 
   return (
     <div className="space-y-4">
-      {/* Season Selector */}
+      {/* Season Selector - Now using Accordion */}
       <div className="bg-cuevana-gray-100 rounded-lg p-4">
-        <h3 className="text-lg font-semibold text-cuevana-white mb-4">Temporadas</h3>
-        <div className="flex flex-wrap gap-2">
-          {seasons.map((season: SeriesSeason) => (
-            <Button
-              key={season.season_number}
-              variant={selectedSeason === season.season_number ? "default" : "outline"}
-              size="sm"
-              onClick={() => onSeasonChange(season.season_number)}
-              className={`${
-                selectedSeason === season.season_number
-                  ? 'bg-cuevana-blue hover:bg-cuevana-blue/90'
-                  : 'border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10'
-              }`}
-            >
-              Temporada {season.season_number}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Episode List */}
-      <div className="bg-cuevana-gray-100 rounded-lg p-4">
-        <h3 className="text-lg font-semibold text-cuevana-white mb-4">
-          Episodios - Temporada {selectedSeason}
-        </h3>
+        <h3 className="text-lg font-semibold text-cuevana-white mb-4">Temporadas y Episodios</h3>
         
-        {/* Mobile: Collapsible Episode List */}
-        <div className="block md:hidden">
-          <Collapsible>
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" className="w-full justify-between border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10">
-                Episodio {selectedEpisode}
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-2 space-y-2">
-              {seasons
-                .find((season: SeriesSeason) => season.season_number === selectedSeason)
-                ?.episodes.map((episode) => (
-                  <Button
-                    key={episode.episode_number}
-                    variant={selectedEpisode === episode.episode_number ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => onEpisodeChange(episode.episode_number)}
-                    className={`w-full justify-start ${
-                      selectedEpisode === episode.episode_number
-                        ? 'bg-cuevana-blue hover:bg-cuevana-blue/90'
-                        : 'text-cuevana-white hover:bg-cuevana-white/10'
-                    }`}
-                  >
-                    <Play className="h-3 w-3 mr-2" />
-                    {episode.episode_number}. {episode.title || `Episodio ${episode.episode_number}`}
-                  </Button>
-                )) || []}
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
+        <Accordion type="single" collapsible value={`season-${selectedSeason}`}>
+          {seasons.map((season: SeriesSeason) => (
+            <AccordionItem 
+              key={season.season_number} 
+              value={`season-${season.season_number}`}
+              className="border-cuevana-white/20"
+            >
+              <AccordionTrigger 
+                className="text-cuevana-white hover:text-cuevana-blue hover:no-underline py-3"
+                onClick={() => onSeasonChange(season.season_number)}
+              >
+                <span className="font-medium">
+                  Temporada {season.season_number} ({season.episodes?.length || 0} episodios)
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                {/* Mobile: Collapsible Episode List */}
+                <div className="block md:hidden">
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10 mb-2">
+                        Episodio {selectedEpisode}
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-2">
+                      {season.episodes?.map((episode) => (
+                        <Button
+                          key={episode.episode_number}
+                          variant={selectedEpisode === episode.episode_number ? "default" : "ghost"}
+                          size="sm"
+                          onClick={() => onEpisodeChange(episode.episode_number)}
+                          className={`w-full justify-start ${
+                            selectedEpisode === episode.episode_number
+                              ? 'bg-cuevana-blue hover:bg-cuevana-blue/90'
+                              : 'text-cuevana-white hover:bg-cuevana-white/10'
+                          }`}
+                        >
+                          <Play className="h-3 w-3 mr-2" />
+                          {episode.episode_number}. {episode.title || `Episodio ${episode.episode_number}`}
+                        </Button>
+                      )) || []}
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
 
-        {/* Desktop: Grid Episode List */}
-        <div className="hidden md:block">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {seasons
-              .find((season: SeriesSeason) => season.season_number === selectedSeason)
-              ?.episodes.map((episode) => (
-                <Button
-                  key={episode.episode_number}
-                  variant={selectedEpisode === episode.episode_number ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => onEpisodeChange(episode.episode_number)}
-                  className={`justify-start text-left h-auto py-3 px-4 ${
-                    selectedEpisode === episode.episode_number
-                      ? 'bg-cuevana-blue hover:bg-cuevana-blue/90'
-                      : 'border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 w-full">
-                    <Play className="h-3 w-3 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium">Ep. {episode.episode_number}</div>
-                      <div className="text-xs opacity-75 truncate">
-                        {episode.title || `Episodio ${episode.episode_number}`}
-                      </div>
-                    </div>
+                {/* Desktop: Grid Episode List */}
+                <div className="hidden md:block">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {season.episodes?.map((episode) => (
+                      <Button
+                        key={episode.episode_number}
+                        variant={selectedEpisode === episode.episode_number ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => onEpisodeChange(episode.episode_number)}
+                        className={`justify-start text-left h-auto py-3 px-4 ${
+                          selectedEpisode === episode.episode_number
+                            ? 'bg-cuevana-blue hover:bg-cuevana-blue/90'
+                            : 'border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 w-full">
+                          <Play className="h-3 w-3 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium">Ep. {episode.episode_number}</div>
+                            <div className="text-xs opacity-75 truncate">
+                              {episode.title || `Episodio ${episode.episode_number}`}
+                            </div>
+                          </div>
+                        </div>
+                      </Button>
+                    )) || []}
                   </div>
-                </Button>
-              )) || []}
-          </div>
-        </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </div>
     </div>
   );
