@@ -522,7 +522,7 @@ export const searchTMDBMovieWithIMDB = async (query: string): Promise<any[]> => 
       return [];
     }
     
-    // Return the results directly - the edge function should handle the IMDB ID fetching
+    // Return the results directly - the edge function now handles the IMDB ID fetching
     return data.results.slice(0, 10); // Limit to 10 results
   } catch (error) {
     console.error("Error searching TMDB:", error);
