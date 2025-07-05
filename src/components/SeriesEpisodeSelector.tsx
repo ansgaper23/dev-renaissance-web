@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, Play } from 'lucide-react';
 import { Series, SeriesSeason } from '@/services/seriesService';
@@ -33,26 +33,28 @@ const SeriesEpisodeSelector = ({
 
   return (
     <div className="space-y-4">
-      {/* Season Selector */}
+      {/* Season Selector Dropdown */}
       <div className="bg-cuevana-gray-100 rounded-lg p-4">
-        <h3 className="text-lg font-semibold text-cuevana-white mb-4">Temporadas</h3>
-        <div className="flex flex-wrap gap-2">
-          {seasons.map((season: SeriesSeason) => (
-            <Button
-              key={season.season_number}
-              variant={selectedSeason === season.season_number ? "default" : "outline"}
-              size="sm"
-              onClick={() => onSeasonChange(season.season_number)}
-              className={`${
-                selectedSeason === season.season_number
-                  ? 'bg-cuevana-blue hover:bg-cuevana-blue/90'
-                  : 'border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-white/10'
-              }`}
-            >
-              Temporada {season.season_number}
-            </Button>
-          ))}
-        </div>
+        <h3 className="text-lg font-semibold text-cuevana-white mb-4">Temporada</h3>
+        <Select
+          value={selectedSeason.toString()}
+          onValueChange={(value) => onSeasonChange(parseInt(value))}
+        >
+          <SelectTrigger className="w-full bg-cuevana-gray-200 border-cuevana-white/30 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue">
+            <SelectValue placeholder="Seleccionar temporada" />
+          </SelectTrigger>
+          <SelectContent className="bg-cuevana-gray-200 border-cuevana-white/30">
+            {seasons.map((season: SeriesSeason) => (
+              <SelectItem 
+                key={season.season_number}
+                value={season.season_number.toString()}
+                className="text-cuevana-white hover:bg-cuevana-blue focus:bg-cuevana-blue focus:text-white"
+              >
+                Temporada {season.season_number}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Episode List */}

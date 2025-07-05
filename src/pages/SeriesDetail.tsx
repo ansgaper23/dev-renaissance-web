@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { fetchSeriesById } from '@/services/seriesService';
+import { fetchSeriesById, fetchSeriesBySlug } from '@/services/seriesService';
 import { Star, Calendar, Clock, Tag, Heart, FileText } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -19,17 +18,23 @@ const SeriesDetail = () => {
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
 
+  // Determine if the id is a UUID or a slug
+  const isUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
   const { data: series, isLoading, error } = useQuery({
     queryKey: ['series', id],
-    queryFn: () => fetchSeriesById(id!),
+    queryFn: () => {
+      if (!id) throw new Error('No series ID provided');
+      return isUUID ? fetchSeriesById(id) : fetchSeriesBySlug(id);
+    },
     enabled: !!id,
   });
 
   // Query para series relacionadas
   const { data: relatedSeries = [] } = useQuery({
     queryKey: ['relatedSeries', id, series?.genres],
-    queryFn: () => fetchRelatedSeries(id!, series?.genres || []),
-    enabled: !!id && !!series,
+    queryFn: () => fetchRelatedSeries(series!.id, series?.genres || []),
+    enabled: !!series?.id && !!series,
   });
 
   // Registrar vista cuando se carga la serie
@@ -56,7 +61,10 @@ const SeriesDetail = () => {
       <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
         <Navbar />
         <div className="container mx-auto px-4 py-20 text-center">
-          Error al cargar la serie
+          <h1 className="text-2xl font-bold mb-4">Error al cargar la serie</h1>
+          <p className="text-cuevana-white/70">
+            {error?.message || 'No se pudo encontrar la serie solicitada'}
+          </p>
         </div>
         <Footer />
       </div>
