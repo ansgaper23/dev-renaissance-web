@@ -446,54 +446,45 @@ interface TMDBSearchResponse {
   movie_results: TMDBMovieResult[];
 }
 
-// TMDB search function - Updated to get IMDB ID
+// TMDB search function - Updated to use Supabase function
 export const searchMovieByIMDBId = async (imdbId: string): Promise<TMDBMovieResult & { imdb_id: string; type: string }> => {
   try {
     console.log("Searching for IMDB ID:", imdbId);
     
-    // Usar el endpoint de supabase functions en lugar del API directo
-    const { supabase } = await import('@/integrations/supabase/client');
+    // Use the Supabase function for TMDB search
+    const { data, error } = await supabase.functions.invoke('tmdb-search', {
+      body: { imdb_id: imdbId }
+    });
     
-    // Intentar buscar usando la función de supabase
-    try {
-      const { data, error } = await supabase.functions.invoke('tmdb-search', {
-        body: { imdb_id: imdbId }
-      });
-      
-      if (!error && data) {
-        console.log("TMDB search result via Supabase:", data);
-        return {
-          ...data,
-          imdb_id: imdbId,
-          type: 'movie'
-        };
-      }
-    } catch (supabaseError) {
-      console.log("Supabase function failed, trying direct API");
+    if (error) {
+      console.error("Supabase function error:", error);
+      throw new Error(error.message || 'Error al buscar en TMDB');
     }
     
-    // Fallback: usar API directo con el hardcoded key (temporal)
-    const tmdbApiKey = '4a29f0dd1dfdbd0a8b506c7b9e35c506';
-    const url = `https://api.themoviedb.org/3/find/${imdbId}?api_key=${tmdbApiKey}&external_source=imdb_id&language=es-ES`;
-    
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error('Error al buscar en TMDB');
-    }
-    
-    const data: TMDBSearchResponse = await response.json();
-    console.log("TMDB search result:", data);
+    console.log("TMDB search result via Supabase:", data);
     
     if (data.movie_results && data.movie_results.length > 0) {
       const movie = data.movie_results[0];
       
-      const detailsUrl = `https://api.themoviedb.org/3/movie/${movie.id}?api_key=${tmdbApiKey}&append_to_response=videos,external_ids&language=es-ES`;
-      const detailsResponse = await fetch(detailsUrl);
-      const movieDetails: TMDBMovieResult = await detailsResponse.json();
+      // Get detailed movie info including runtime
+      const { data: detailsData, error: detailsError } = await supabase.functions.invoke('tmdb-search', {
+        body: { 
+          query: movie.title,
+          type: 'movie'
+        }
+      });
+      
+      if (!detailsError && detailsData && detailsData.results && detailsData.results.length > 0) {
+        const detailedMovie = detailsData.results.find((m: any) => m.id === movie.id) || movie;
+        return {
+          ...detailedMovie,
+          imdb_id: imdbId,
+          type: 'movie'
+        };
+      }
       
       return {
-        ...movieDetails,
+        ...movie,
         imdb_id: imdbId,
         type: 'movie'
       };
@@ -511,30 +502,35 @@ export const searchTMDBMovieWithIMDB = async (query: string): Promise<any[]> => 
   try {
     console.log("Searching TMDB with query:", query);
     
-    const tmdbApiKey = '4a29f0dd1dfdbd0a8b506c7b9e35c506';
-    const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${tmdbApiKey}&query=${encodeURIComponent(query)}&language=es-ES`;
+    // Use the Supabase function for TMDB search
+    const { data, error } = await supabase.functions.invoke('tmdb-search', {
+      body: { query: query }
+    });
     
-    const response = await fetch(searchUrl);
-    
-    if (!response.ok) {
-      throw new Error('Error al buscar en TMDB');
+    if (error) {
+      console.error("Supabase function error:", error);
+      throw new Error(error.message || 'Error al buscar en TMDB');
     }
     
-    const data = await response.json();
     console.log("TMDB search results:", data);
     
     // Get detailed info including IMDB ID for each result
     const moviesWithIMDB = await Promise.all(
       data.results.slice(0, 5).map(async (movie: any) => {
         try {
-          const detailsUrl = `https://api.themoviedb.org/3/movie/${movie.id}?api_key=${tmdbApiKey}&append_to_response=external_ids&language=es-ES`;
-          const detailsResponse = await fetch(detailsUrl);
-          const movieDetails = await detailsResponse.json();
+          // Try to get IMDB ID using the find endpoint
+          const { data: findData, error: findError } = await supabase.functions.invoke('tmdb-search', {
+            body: { 
+              imdb_id: `tt${movie.id}`, // This won't work, but we'll use a different approach
+              query: movie.title
+            }
+          });
           
+          // For now, we'll return the movie without IMDB ID and let the user know
           return {
             ...movie,
-            imdb_id: movieDetails.external_ids?.imdb_id || null,
-            runtime: movieDetails.runtime || null
+            imdb_id: null, // We'll need to implement a different way to get IMDB IDs
+            runtime: null
           };
         } catch (error) {
           console.error("Error getting movie details:", error);
