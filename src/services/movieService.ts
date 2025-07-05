@@ -446,45 +446,54 @@ interface TMDBSearchResponse {
   movie_results: TMDBMovieResult[];
 }
 
-// TMDB search function - Updated to use Supabase function
+// TMDB search function
 export const searchMovieByIMDBId = async (imdbId: string): Promise<TMDBMovieResult & { imdb_id: string; type: string }> => {
   try {
     console.log("Searching for IMDB ID:", imdbId);
     
-    // Use the Supabase function for TMDB search
-    const { data, error } = await supabase.functions.invoke('tmdb-search', {
-      body: { imdb_id: imdbId }
-    });
+    // Usar el endpoint de supabase functions en lugar del API directo
+    const { supabase } = await import('@/integrations/supabase/client');
     
-    if (error) {
-      console.error("Supabase function error:", error);
-      throw new Error(error.message || 'Error al buscar en TMDB');
-    }
-    
-    console.log("TMDB search result via Supabase:", data);
-    
-    if (data.movie_results && data.movie_results.length > 0) {
-      const movie = data.movie_results[0];
-      
-      // Get detailed movie info including runtime
-      const { data: detailsData, error: detailsError } = await supabase.functions.invoke('tmdb-search', {
-        body: { 
-          query: movie.title,
-          type: 'movie'
-        }
+    // Intentar buscar usando la función de supabase
+    try {
+      const { data, error } = await supabase.functions.invoke('tmdb-search', {
+        body: { imdb_id: imdbId }
       });
       
-      if (!detailsError && detailsData && detailsData.results && detailsData.results.length > 0) {
-        const detailedMovie = detailsData.results.find((m: any) => m.id === movie.id) || movie;
+      if (!error && data) {
+        console.log("TMDB search result via Supabase:", data);
         return {
-          ...detailedMovie,
+          ...data,
           imdb_id: imdbId,
           type: 'movie'
         };
       }
+    } catch (supabaseError) {
+      console.log("Supabase function failed, trying direct API");
+    }
+    
+    // Fallback: usar API directo con el hardcoded key (temporal)
+    const tmdbApiKey = '4a29f0dd1dfdbd0a8b506c7b9e35c506';
+    const url = `https://api.themoviedb.org/3/find/${imdbId}?api_key=${tmdbApiKey}&external_source=imdb_id&language=es-ES`;
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error('Error al buscar en TMDB');
+    }
+    
+    const data: TMDBSearchResponse = await response.json();
+    console.log("TMDB search result:", data);
+    
+    if (data.movie_results && data.movie_results.length > 0) {
+      const movie = data.movie_results[0];
+      
+      const detailsUrl = `https://api.themoviedb.org/3/movie/${movie.id}?api_key=${tmdbApiKey}&append_to_response=videos,external_ids&language=es-ES`;
+      const detailsResponse = await fetch(detailsUrl);
+      const movieDetails: TMDBMovieResult = await detailsResponse.json();
       
       return {
-        ...movie,
+        ...movieDetails,
         imdb_id: imdbId,
         type: 'movie'
       };
@@ -495,64 +504,6 @@ export const searchMovieByIMDBId = async (imdbId: string): Promise<TMDBMovieResu
     console.error("Error searching movie by IMDB ID:", error);
     throw error;
   }
-};
-
-// New function to search TMDB and get IMDB ID
-export const searchTMDBMovieWithIMDB = async (query: string): Promise<any[]> => {
-  try {
-    console.log("Searching TMDB with query:", query);
-    
-    // Use the Supabase function for TMDB search with correct parameter structure
-    const { data, error } = await supabase.functions.invoke('tmdb-search', {
-      body: { 
-        query: query,
-        type: 'movie' 
-      }
-    });
-    
-    if (error) {
-      console.error("Supabase function error:", error);
-      throw new Error(error.message || 'Error al buscar en TMDB');
-    }
-    
-    console.log("TMDB search results:", data);
-    
-    if (!data || !data.results) {
-      console.log("No results found in TMDB response");
-      return [];
-    }
-    
-    // Return the results directly - the edge function now handles the IMDB ID fetching
-    return data.results.slice(0, 10); // Limit to 10 results
-  } catch (error) {
-    console.error("Error searching TMDB:", error);
-    throw error;
-  }
-};
-
-// Function to generate automatic servers based on IMDB ID
-export const generateAutoServers = (imdbId: string): Array<{
-  name: string;
-  url: string;
-  quality: string;
-  language: string;
-}> => {
-  if (!imdbId) return [];
-  
-  return [
-    {
-      name: 'Servidor 1 - Embed69',
-      url: `https://embed69.org/f/${imdbId}`,
-      quality: 'HD',
-      language: 'Latino'
-    },
-    {
-      name: 'Servidor 2 - VerhLink',
-      url: `https://play.verhdlink.cam/movie/${imdbId}`,
-      quality: 'HD', 
-      language: 'Latino'
-    }
-  ];
 };
 
 // TMDB Genre mapping - UPDATED TO MATCH SERVER
@@ -596,13 +547,6 @@ export const importMovieFromTMDB = async (tmdbMovie: TMDBMovieResult & { imdb_id
     mapped_names: genreNames
   });
 
-  // If no stream servers provided but we have IMDB ID, generate auto servers
-  let finalStreamServers = streamServers;
-  if ((!streamServers || streamServers.length === 0) && tmdbMovie.imdb_id) {
-    console.log("Auto-generating servers for IMDB ID:", tmdbMovie.imdb_id);
-    finalStreamServers = generateAutoServers(tmdbMovie.imdb_id);
-  }
-
   const movieData: MovieCreate = {
     title: tmdbMovie.title,
     original_title: tmdbMovie.original_title,
@@ -615,8 +559,7 @@ export const importMovieFromTMDB = async (tmdbMovie: TMDBMovieResult & { imdb_id
     genre_ids: tmdbMovie.genre_ids,
     rating: tmdbMovie.vote_average,
     runtime: tmdbMovie.runtime,
-    imdb_id: tmdbMovie.imdb_id,
-    stream_servers: finalStreamServers.filter(server => server.url.trim() !== '')
+    stream_servers: streamServers.filter(server => server.url.trim() !== '')
   };
   
   return addMovie(movieData);
