@@ -502,9 +502,12 @@ export const searchTMDBMovieWithIMDB = async (query: string): Promise<any[]> => 
   try {
     console.log("Searching TMDB with query:", query);
     
-    // Use the Supabase function for TMDB search
+    // Use the Supabase function for TMDB search with correct parameter structure
     const { data, error } = await supabase.functions.invoke('tmdb-search', {
-      body: { query: query }
+      body: { 
+        query: query,
+        type: 'movie' 
+      }
     });
     
     if (error) {
@@ -514,32 +517,13 @@ export const searchTMDBMovieWithIMDB = async (query: string): Promise<any[]> => 
     
     console.log("TMDB search results:", data);
     
-    // Get detailed info including IMDB ID for each result
-    const moviesWithIMDB = await Promise.all(
-      data.results.slice(0, 5).map(async (movie: any) => {
-        try {
-          // Try to get IMDB ID using the find endpoint
-          const { data: findData, error: findError } = await supabase.functions.invoke('tmdb-search', {
-            body: { 
-              imdb_id: `tt${movie.id}`, // This won't work, but we'll use a different approach
-              query: movie.title
-            }
-          });
-          
-          // For now, we'll return the movie without IMDB ID and let the user know
-          return {
-            ...movie,
-            imdb_id: null, // We'll need to implement a different way to get IMDB IDs
-            runtime: null
-          };
-        } catch (error) {
-          console.error("Error getting movie details:", error);
-          return { ...movie, imdb_id: null, runtime: null };
-        }
-      })
-    );
+    if (!data || !data.results) {
+      console.log("No results found in TMDB response");
+      return [];
+    }
     
-    return moviesWithIMDB;
+    // Return the results directly - the edge function should handle the IMDB ID fetching
+    return data.results.slice(0, 10); // Limit to 10 results
   } catch (error) {
     console.error("Error searching TMDB:", error);
     throw error;
