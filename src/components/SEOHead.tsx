@@ -191,6 +191,8 @@ const SEOHead = ({
       // Create and append new ads code
       const adsScript = document.createElement('script');
       adsScript.id = 'ads-code-script';
+      adsScript.type = 'text/javascript';
+      adsScript.setAttribute('data-cfasync', 'false');
       adsScript.innerHTML = adsCode;
       document.head.appendChild(adsScript);
     }
