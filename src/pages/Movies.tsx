@@ -3,14 +3,17 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import MovieGrid from '@/components/MovieGrid';
+import SEOHead from '@/components/SEOHead';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Filter } from 'lucide-react';
 import { fetchMovies } from '@/services/movieService';
+import { useSettings } from '@/hooks/useSettings';
 
 const Movies = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentSearchTerm, setCurrentSearchTerm] = useState('');
+  const { data: settings } = useSettings();
 
   const { data: movies, isLoading } = useQuery({
     queryKey: ['movies', currentSearchTerm],
@@ -29,6 +32,13 @@ const Movies = () => {
 
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
+      <SEOHead 
+        title="Películas Online Gratis"
+        description="Descubre miles de películas online gratis en HD. Estrenos, clásicos y contenido exclusivo."
+        siteName={settings?.site_name}
+        logoUrl={settings?.logo_url}
+        adsCode={settings?.ads_code}
+      />
       <Navbar />
       
       <div className="container mx-auto px-4 py-8">

@@ -12,11 +12,13 @@ import { Button } from '@/components/ui/button';
 import ShareButton from '@/components/ShareButton';
 import SeriesSection from '@/components/SeriesSection';
 import { recordSeriesView, fetchRelatedSeries } from '@/services/viewsService';
+import { useSettings } from '@/hooks/useSettings';
 
 const SeriesDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
+  const { data: settings } = useSettings();
 
   // Determine if the id is a UUID or a slug
   const isUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -109,6 +111,9 @@ const SeriesDetail = () => {
         description={series.overview || `Mira ${series.title} online gratis`}
         image={posterUrl}
         type="series"
+        siteName={settings?.site_name}
+        logoUrl={settings?.logo_url}
+        adsCode={settings?.ads_code}
       />
       
       <div className="container mx-auto px-4 py-8">

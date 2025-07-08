@@ -3,14 +3,17 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
+import SEOHead from '@/components/SEOHead';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Filter, Play, Calendar, Star } from 'lucide-react';
 import { fetchSeries } from '@/services/seriesService';
+import { useSettings } from '@/hooks/useSettings';
 
 const Series = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentSearchTerm, setCurrentSearchTerm] = useState('');
+  const { data: settings } = useSettings();
 
   const { data: series, isLoading } = useQuery({
     queryKey: ['series', currentSearchTerm],
@@ -29,6 +32,13 @@ const Series = () => {
 
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
+      <SEOHead 
+        title="Series Online Gratis"
+        description="Disfruta de las mejores series online gratis en HD. Series populares, estrenos y contenido exclusivo."
+        siteName={settings?.site_name}
+        logoUrl={settings?.logo_url}
+        adsCode={settings?.ads_code}
+      />
       <Navbar />
       
       <div className="container mx-auto px-4 py-8">
