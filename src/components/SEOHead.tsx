@@ -188,13 +188,36 @@ const SEOHead = ({
         existingAdsScript.remove();
       }
 
-      // Create and append new ads code
+      // Create and append new ads code for popads
       const adsScript = document.createElement('script');
       adsScript.id = 'ads-code-script';
       adsScript.type = 'text/javascript';
       adsScript.setAttribute('data-cfasync', 'false');
-      adsScript.innerHTML = adsCode;
-      document.head.appendChild(adsScript);
+      adsScript.async = false; // Ensure script loads synchronously for popads
+      
+      // For popads, we need to execute the script immediately
+      try {
+        adsScript.innerHTML = adsCode;
+        document.head.appendChild(adsScript);
+        
+        // Force script execution by creating a new script element if needed
+        setTimeout(() => {
+          if (adsScript.innerHTML && !document.querySelector('#ads-code-backup')) {
+            const backupScript = document.createElement('script');
+            backupScript.id = 'ads-code-backup';
+            backupScript.type = 'text/javascript';
+            backupScript.setAttribute('data-cfasync', 'false');
+            backupScript.text = adsCode;
+            document.body.appendChild(backupScript);
+          }
+        }, 100);
+      } catch (error) {
+        console.log('Ad script load attempt:', error);
+        // Alternative method for problematic scripts
+        const scriptElement = document.createElement('div');
+        scriptElement.innerHTML = `<script type="text/javascript" data-cfasync="false">${adsCode}</script>`;
+        document.head.appendChild(scriptElement.firstChild as HTMLScriptElement);
+      }
     }
 
     // Add JSON-LD schema for better SEO
