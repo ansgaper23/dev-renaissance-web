@@ -236,27 +236,34 @@ export const searchSeriesByIMDBId = async (imdbId: string): Promise<any> => {
       console.log("Supabase function failed, trying direct API");
     }
     
-    // Buscar en TMDB usando el IMDB ID - fallback directo
-    const tmdbApiKey = '4a29f0dd1dfdbd0a8b506c7b9e35c506';
-    const tmdbResponse = await fetch(`https://api.themoviedb.org/3/find/${imdbId}?api_key=${tmdbApiKey}&external_source=imdb_id&language=es-ES`);
+    // Use secure TMDB search function for series
+    const { data, error } = await supabase.functions.invoke('secure-tmdb-search', {
+      body: { imdb_id: imdbId, type: 'tv' }
+    });
     
-    if (!tmdbResponse.ok) {
-      throw new Error('Error al buscar en TMDB');
+    if (error) {
+      console.error("Secure TMDB search error:", error);
+      throw new Error('Error al buscar series en TMDB: ' + error.message);
     }
     
-    const tmdbData = await tmdbResponse.json();
-    console.log("TMDB search result for series:", tmdbData);
+    if (!data) {
+      throw new Error('No se encontraron series para este IMDB ID');
+    }
     
-    // Verificar si encontramos resultados de TV
-    if (tmdbData.tv_results && tmdbData.tv_results.length > 0) {
-      const series = tmdbData.tv_results[0];
-      
-      // Obtener detalles completos de la serie
-      const detailsResponse = await fetch(`https://api.themoviedb.org/3/tv/${series.id}?api_key=${tmdbApiKey}&append_to_response=videos,external_ids&language=es-ES`);
-      const seriesDetails = await detailsResponse.json();
-      
+    console.log("TMDB search result for series via secure function:", data);
+    
+    // Handle both find API response and direct series response
+    if (data.tv_results && data.tv_results.length > 0) {
+      const series = data.tv_results[0];
       return {
-        ...seriesDetails,
+        ...series,
+        imdb_id: imdbId,
+        type: 'tv'
+      };
+    } else if (data.id) {
+      // Direct series response
+      return {
+        ...data,
         imdb_id: imdbId,
         type: 'tv'
       };

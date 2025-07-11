@@ -133,25 +133,26 @@ export const searchMovieByIMDBIdOMDb = async (imdbId: string): Promise<OMDbMovie
   try {
     console.log("Searching OMDb for IMDB ID:", imdbId);
     
-    // Usar API key directamente
-    const apiKey = '9a66c7c6';
+    // Use secure OMDB search function
+    const { supabase } = await import('@/integrations/supabase/client');
     
-    const url = `https://www.omdbapi.com/?i=${imdbId}&apikey=${apiKey}&plot=full`;
+    const { data, error } = await supabase.functions.invoke('secure-omdb-search', {
+      body: { imdb_id: imdbId }
+    });
     
-    console.log("Fetching from OMDb with URL:", url.replace(apiKey, '[API_KEY]'));
-    
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+    if (error) {
+      console.error("Secure OMDb search error:", error);
+      throw new Error('Error al buscar en OMDb: ' + error.message);
     }
     
-    const data: OMDbMovie | OMDbErrorResponse = await response.json();
-    console.log("OMDb search result:", data);
+    if (!data) {
+      throw new Error('No se encontraron películas para este IMDB ID en OMDb');
+    }
+    
+    console.log("OMDb search result via secure function:", data);
     
     if (data.Response === "False") {
-      const errorData = data as OMDbErrorResponse;
-      throw new Error(`No se encontraron películas para este IMDB ID en OMDb: ${errorData.Error || 'Error desconocido'}`);
+      throw new Error(`No se encontraron películas para este IMDB ID en OMDb: ${data.Error || 'Error desconocido'}`);
     }
     
     return data as OMDbMovie;
@@ -165,25 +166,26 @@ export const searchSeriesByIMDBIdOMDb = async (imdbId: string): Promise<OMDbSeri
   try {
     console.log("Searching OMDb for series IMDB ID:", imdbId);
     
-    // Usar API key directamente
-    const apiKey = '9a66c7c6';
-
-    const url = `https://www.omdbapi.com/?i=${imdbId}&apikey=${apiKey}&plot=full`;
+    // Use secure OMDB search function
+    const { supabase } = await import('@/integrations/supabase/client');
     
-    console.log("Fetching series from OMDb with URL:", url.replace(apiKey, '[API_KEY]'));
+    const { data, error } = await supabase.functions.invoke('secure-omdb-search', {
+      body: { imdb_id: imdbId }
+    });
     
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+    if (error) {
+      console.error("Secure OMDb search error:", error);
+      throw new Error('Error al buscar en OMDb: ' + error.message);
     }
     
-    const data: OMDbSeries | OMDbErrorResponse = await response.json();
-    console.log("OMDb series search result:", data);
+    if (!data) {
+      throw new Error('No se encontraron series para este IMDB ID en OMDb');
+    }
+    
+    console.log("OMDb series search result via secure function:", data);
     
     if (data.Response === "False") {
-      const errorData = data as OMDbErrorResponse;
-      throw new Error(`No se encontraron series para este IMDB ID en OMDb: ${errorData.Error || 'Error desconocido'}`);
+      throw new Error(`No se encontraron series para este IMDB ID en OMDb: ${data.Error || 'Error desconocido'}`);
     }
     
     const seriesData = data as OMDbSeries;

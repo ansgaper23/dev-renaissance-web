@@ -1,1 +1,16 @@
 project_id = "enhmycayolksjbjmnvzx"
+
+[functions.fix-missing-genres]
+verify_jwt = false
+
+[functions.tmdb-import]
+verify_jwt = false
+
+[functions.tmdb-search]
+verify_jwt = false
+
+[functions.secure-tmdb-search]
+verify_jwt = false
+
+[functions.secure-omdb-search]
+verify_jwt = false

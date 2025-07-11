@@ -40,8 +40,10 @@ export interface AdminCredentials {
 
 export interface AdminSession {
   authenticated: boolean;
+  admin_id: string;
   email: string;
-  expiresAt: number;
+  session_token: string;
+  expires_at: number;
 }
 
 // Helper function to convert database row to Movie
@@ -71,25 +73,28 @@ export const generateSlug = (title: string, year?: string): string => {
 
 // Admin authentication functions
 export const adminLogin = async (credentials: AdminCredentials): Promise<void> => {
-  const { data, error } = await supabase
-    .from('admins')
-    .select('*')
-    .eq('email', credentials.email)
-    .eq('password', credentials.password)
-    .single();
-
-  if (error || !data) {
-    throw new Error('Invalid credentials');
+  try {
+    console.log("Admin login attempt for:", credentials.email);
+    
+    // Use secure authentication function
+    const { data, error } = await supabase
+      .rpc('authenticate_admin', {
+        email_input: credentials.email,
+        password_input: credentials.password
+      });
+    
+    if (error || !data) {
+      console.error("Login error:", error);
+      throw new Error('Credenciales inválidas');
+    }
+    
+    // Store secure session data
+    localStorage.setItem('adminSession', JSON.stringify(data));
+    console.log("Admin login successful:", (data as any).email);
+  } catch (error) {
+    console.error("Admin login error:", error);
+    throw error;
   }
-
-  // Store session in localStorage
-  const session: AdminSession = {
-    authenticated: true,
-    email: data.email,
-    expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
-  };
-
-  localStorage.setItem('adminSession', JSON.stringify(session));
 };
 
 export const getAdminSession = (): AdminSession | null => {
@@ -100,7 +105,7 @@ export const getAdminSession = (): AdminSession | null => {
     const session: AdminSession = JSON.parse(sessionStr);
     
     // Check if session is expired
-    if (Date.now() > session.expiresAt) {
+    if (Date.now() > session.expires_at * 1000) { // Convert from seconds to milliseconds
       localStorage.removeItem('adminSession');
       return null;
     }
@@ -454,46 +459,34 @@ export const searchMovieByIMDBId = async (imdbId: string): Promise<TMDBMovieResu
     // Usar el endpoint de supabase functions en lugar del API directo
     const { supabase } = await import('@/integrations/supabase/client');
     
-    // Intentar buscar usando la función de supabase
-    try {
-      const { data, error } = await supabase.functions.invoke('tmdb-search', {
-        body: { imdb_id: imdbId }
-      });
-      
-      if (!error && data) {
-        console.log("TMDB search result via Supabase:", data);
-        return {
-          ...data,
-          imdb_id: imdbId,
-          type: 'movie'
-        };
-      }
-    } catch (supabaseError) {
-      console.log("Supabase function failed, trying direct API");
+    // Use secure TMDB search function
+    const { data, error } = await supabase.functions.invoke('secure-tmdb-search', {
+      body: { imdb_id: imdbId, type: 'movie' }
+    });
+    
+    if (error) {
+      console.error("Secure TMDB search error:", error);
+      throw new Error('Error al buscar en TMDB: ' + error.message);
     }
     
-    // Fallback: usar API directo con el hardcoded key (temporal)
-    const tmdbApiKey = '4a29f0dd1dfdbd0a8b506c7b9e35c506';
-    const url = `https://api.themoviedb.org/3/find/${imdbId}?api_key=${tmdbApiKey}&external_source=imdb_id&language=es-ES`;
-    
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error('Error al buscar en TMDB');
+    if (!data) {
+      throw new Error('No se encontraron películas para este IMDB ID');
     }
     
-    const data: TMDBSearchResponse = await response.json();
-    console.log("TMDB search result:", data);
+    console.log("TMDB search result via secure function:", data);
     
+    // Handle both find API response and direct movie response
     if (data.movie_results && data.movie_results.length > 0) {
       const movie = data.movie_results[0];
-      
-      const detailsUrl = `https://api.themoviedb.org/3/movie/${movie.id}?api_key=${tmdbApiKey}&append_to_response=videos,external_ids&language=es-ES`;
-      const detailsResponse = await fetch(detailsUrl);
-      const movieDetails: TMDBMovieResult = await detailsResponse.json();
-      
       return {
-        ...movieDetails,
+        ...movie,
+        imdb_id: imdbId,
+        type: 'movie'
+      };
+    } else if (data.id) {
+      // Direct movie response
+      return {
+        ...data,
         imdb_id: imdbId,
         type: 'movie'
       };

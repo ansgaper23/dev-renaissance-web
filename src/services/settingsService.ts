@@ -11,29 +11,47 @@ export interface Settings {
 }
 
 export const getSettings = async (): Promise<Settings> => {
-  const { data, error } = await supabase
-    .from('settings')
-    .select('*')
-    .eq('id', 1)
-    .single();
-    
-  if (error) {
-    throw new Error(error.message);
+  try {
+    // Use secure settings function
+    const { data, error } = await supabase.rpc('get_site_settings');
+
+    if (error) {
+      console.error('Error fetching settings:', error);
+      throw error;
+    }
+
+    return data as unknown as Settings;
+  } catch (error) {
+    console.error('Error fetching settings:', error);
+    // Return default settings if error
+    return {
+      id: 1,
+      site_name: 'Cine Explorer',
+      site_description: 'Explora miles de películas y series online',
+      logo_url: null,
+      ads_code: null,
+      updated_at: new Date().toISOString()
+    };
   }
-  
-  return data as Settings;
 };
 
 export const updateSettings = async (settings: Partial<Settings>): Promise<Settings> => {
-  const { data, error } = await supabase
-    .from('settings')
-    .update({ ...settings, updated_at: new Date().toISOString() })
-    .eq('id', 1)
-    .select();
-    
-  if (error) {
-    throw new Error(error.message);
+  try {
+    // Use secure settings update function  
+    const { data, error } = await supabase.rpc('update_site_settings', {
+      site_name_input: settings.site_name || null,
+      site_description_input: settings.site_description || null,
+      logo_url_input: settings.logo_url || null,
+      ads_code_input: settings.ads_code || null
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data as unknown as Settings;
+  } catch (error) {
+    console.error('Error updating settings:', error);
+    throw error;
   }
-  
-  return data[0] as Settings;
 };

@@ -373,6 +373,14 @@ export type Database = {
       }
     }
     Functions: {
+      authenticate_admin: {
+        Args: { email_input: string; password_input: string }
+        Returns: Json
+      }
+      get_site_settings: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       gtrgm_compress: {
         Args: { "": unknown }
         Returns: unknown
@@ -404,6 +412,15 @@ export type Database = {
       show_trgm: {
         Args: { "": string }
         Returns: string[]
+      }
+      update_site_settings: {
+        Args: {
+          site_name_input?: string
+          site_description_input?: string
+          logo_url_input?: string
+          ads_code_input?: string
+        }
+        Returns: Json
       }
     }
     Enums: {
