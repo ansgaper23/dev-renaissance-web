@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
+import CustomVideoPlayer from './CustomVideoPlayer';
 
 // El mensaje que se ve en el screenshot
 const INFO_MESSAGE = "Esta opción de video contiene ventanas emergentes y la carga es óptima, puedes mirar sin cortes.";
+
 interface VideoPlayerProps {
   title: string;
   streamServers?: Array<{
@@ -14,6 +16,7 @@ interface VideoPlayerProps {
   }>;
   streamUrl?: string;
 }
+
 const VideoPlayer = ({
   title,
   streamServers = [],
@@ -76,6 +79,9 @@ const VideoPlayer = ({
   const allServerList = Object.entries(serversByLanguage).reduce((arr, [lang, servers]) => [...arr, ...servers], [] as typeof availableServers);
   const currentServer = allServerList[selectedServer] || allServerList[0];
   const currentStreamUrl = currentServer?.url;
+
+  // Check if current URL is a direct MP4 file
+  const isDirectMp4 = currentStreamUrl?.toLowerCase().includes('.mp4');
 
   // Estilo para los botones tipo card con efecto cristal/minimalista
   const cardClass = `
@@ -154,6 +160,12 @@ const VideoPlayer = ({
   // Renderiza el video/iframe basado en la URL
   const getVideoElement = (url: string) => {
     if (!url) return null;
+    
+    // Si es un archivo MP4 directo, usar el reproductor personalizado
+    if (url.toLowerCase().includes('.mp4')) {
+      return <CustomVideoPlayer src={url} title={title} />;
+    }
+    
     // Check for iframe-compatible URLs
     if (url.includes('embed') || url.includes('swiftplayers.com') || url.includes('streamtape.com') || url.includes('doodstream.com') || url.includes('mixdrop.co') || url.includes('fembed.com') || url.includes('jilliandescribecompany.com') || url.includes('/e/') || url.includes('player') || url.includes('iframe')) {
       return <iframe key={url} src={url} title={title} className="w-full h-full border-0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerPolicy="no-referrer-when-downgrade" />;
@@ -163,7 +175,7 @@ const VideoPlayer = ({
       const embedUrl = url.includes('watch?v=') ? url.replace('watch?v=', 'embed/') : url;
       return <iframe key={url} src={embedUrl} title={title} className="w-full h-full border-0" allowFullScreen />;
     }
-    // Direct video
+    // Direct video fallback
     return <video key={url} controls className="w-full h-full" preload="metadata">
         <source src={url} type="video/mp4" />
         <source src={url} type="video/webm" />
@@ -191,4 +203,5 @@ const VideoPlayer = ({
     </div>
   );
 };
+
 export default VideoPlayer;
