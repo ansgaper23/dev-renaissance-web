@@ -224,7 +224,7 @@ const CustomVideoPlayer = ({ src, title, poster }: CustomVideoPlayerProps) => {
       </div>
 
       {/* Custom Slider Styles */}
-      <style jsx>{`
+      <style>{`
         .slider::-webkit-slider-thumb {
           appearance: none;
           width: 16px;
