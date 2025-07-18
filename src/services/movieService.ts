@@ -139,6 +139,37 @@ export const fetchMovies = async (searchTerm: string = ''): Promise<Movie[]> => 
   return (data || []).map(convertToMovie);
 };
 
+export const fetchMoviesByRating = async (limit: number = 20): Promise<Movie[]> => {
+  const { data, error } = await supabase
+    .from('movies')
+    .select('*')
+    .not('rating', 'is', null)
+    .gte('rating', 7) // Only show movies with rating >= 7
+    .order('rating', { ascending: false })
+    .limit(limit);
+    
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  return (data || []).map(convertToMovie);
+};
+
+export const fetchMoviesByReleaseDate = async (limit: number = 20): Promise<Movie[]> => {
+  const { data, error } = await supabase
+    .from('movies')
+    .select('*')
+    .not('release_date', 'is', null)
+    .order('release_date', { ascending: false })
+    .limit(limit);
+    
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  return (data || []).map(convertToMovie);
+};
+
 export const fetchMostViewedMovies = async (): Promise<Movie[]> => {
   const { data, error } = await supabase
     .from('most_viewed_movies')

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchMovies } from '@/services/movieService';
+import { fetchMovies, fetchMoviesByRating, fetchMoviesByReleaseDate } from '@/services/movieService';
 import MovieSection from './MovieSection';
 import { Loader2 } from 'lucide-react';
 
@@ -13,9 +13,20 @@ interface MovieSectionConnectorProps {
 }
 
 const MovieSectionConnector = ({ title, viewAllLink, limit = 6, sortBy = 'created_at' }: MovieSectionConnectorProps) => {
+  const queryFn = () => {
+    switch (sortBy) {
+      case 'rating':
+        return fetchMoviesByRating(limit);
+      case 'release_date':
+        return fetchMoviesByReleaseDate(limit);
+      default:
+        return fetchMovies('').then(movies => movies.slice(0, limit));
+    }
+  };
+
   const { data: movies, isLoading, error } = useQuery({
     queryKey: ['movies', sortBy, limit],
-    queryFn: () => fetchMovies(''),
+    queryFn,
   });
 
   if (isLoading) {
@@ -44,19 +55,15 @@ const MovieSectionConnector = ({ title, viewAllLink, limit = 6, sortBy = 'create
     );
   }
 
-  // Transformar los datos para que coincidan con la interfaz del MovieSection
-  const transformedMovies = movies.slice(0, limit).map(movie => ({
+  // Transformar los datos para que coincidan con la interfaz del MovieSection  
+  const transformedMovies = (movies || []).map(movie => ({
     id: movie.id,
     title: movie.title,
-    posterUrl: movie.poster_path ? 
-      (movie.poster_path.startsWith('http') ? movie.poster_path : `https://image.tmdb.org/t/p/w500${movie.poster_path}`) : 
-      '/placeholder.svg',
+    poster_path: movie.poster_path,
     rating: movie.rating || 0,
-    year: movie.release_date ? new Date(movie.release_date).getFullYear() : null,
-    genre: (movie.genres && movie.genres.length > 0) ? movie.genres[0] : null,
-    // Mantener datos originales para el slug
     release_date: movie.release_date,
-    poster_path: movie.poster_path
+    genres: movie.genres,
+    slug: movie.slug
   }));
 
   return (

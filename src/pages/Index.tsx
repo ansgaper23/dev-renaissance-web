@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar';
 import SEOHead from '@/components/SEOHead';
 import FeaturedCarousel from '@/components/FeaturedCarousel';
 import MostViewedMoviesSection from '@/components/MostViewedMoviesSection';
+import MostViewedSeriesSection from '@/components/MostViewedSeriesSection';
 import SeriesSectionConnector from '@/components/SeriesSectionConnector';
 import MovieSectionConnector from '@/components/MovieSectionConnector';
 import { useSettings } from '@/hooks/useSettings';
@@ -36,10 +37,9 @@ const Index = () => {
           viewAllLink="/movies"
         />
         
-        <SeriesSectionConnector 
-          title="📺 Series Populares" 
+        <MostViewedSeriesSection 
+          title="📺 Series más vistas" 
           limit={6}
-          sortBy="rating"
           viewAllLink="/series"
         />
         

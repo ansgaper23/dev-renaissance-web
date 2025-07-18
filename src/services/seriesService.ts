@@ -105,6 +105,37 @@ export const fetchSeries = async (searchTerm: string = ''): Promise<Series[]> =>
   return (data || []).map(convertToSeries);
 };
 
+export const fetchSeriesByRating = async (limit: number = 20): Promise<Series[]> => {
+  const { data, error } = await supabase
+    .from('series')
+    .select('*')
+    .not('rating', 'is', null)
+    .gte('rating', 7) // Only show series with rating >= 7
+    .order('rating', { ascending: false })
+    .limit(limit);
+    
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  return (data || []).map(convertToSeries);
+};
+
+export const fetchSeriesByAirDate = async (limit: number = 20): Promise<Series[]> => {
+  const { data, error } = await supabase
+    .from('series')
+    .select('*')
+    .not('first_air_date', 'is', null)
+    .order('first_air_date', { ascending: false })
+    .limit(limit);
+    
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  return (data || []).map(convertToSeries);
+};
+
 export const fetchSeriesById = async (id: string): Promise<Series> => {
   const { data, error } = await supabase
     .from('series')

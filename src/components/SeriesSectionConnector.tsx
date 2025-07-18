@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchSeries } from '@/services/seriesService';
+import { fetchSeries, fetchSeriesByRating, fetchSeriesByAirDate } from '@/services/seriesService';
 import SeriesSection from './SeriesSection';
 
 interface SeriesSectionConnectorProps {
@@ -17,36 +17,21 @@ const SeriesSectionConnector = ({
   sortBy = 'created_at',
   viewAllLink 
 }: SeriesSectionConnectorProps) => {
-  const { data: allSeries = [], isLoading } = useQuery({
-    queryKey: ['series', sortBy],
-    queryFn: () => fetchSeries(''),
-  });
-
-  // Sort and limit the series based on the sortBy parameter
-  const sortedSeries = React.useMemo(() => {
-    if (!allSeries.length) return [];
-    
-    let sorted = [...allSeries];
-    
+  const queryFn = () => {
     switch (sortBy) {
       case 'rating':
-        sorted = sorted
-          .filter(serie => serie.rating && serie.rating > 0)
-          .sort((a, b) => (b.rating || 0) - (a.rating || 0));
-        break;
+        return fetchSeriesByRating(limit);
       case 'first_air_date':
-        sorted = sorted
-          .filter(serie => serie.first_air_date)
-          .sort((a, b) => new Date(b.first_air_date!).getTime() - new Date(a.first_air_date!).getTime());
-        break;
-      case 'created_at':
+        return fetchSeriesByAirDate(limit);
       default:
-        sorted = sorted.sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime());
-        break;
+        return fetchSeries('').then(series => series.slice(0, limit));
     }
-    
-    return sorted.slice(0, limit);
-  }, [allSeries, sortBy, limit]);
+  };
+
+  const { data: sortedSeries = [], isLoading } = useQuery({
+    queryKey: ['series', sortBy, limit],
+    queryFn,
+  });
 
   return (
     <SeriesSection 
