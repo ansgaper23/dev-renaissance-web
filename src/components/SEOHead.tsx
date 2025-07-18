@@ -149,6 +149,7 @@ const SEOHead = ({
     if (!canonical) {
       canonical = document.createElement('link');
       canonical.rel = 'canonical';
+      canonical.type = 'text/html';
       document.head.appendChild(canonical);
     }
     canonical.href = currentUrl;

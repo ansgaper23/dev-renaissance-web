@@ -49,6 +49,8 @@ const App = () => (
               <Route path="/admin" element={<AdminRoute element={<Admin />} />} />
               <Route path="/movie/:slug" element={<MovieDetail />} />
               <Route path="/series/:id" element={<SeriesDetail />} />
+              <Route path="/top-rated" element={<Movies />} />
+              <Route path="/recent" element={<Movies />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/dmca" element={<DMCANotice />} />

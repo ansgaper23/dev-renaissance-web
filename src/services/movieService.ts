@@ -372,13 +372,12 @@ export const recordMovieView = async (movieId: string): Promise<void> => {
   }
 };
 
-// Simplified related movies function without RPC calls
+// Enhanced related movies function with better genre matching
 export const fetchRelatedMovies = async (movieId: string, genres: string[]): Promise<Movie[]> => {
   console.log("Fetching related movies for:", movieId, "with genres:", genres);
   
   if (!genres || genres.length === 0) {
     console.log("No genres provided, fetching recent movies instead");
-    // If no genres, return recent movies
     const { data, error } = await supabase
       .from('movies')
       .select('*')
@@ -395,72 +394,80 @@ export const fetchRelatedMovies = async (movieId: string, genres: string[]): Pro
   }
 
   try {
-    // First, try to find movies with matching genres
-    const { data: allMovies, error } = await supabase
+    // Use PostgreSQL array overlap operator for better performance
+    const { data: exactMatches, error: exactError } = await supabase
       .from('movies')
       .select('*')
       .neq('id', movieId)
-      .not('genres', 'is', null)
-      .limit(50); // Get more movies to filter from
+      .overlaps('genres', genres)
+      .order('rating', { ascending: false })
+      .limit(10);
 
-    if (error) {
-      console.error("Error fetching movies for genre matching:", error);
-      return [];
+    if (exactError) {
+      console.warn("Error fetching exact genre matches:", exactError);
     }
 
-    if (!allMovies || allMovies.length === 0) {
-      console.log("No movies found, returning empty array");
-      return [];
+    // If we have exact matches, prioritize them
+    if (exactMatches && exactMatches.length > 0) {
+      console.log(`Found ${exactMatches.length} movies with exact genre overlap`);
+      
+      // Sort by number of matching genres (more matches = higher priority)
+      const sortedMatches = exactMatches.sort((a, b) => {
+        const aMatches = a.genres ? a.genres.filter((g: string) => genres.includes(g)).length : 0;
+        const bMatches = b.genres ? b.genres.filter((g: string) => genres.includes(g)).length : 0;
+        return bMatches - aMatches;
+      });
+      
+      return sortedMatches.slice(0, 6).map(convertToMovie);
     }
 
-    console.log(`Found ${allMovies.length} movies to check for genre matches`);
-
-    // Filter movies that share at least one genre
-    const relatedMovies: any[] = [];
+    // Fallback: try partial matches with individual genres
+    console.log("No exact matches found, trying individual genre searches");
+    const partialMatches: any[] = [];
     
-    for (const movie of allMovies) {
-      if (movie.genres && Array.isArray(movie.genres)) {
-        const hasSharedGenre = movie.genres.some((genre: string) => 
-          genres.some(currentGenre => 
-            genre.toLowerCase().trim() === currentGenre.toLowerCase().trim()
-          )
-        );
-        
-        if (hasSharedGenre) {
-          relatedMovies.push(movie);
-        }
-      }
-    }
-
-    console.log(`Found ${relatedMovies.length} movies with matching genres`);
-
-    // If we found related movies by genre, return them (limit to 6)
-    if (relatedMovies.length > 0) {
-      return relatedMovies.slice(0, 6).map(convertToMovie);
-    }
-
-    // If no movies share genres, return recent movies as fallback
-    console.log("No genre matches found, returning recent movies as fallback");
-    const recentMovies = allMovies.slice(0, 6);
-    return recentMovies.map(convertToMovie);
-
-  } catch (error) {
-    console.error("Error in fetchRelatedMovies:", error);
-    
-    // Final fallback: get any recent movies
-    try {
-      const { data: fallbackData } = await supabase
+    for (const genre of genres) {
+      const { data: genreMovies, error: genreError } = await supabase
         .from('movies')
         .select('*')
         .neq('id', movieId)
-        .order('created_at', { ascending: false })
-        .limit(6);
-      
-      return (fallbackData || []).map(convertToMovie);
-    } catch (fallbackError) {
-      console.error("Fallback query also failed:", fallbackError);
+        .contains('genres', [genre])
+        .order('rating', { ascending: false })
+        .limit(3);
+
+      if (!genreError && genreMovies) {
+        partialMatches.push(...genreMovies);
+      }
+    }
+
+    // Remove duplicates and limit to 6
+    const uniqueMatches = partialMatches.filter((movie, index, self) => 
+      index === self.findIndex(m => m.id === movie.id)
+    );
+
+    if (uniqueMatches.length > 0) {
+      console.log(`Found ${uniqueMatches.length} movies with partial genre matches`);
+      return uniqueMatches.slice(0, 6).map(convertToMovie);
+    }
+
+    // Final fallback: recent movies
+    console.log("No genre matches found, returning recent movies as fallback");
+    const { data: recentMovies, error: recentError } = await supabase
+      .from('movies')
+      .select('*')
+      .neq('id', movieId)
+      .order('created_at', { ascending: false })
+      .limit(6);
+
+    if (recentError) {
+      console.error("Error fetching recent movies fallback:", recentError);
       return [];
     }
+
+    return (recentMovies || []).map(convertToMovie);
+
+  } catch (error) {
+    console.error("Error in fetchRelatedMovies:", error);
+    return [];
   }
 };
 
