@@ -12,18 +12,28 @@ export interface Settings {
 
 export const getSettings = async (): Promise<Settings> => {
   try {
-    // Use secure settings function
+    // 1) Intentar vía función segura (si existe)
     const { data, error } = await supabase.rpc('get_site_settings');
 
-    if (error) {
-      console.error('Error fetching settings:', error);
-      throw error;
+    if (!error && data) {
+      return data as unknown as Settings;
     }
 
-    return data as unknown as Settings;
+    // 2) Fallback: leer directamente de la tabla pública (RLS permite SELECT)
+    const { data: tableData, error: tableError } = await supabase
+      .from('settings')
+      .select('*')
+      .single();
+
+    if (tableError) {
+      console.error('Error fetching settings (table):', tableError);
+      throw tableError;
+    }
+
+    return tableData as unknown as Settings;
   } catch (error) {
     console.error('Error fetching settings:', error);
-    // Return default settings if error
+    // Defaults
     return {
       id: 1,
       site_name: 'Cine Explorer',

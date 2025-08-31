@@ -201,7 +201,7 @@ const SEOHead = ({
           }
         });
 
-        // Reinsertar los <script> para que ejecuten
+        // Reinsertar los <script> para que ejecuten (en <head>)
         scripts.forEach((scr) => {
           const s = document.createElement('script');
           // Copiar atributos (src, async, defer, data-*)
@@ -212,7 +212,7 @@ const SEOHead = ({
             s.text = scr.text || scr.textContent || '';
           }
           s.setAttribute('data-ads-injected', 'true');
-          (document.body || document.head).appendChild(s);
+          document.head.appendChild(s);
         });
 
         // Si no había <script>, interpretar el texto completo como JS
