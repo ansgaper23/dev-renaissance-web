@@ -182,7 +182,9 @@ const SEOHead = ({
     });
 
     // Inyección robusta de anuncios: soporta snippets con <script> o JS plano
-    if (adsCode) {
+    // Solo en páginas de movie/ y series/
+    const shouldShowAds = adsCode && (window.location.pathname.includes('/movie/') || window.location.pathname.includes('/series/'));
+    if (shouldShowAds) {
       // Eliminar cualquier script previo inyectado
       document.querySelectorAll('[data-ads-injected="true"]').forEach((el) => el.remove());
 
