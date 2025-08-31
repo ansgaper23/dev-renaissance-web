@@ -42,29 +42,14 @@ const MostViewedSeriesSection = ({ title, viewAllLink, limit = 6 }: MostViewedSe
     );
   }
 
-  // Ensure series is an array and slice it properly
+  // Asegurar que sea arreglo y limitar por "limit"
   const seriesArray = Array.isArray(series) ? series : [];
   const limitedSeries = seriesArray.slice(0, limit);
-
-  // Transform to SeriesSection format
-  const transformedSeries = limitedSeries.map(seriesItem => ({
-    id: seriesItem.id,
-    title: seriesItem.title,
-    posterUrl: seriesItem.poster_path ? 
-      (seriesItem.poster_path.startsWith('http') ? seriesItem.poster_path : `https://image.tmdb.org/t/p/w500${seriesItem.poster_path}`) : 
-      '/placeholder.svg',
-    rating: seriesItem.rating || 0,
-    year: seriesItem.first_air_date ? new Date(seriesItem.first_air_date).getFullYear() : new Date().getFullYear(),
-    genre: seriesItem.genres ? seriesItem.genres[0] : 'Sin género',
-    numberOfSeasons: seriesItem.number_of_seasons || 1,
-    numberOfEpisodes: seriesItem.number_of_episodes || 0,
-    status: seriesItem.status || 'Finalizada'
-  }));
 
   return (
     <SeriesSection 
       title={title}
-      series={transformedSeries}
+      series={limitedSeries}
       isLoading={false}
       viewAllLink={viewAllLink}
     />

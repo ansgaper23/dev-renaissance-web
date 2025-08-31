@@ -88,20 +88,8 @@ const SeriesDetail = () => {
   const firstAirYear = series.first_air_date ? new Date(series.first_air_date).getFullYear() : 'Sin fecha';
   const genres = Array.isArray(series.genres) ? series.genres.join(', ') : 'Sin género';
 
-  // Transformar series relacionadas para SeriesSection
-  const transformedRelatedSeries = relatedSeries.map(relatedSeriesItem => ({
-    id: relatedSeriesItem.id,
-    title: relatedSeriesItem.title,
-    posterUrl: relatedSeriesItem.poster_path ? 
-      (relatedSeriesItem.poster_path.startsWith('http') ? relatedSeriesItem.poster_path : `https://image.tmdb.org/t/p/w500${relatedSeriesItem.poster_path}`) : 
-      '/placeholder.svg',
-    rating: relatedSeriesItem.rating || 0,
-    year: relatedSeriesItem.first_air_date ? new Date(relatedSeriesItem.first_air_date).getFullYear() : new Date().getFullYear(),
-    genre: relatedSeriesItem.genres ? relatedSeriesItem.genres[0] : 'Sin género',
-    numberOfSeasons: relatedSeriesItem.number_of_seasons || 1,
-    numberOfEpisodes: relatedSeriesItem.number_of_episodes || 0,
-    status: relatedSeriesItem.status || 'Finalizada'
-  }));
+  // Usar directamente el arreglo tipado que retorna el servicio
+  const transformedRelatedSeries = relatedSeries;
 
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white">

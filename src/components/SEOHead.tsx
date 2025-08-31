@@ -181,43 +181,55 @@ const SEOHead = ({
       }
     });
 
-    // Add ads code to head if provided
+    // Inyección robusta de anuncios: soporta snippets con <script> o JS plano
     if (adsCode) {
-      // Remove existing ads code if any
-      const existingAdsScript = document.querySelector('#ads-code-script');
-      if (existingAdsScript) {
-        existingAdsScript.remove();
-      }
+      // Eliminar cualquier script previo inyectado
+      document.querySelectorAll('[data-ads-injected="true"]').forEach((el) => el.remove());
 
-      // Create and append new ads code for popads
-      const adsScript = document.createElement('script');
-      adsScript.id = 'ads-code-script';
-      adsScript.type = 'text/javascript';
-      adsScript.setAttribute('data-cfasync', 'false');
-      adsScript.async = false; // Ensure script loads synchronously for popads
-      
-      // For popads, we need to execute the script immediately
       try {
-        adsScript.innerHTML = adsCode;
-        document.head.appendChild(adsScript);
-        
-        // Force script execution by creating a new script element if needed
-        setTimeout(() => {
-          if (adsScript.innerHTML && !document.querySelector('#ads-code-backup')) {
-            const backupScript = document.createElement('script');
-            backupScript.id = 'ads-code-backup';
-            backupScript.type = 'text/javascript';
-            backupScript.setAttribute('data-cfasync', 'false');
-            backupScript.text = adsCode;
-            document.body.appendChild(backupScript);
+        const parser = new DOMParser();
+        const parsed = parser.parseFromString(adsCode, 'text/html');
+        const scripts = Array.from(parsed.querySelectorAll('script')) as HTMLScriptElement[];
+        const hasScriptTags = scripts.length > 0;
+
+        // Insertar elementos no-script (por si incluyen contenedores)
+        Array.from(parsed.body.children).forEach((child) => {
+          if (child.tagName.toLowerCase() !== 'script') {
+            const clone = child.cloneNode(true) as HTMLElement;
+            clone.setAttribute('data-ads-injected', 'true');
+            (document.body || document.documentElement).appendChild(clone);
           }
-        }, 100);
-      } catch (error) {
-        console.log('Ad script load attempt:', error);
-        // Alternative method for problematic scripts
-        const scriptElement = document.createElement('div');
-        scriptElement.innerHTML = `<script type="text/javascript" data-cfasync="false">${adsCode}</script>`;
-        document.head.appendChild(scriptElement.firstChild as HTMLScriptElement);
+        });
+
+        // Reinsertar los <script> para que ejecuten
+        scripts.forEach((scr) => {
+          const s = document.createElement('script');
+          // Copiar atributos (src, async, defer, data-*)
+          Array.from(scr.attributes).forEach((attr) => s.setAttribute(attr.name, attr.value));
+          if (scr.src) {
+            s.src = scr.src;
+          } else if (scr.text || scr.textContent) {
+            s.text = scr.text || scr.textContent || '';
+          }
+          s.setAttribute('data-ads-injected', 'true');
+          (document.body || document.head).appendChild(s);
+        });
+
+        // Si no había <script>, interpretar el texto completo como JS
+        if (!hasScriptTags) {
+          const s = document.createElement('script');
+          s.type = 'text/javascript';
+          s.setAttribute('data-ads-injected', 'true');
+          s.text = adsCode;
+          (document.body || document.head).appendChild(s);
+        }
+      } catch (e) {
+        // Fallback: inyectar como script de texto
+        const s = document.createElement('script');
+        s.type = 'text/javascript';
+        s.setAttribute('data-ads-injected', 'true');
+        s.text = adsCode;
+        (document.body || document.head).appendChild(s);
       }
     }
 
