@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getTotalMoviesCount } from '@/services/movieService';
 import { getTotalSeriesCount } from '@/services/seriesService';
 import { Loader2 } from 'lucide-react';
-import FeaturedMoviesManager from './FeaturedMoviesManager';
+import FeaturedContentManager from './FeaturedContentManager';
 import SiteSettings from './SiteSettings';
 import FixMissingGenres from './FixMissingGenres';
 import ManualAddMovieDialogButton from "./ManualAddMovieDialogButton";
@@ -75,8 +75,8 @@ const AdminDashboard = () => {
       {/* Site Settings */}
       <SiteSettings />
 
-      {/* Featured Movies Manager */}
-      <FeaturedMoviesManager />
+      {/* Featured Content Manager */}
+      <FeaturedContentManager />
     </div>
   );
 };

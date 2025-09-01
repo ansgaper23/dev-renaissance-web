@@ -2,7 +2,7 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import SEOHead from '@/components/SEOHead';
-import FeaturedCarousel from '@/components/FeaturedCarousel';
+import FeaturedCarouselUnified from '@/components/FeaturedCarouselUnified';
 import MostViewedMoviesSection from '@/components/MostViewedMoviesSection';
 import MostViewedSeriesSection from '@/components/MostViewedSeriesSection';
 import SeriesSectionConnector from '@/components/SeriesSectionConnector';
@@ -26,7 +26,7 @@ const Index = () => {
       <Navbar />
       
       {/* Featured Carousel */}
-      <FeaturedCarousel />
+      <FeaturedCarouselUnified />
       
       {/* Movie and Series Sections with real data */}
       <div className="space-y-8 pb-12">
