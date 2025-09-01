@@ -167,7 +167,7 @@ const VideoPlayer = ({
     }
     
     // Check for iframe-compatible URLs
-    if (url.includes('embed') || url.includes('swiftplayers.com') || url.includes('streamtape.com') || url.includes('doodstream.com') || url.includes('mixdrop.co') || url.includes('fembed.com') || url.includes('jilliandescribecompany.com') || url.includes('/e/') || url.includes('player') || url.includes('iframe')) {
+    if (url.includes('embed') || url.includes('swiftplayers.com') || url.includes('streamtape.com') || url.includes('doodstream.com') || url.includes('mixdrop.co') || url.includes('fembed.com') || url.includes('jilliandescribecompany.com') || url.includes('xupalace.org') || url.includes('/e/') || url.includes('player') || url.includes('iframe')) {
       return <iframe key={url} src={url} title={title} className="w-full h-full border-0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerPolicy="no-referrer-when-downgrade" />;
     }
     // YouTube

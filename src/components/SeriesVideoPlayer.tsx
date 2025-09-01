@@ -106,6 +106,7 @@ const SeriesVideoPlayer = ({
         url.includes('mixdrop.co') || 
         url.includes('fembed.com') ||
         url.includes('jilliandescribecompany.com') ||
+        url.includes('xupalace.org') ||
         url.includes('/e/') ||
         url.includes('player') ||
         url.includes('embed')) {
