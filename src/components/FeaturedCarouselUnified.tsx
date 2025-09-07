@@ -46,65 +46,81 @@ const FeaturedCarouselUnified = () => {
   const { data: featuredItemsData = [] } = useQuery({
     queryKey: ['featuredItems'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // 1) Fetch featured item ids only (no embeds) preserving order
+      const { data: featuredRows, error } = await supabase
         .from('featured_items')
-        .select(`
-          *,
-          movies (
-            id,
-            slug,
-            title,
-            overview,
-            backdrop_path,
-            poster_path,
-            rating,
-            release_date,
-            genres
-          ),
-          series (
-            id,
-            slug,
-            title,
-            overview,
-            backdrop_path,
-            poster_path,
-            rating,
-            first_air_date,
-            genres
-          )
-        `)
+        .select('*')
         .order('display_order');
-        
+
       if (error) {
         console.error('Error fetching featured items:', error);
-        return [];
+        return [] as any[];
       }
-      
-      const items = data
-        .map((featured: any) => {
-          const item = featured.item_type === 'movie' ? featured.movies : featured.series;
-          if (!item) return null;
-          const dateField = featured.item_type === 'movie' ? 'release_date' : 'first_air_date';
-          
+
+      if (!featuredRows || featuredRows.length === 0) return [] as any[];
+
+      // 2) Split ids by type
+      const movieIds = featuredRows
+        .filter((r: any) => r.item_type === 'movie')
+        .map((r: any) => r.item_id);
+      const seriesIds = featuredRows
+        .filter((r: any) => r.item_type === 'series')
+        .map((r: any) => r.item_id);
+
+      // 3) Fetch movies and series in parallel
+      const [moviesRes, seriesRes] = await Promise.all([
+        movieIds.length
+          ? supabase
+              .from('movies')
+              .select('id, slug, title, overview, backdrop_path, poster_path, rating, release_date, genres')
+              .in('id', movieIds)
+          : Promise.resolve({ data: [], error: null }),
+        seriesIds.length
+          ? supabase
+              .from('series')
+              .select('id, slug, title, overview, backdrop_path, poster_path, rating, first_air_date, genres')
+              .in('id', seriesIds)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+
+      if (moviesRes.error) console.error('Error fetching movies for featured:', moviesRes.error);
+      if (seriesRes.error) console.error('Error fetching series for featured:', seriesRes.error);
+
+      // 4) Build maps for quick lookup
+      const movieMap = new Map((moviesRes.data as any[]).map((m: any) => [m.id, m]));
+      const seriesMap = new Map((seriesRes.data as any[]).map((s: any) => [s.id, s]));
+
+      // 5) Compose final items in original order
+      const items = featuredRows
+        .map((row: any) => {
+          const item = row.item_type === 'movie' ? movieMap.get(row.item_id) : seriesMap.get(row.item_id);
+          if (!item) return null; // Skip invalid refs
+          const dateField = row.item_type === 'movie' ? 'release_date' : 'first_air_date';
+
+          const backdropUrl = item.backdrop_path?.startsWith('http')
+            ? item.backdrop_path
+            : item.backdrop_path
+              ? `https://image.tmdb.org/t/p/original${item.backdrop_path}`
+              : item.poster_path?.startsWith('http')
+                ? item.poster_path
+                : item.poster_path
+                  ? `https://image.tmdb.org/t/p/original${item.poster_path}`
+                  : '/placeholder.svg';
+
           return {
             id: item.id,
             slug: item.slug,
             title: item.title,
-            description: item.overview || "Sin descripción disponible",
-            backdropUrl: item.backdrop_path?.startsWith('http') 
-              ? item.backdrop_path 
-              : item.backdrop_path 
-                ? `https://image.tmdb.org/t/p/original${item.backdrop_path}`
-                : item.poster_path?.startsWith('http')
-                  ? item.poster_path
-                  : `https://image.tmdb.org/t/p/original${item.poster_path}`,
+            description: item.overview || 'Sin descripción disponible',
+            backdropUrl,
             rating: item.rating || 0,
             year: item[dateField] ? new Date(item[dateField]).getFullYear() : 'Sin fecha',
             genre: Array.isArray(item.genres) ? item.genres.join(', ') : 'Sin género',
-            type: featured.item_type
+            type: row.item_type,
           };
         })
         .filter(Boolean);
+
       return items as any[];
     }
   });
