@@ -52,6 +52,7 @@ const FeaturedCarouselUnified = () => {
           *,
           movies (
             id,
+            slug,
             title,
             overview,
             backdrop_path,
@@ -62,6 +63,7 @@ const FeaturedCarouselUnified = () => {
           ),
           series (
             id,
+            slug,
             title,
             overview,
             backdrop_path,
@@ -78,27 +80,32 @@ const FeaturedCarouselUnified = () => {
         return [];
       }
       
-      return data.map((featured: any) => {
-        const item = featured.item_type === 'movie' ? featured.movies : featured.series;
-        const dateField = featured.item_type === 'movie' ? 'release_date' : 'first_air_date';
-        
-        return {
-          id: item.id,
-          title: item.title,
-          description: item.overview || "Sin descripción disponible",
-          backdropUrl: item.backdrop_path?.startsWith('http') 
-            ? item.backdrop_path 
-            : item.backdrop_path 
-              ? `https://image.tmdb.org/t/p/original${item.backdrop_path}`
-              : item.poster_path?.startsWith('http')
-                ? item.poster_path
-                : `https://image.tmdb.org/t/p/original${item.poster_path}`,
-          rating: item.rating || 0,
-          year: item[dateField] ? new Date(item[dateField]).getFullYear() : 'Sin fecha',
-          genre: Array.isArray(item.genres) ? item.genres.join(', ') : 'Sin género',
-          type: featured.item_type
-        };
-      });
+      const items = data
+        .map((featured: any) => {
+          const item = featured.item_type === 'movie' ? featured.movies : featured.series;
+          if (!item) return null;
+          const dateField = featured.item_type === 'movie' ? 'release_date' : 'first_air_date';
+          
+          return {
+            id: item.id,
+            slug: item.slug,
+            title: item.title,
+            description: item.overview || "Sin descripción disponible",
+            backdropUrl: item.backdrop_path?.startsWith('http') 
+              ? item.backdrop_path 
+              : item.backdrop_path 
+                ? `https://image.tmdb.org/t/p/original${item.backdrop_path}`
+                : item.poster_path?.startsWith('http')
+                  ? item.poster_path
+                  : `https://image.tmdb.org/t/p/original${item.poster_path}`,
+            rating: item.rating || 0,
+            year: item[dateField] ? new Date(item[dateField]).getFullYear() : 'Sin fecha',
+            genre: Array.isArray(item.genres) ? item.genres.join(', ') : 'Sin género',
+            type: featured.item_type
+          };
+        })
+        .filter(Boolean);
+      return items as any[];
     }
   });
 
@@ -130,7 +137,16 @@ const FeaturedCarouselUnified = () => {
   }
 
   const currentItem = featuredItems[currentSlide];
-  const linkPath = `/${currentItem.type}/${currentItem.id}`;
+  const getLinkPath = (): string => {
+    if (featuredItemsData.length === 0) {
+      return currentItem.type === 'movie' ? '/movies' : '/series';
+    }
+    const item: any = currentItem as any;
+    return currentItem.type === 'movie'
+      ? `/movie/${item.slug || item.id}`
+      : `/series/${item.id || item.slug}`;
+  };
+  const linkPath = getLinkPath();
 
   return (
     <div className="relative h-[70vh] overflow-hidden">
