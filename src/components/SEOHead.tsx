@@ -14,7 +14,7 @@ interface SEOHeadProps {
   modifiedTime?: string;
   section?: string;
   tags?: string[];
-  adsCode?: string;
+  adsCode?: string | string[];
 }
 
 const SEOHead = ({ 
@@ -185,6 +185,9 @@ const SEOHead = ({
     // Solo en páginas de movie/ y series/
     const shouldShowAds = adsCode && (window.location.pathname.includes('/movie/') || window.location.pathname.includes('/series/'));
     if (shouldShowAds) {
+      // Normalizar adsCode como array
+      const adsArray = Array.isArray(adsCode) ? adsCode : [adsCode];
+      
       // Usar requestIdleCallback para no bloquear la interacción
       const injectAds = () => {
         // Evitar ejecutar durante interacciones recientes del usuario
@@ -198,58 +201,68 @@ const SEOHead = ({
         // Eliminar cualquier script previo inyectado
         document.querySelectorAll('[data-ads-injected="true"]').forEach((el) => el.remove());
 
-        try {
-          const parser = new DOMParser();
-          const parsed = parser.parseFromString(adsCode, 'text/html');
-          const scripts = Array.from(parsed.querySelectorAll('script')) as HTMLScriptElement[];
-          const hasScriptTags = scripts.length > 0;
+        // Procesar cada script de anuncios
+        adsArray.forEach((adCode, index) => {
+          if (!adCode) return;
+          
+          try {
+            const parser = new DOMParser();
+            const parsed = parser.parseFromString(adCode, 'text/html');
+            const scripts = Array.from(parsed.querySelectorAll('script')) as HTMLScriptElement[];
+            const hasScriptTags = scripts.length > 0;
 
-          // Insertar elementos no-script (por si incluyen contenedores)
-          Array.from(parsed.body.children).forEach((child) => {
-            if (child.tagName.toLowerCase() !== 'script') {
-              const clone = child.cloneNode(true) as HTMLElement;
-              clone.setAttribute('data-ads-injected', 'true');
-              (document.body || document.documentElement).appendChild(clone);
+            // Insertar elementos no-script (por si incluyen contenedores)
+            Array.from(parsed.body.children).forEach((child) => {
+              if (child.tagName.toLowerCase() !== 'script') {
+                const clone = child.cloneNode(true) as HTMLElement;
+                clone.setAttribute('data-ads-injected', 'true');
+                clone.setAttribute('data-ads-index', index.toString());
+                (document.body || document.documentElement).appendChild(clone);
+              }
+            });
+
+            // Reinsertar los <script> de forma no bloqueante
+            scripts.forEach((scr, scriptIndex) => {
+              const s = document.createElement('script');
+              // Copiar atributos y forzar async/defer
+              Array.from(scr.attributes).forEach((attr) => s.setAttribute(attr.name, attr.value));
+              s.async = true;
+              s.defer = true;
+              
+              if (scr.src) {
+                s.src = scr.src;
+              } else if (scr.text || scr.textContent) {
+                s.text = scr.text || scr.textContent || '';
+              }
+              s.setAttribute('data-ads-injected', 'true');
+              s.setAttribute('data-ads-index', index.toString());
+              s.setAttribute('data-script-index', scriptIndex.toString());
+              document.head.appendChild(s);
+            });
+
+            // Si no había <script>, interpretar el texto completo como JS de forma no bloqueante
+            if (!hasScriptTags) {
+              const s = document.createElement('script');
+              s.type = 'text/javascript';
+              s.async = true;
+              s.defer = true;
+              s.setAttribute('data-ads-injected', 'true');
+              s.setAttribute('data-ads-index', index.toString());
+              s.text = adCode;
+              (document.body || document.head).appendChild(s);
             }
-          });
-
-          // Reinsertar los <script> de forma no bloqueante
-          scripts.forEach((scr) => {
-            const s = document.createElement('script');
-            // Copiar atributos y forzar async/defer
-            Array.from(scr.attributes).forEach((attr) => s.setAttribute(attr.name, attr.value));
-            s.async = true;
-            s.defer = true;
-            
-            if (scr.src) {
-              s.src = scr.src;
-            } else if (scr.text || scr.textContent) {
-              s.text = scr.text || scr.textContent || '';
-            }
-            s.setAttribute('data-ads-injected', 'true');
-            document.head.appendChild(s);
-          });
-
-          // Si no había <script>, interpretar el texto completo como JS de forma no bloqueante
-          if (!hasScriptTags) {
+          } catch (e) {
+            // Fallback: inyectar como script de texto no bloqueante
             const s = document.createElement('script');
             s.type = 'text/javascript';
             s.async = true;
             s.defer = true;
             s.setAttribute('data-ads-injected', 'true');
-            s.text = adsCode;
+            s.setAttribute('data-ads-index', index.toString());
+            s.text = adCode;
             (document.body || document.head).appendChild(s);
           }
-        } catch (e) {
-          // Fallback: inyectar como script de texto no bloqueante
-          const s = document.createElement('script');
-          s.type = 'text/javascript';
-          s.async = true;
-          s.defer = true;
-          s.setAttribute('data-ads-injected', 'true');
-          s.text = adsCode;
-          (document.body || document.head).appendChild(s);
-        }
+        });
       };
 
       // Rastrear interacciones del usuario para evitar conflictos

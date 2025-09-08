@@ -104,9 +104,9 @@ const Genres = () => {
 
         {allGenres.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {allGenres.map((genre) => (
+            {allGenres.map((genre, index) => (
               <div 
-                key={genre.id} 
+                key={`${genre.id}-${index}`} 
                 className="group cursor-pointer"
                 onClick={() => handleGenreClick(genre.name)}
               >
