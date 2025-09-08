@@ -1,17 +1,24 @@
 
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import Navbar from '@/components/Navbar';
 import SEOHead from '@/components/SEOHead';
 import FeaturedCarouselUnified from '@/components/FeaturedCarouselUnified';
-import MostViewedMoviesSection from '@/components/MostViewedMoviesSection';
-import MostViewedSeriesSection from '@/components/MostViewedSeriesSection';
-import SeriesSectionConnector from '@/components/SeriesSectionConnector';
-import MovieSectionConnector from '@/components/MovieSectionConnector';
+import LazySection from '@/components/LazySection';
 import { useSettings } from '@/hooks/useSettings';
+import { usePerformance } from '@/hooks/usePerformance';
 import Footer from '@/components/Footer';
+
+// Lazy load non-critical sections for better INP
+const MostViewedMoviesSection = lazy(() => import('@/components/MostViewedMoviesSection'));
+const MostViewedSeriesSection = lazy(() => import('@/components/MostViewedSeriesSection'));
+const SeriesSectionConnector = lazy(() => import('@/components/SeriesSectionConnector'));
+const MovieSectionConnector = lazy(() => import('@/components/MovieSectionConnector'));
 
 const Index = () => {
   const { data: settings } = useSettings();
+  
+  // Monitor performance metrics
+  usePerformance();
 
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white flex flex-col">
@@ -28,40 +35,50 @@ const Index = () => {
       {/* Featured Carousel */}
       <FeaturedCarouselUnified />
       
-      {/* Movie and Series Sections with real data */}
+      {/* Movie and Series Sections with lazy loading for better INP */}
       <div className="space-y-8 pb-12">
-        <MostViewedMoviesSection 
-          title="📺 Películas más vistas" 
-          limit={6}
-          viewAllLink="/movies"
-        />
+        <LazySection>
+          <MostViewedMoviesSection 
+            title="📺 Películas más vistas" 
+            limit={6}
+            viewAllLink="/movies"
+          />
+        </LazySection>
         
-        <MostViewedSeriesSection 
-          title="📺 Series más vistas" 
-          limit={6}
-          viewAllLink="/series"
-        />
+        <LazySection>
+          <MostViewedSeriesSection 
+            title="📺 Series más vistas" 
+            limit={6}
+            viewAllLink="/series"
+          />
+        </LazySection>
         
-        <MovieSectionConnector 
-          title="⭐ Mejor Calificadas" 
-          limit={6}
-          sortBy="rating"
-          viewAllLink="/top-rated"
-        />
+        <LazySection>
+          <MovieSectionConnector 
+            title="⭐ Mejor Calificadas" 
+            limit={6}
+            sortBy="rating"
+            viewAllLink="/top-rated"
+          />
+        </LazySection>
         
-        <SeriesSectionConnector 
-          title="🆕 Series Recientes" 
-          limit={6}
-          sortBy="created_at"
-          viewAllLink="/series"
-        />
+        <LazySection>
+          <SeriesSectionConnector 
+            title="🆕 Series Recientes" 
+            limit={6}
+            sortBy="created_at"
+            viewAllLink="/series"
+          />
+        </LazySection>
         
-        <MovieSectionConnector 
-          title="📅 Estrenos Recientes" 
-          limit={6}
-          sortBy="release_date"
-          viewAllLink="/recent"
-        />
+        <LazySection>
+          <MovieSectionConnector 
+            title="📅 Estrenos Recientes" 
+            limit={6}
+            sortBy="release_date"
+            viewAllLink="/recent"
+          />
+        </LazySection>
       </div>
       <Footer />
     </div>
