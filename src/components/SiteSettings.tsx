@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSettings, updateSettings } from '@/services/settingsService';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, Plus, Trash2 } from 'lucide-react';
 
 const SiteSettings = () => {
   const queryClient = useQueryClient();
@@ -25,6 +25,9 @@ const SiteSettings = () => {
     ads_code: ''
   });
 
+  // Lista de anuncios (Anuncio 1, Anuncio 2, ...)
+  const [adsList, setAdsList] = useState<string[]>(['']);
+
   React.useEffect(() => {
     if (settings) {
       setFormData({
@@ -33,6 +36,10 @@ const SiteSettings = () => {
         logo_url: settings.logo_url || '',
         ads_code: settings.ads_code || ''
       });
+
+      const raw = settings.ads_code || '';
+      const parts = raw.split('<!--AD_SPLIT-->').map(s => s.trim()).filter(Boolean);
+      setAdsList(parts.length ? parts : [raw]);
     }
   }, [settings]);
 
@@ -56,7 +63,8 @@ const SiteSettings = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateMutation.mutate(formData);
+    const joinedAds = adsList.join('\n<!--AD_SPLIT-->\n');
+    updateMutation.mutate({ ...formData, ads_code: joinedAds });
   };
 
   if (isLoading) {
@@ -116,15 +124,45 @@ const SiteSettings = () => {
           </div>
           
           <div>
-            <Label htmlFor="ads_code" className="text-gray-300">Código de Anuncios</Label>
-            <Textarea
-              id="ads_code"
-              value={formData.ads_code}
-              onChange={(e) => setFormData(prev => ({ ...prev, ads_code: e.target.value }))}
-              className="bg-gray-800 border-gray-600 text-white"
-              rows={4}
-              placeholder="Pega aquí tu código de Google AdSense u otros anuncios"
-            />
+            <Label className="text-gray-300">Bloques de Anuncios (múltiples dominios)</Label>
+            <p className="text-sm text-gray-400 mb-2">Agrega uno o más códigos de anuncio. Se inyectarán todos; tu red mostrará el que corresponda al dominio.</p>
+            <div className="space-y-4">
+              {adsList.map((ad, idx) => (
+                <div key={idx} className="p-3 bg-gray-800 border border-gray-700 rounded">
+                  <Label className="text-gray-400">Anuncio {idx + 1}</Label>
+                  <Textarea
+                    value={ad}
+                    onChange={(e) => {
+                      const next = [...adsList];
+                      next[idx] = e.target.value;
+                      setAdsList(next);
+                    }}
+                    className="bg-gray-900 border-gray-600 text-white mt-1"
+                    rows={4}
+                    placeholder="<script>...</script>"
+                  />
+                  <div className="mt-2 flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                      onClick={() => setAdsList(adsList.filter((_, i) => i !== idx))}
+                      disabled={adsList.length <= 1}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" /> Eliminar
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="secondary"
+                className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-200"
+                onClick={() => setAdsList([...adsList, ''])}
+              >
+                <Plus className="h-4 w-4 mr-1" /> Agregar anuncio
+              </Button>
+            </div>
           </div>
 
           {formData.logo_url && (

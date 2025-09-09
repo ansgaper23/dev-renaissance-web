@@ -183,10 +183,14 @@ const SEOHead = ({
 
     // Inyección de anuncios no bloqueante para mejorar INP
     // Solo en páginas de movie/ y series/
-    const shouldShowAds = adsCode && (window.location.pathname.includes('/movie/') || window.location.pathname.includes('/series/'));
+    const shouldShowAds = Boolean(adsCode);
     if (shouldShowAds) {
-      // Normalizar adsCode como array
-      const adsArray = Array.isArray(adsCode) ? adsCode : [adsCode];
+      // Normalizar adsCode: soporta arreglo o separador <!--AD_SPLIT-->
+      const adsArray = Array.isArray(adsCode)
+        ? adsCode
+        : (typeof adsCode === 'string'
+            ? adsCode.split('<!--AD_SPLIT-->').map(s => s.trim()).filter(Boolean)
+            : []);
       
       // Usar requestIdleCallback para no bloquear la interacción
       const injectAds = () => {
