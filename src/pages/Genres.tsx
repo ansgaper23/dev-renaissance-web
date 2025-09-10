@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { fetchMovies } from '@/services/movieService';
 import { fetchSeries } from '@/services/seriesService';
+import { supabase } from '@/integrations/supabase/client';
 
 const Genres = () => {
   const navigate = useNavigate();
@@ -27,6 +28,32 @@ const Genres = () => {
   React.useEffect(() => {
     refetchMovies();
     refetchSeries();
+  }, [refetchMovies, refetchSeries]);
+
+  // Live update counts on DB changes and when tab becomes visible
+  React.useEffect(() => {
+    const channel = supabase
+      .channel('genres-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'movies' }, () => {
+        refetchMovies();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'series' }, () => {
+        refetchSeries();
+      })
+      .subscribe();
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        refetchMovies();
+        refetchSeries();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      supabase.removeChannel(channel);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [refetchMovies, refetchSeries]);
 
   // Combine all genres from movies and series
