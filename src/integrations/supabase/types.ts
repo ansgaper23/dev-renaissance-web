@@ -401,6 +401,18 @@ export type Database = {
         Args: { email_input: string; password_input: string }
         Returns: Json
       }
+      change_admin_password: {
+        Args: {
+          admin_id_input: string
+          new_password_input: string
+          old_password_input: string
+        }
+        Returns: Json
+      }
+      create_admin_account: {
+        Args: { email_input: string; password_input: string }
+        Returns: Json
+      }
       get_site_settings: {
         Args: Record<PropertyKey, never>
         Returns: Json
