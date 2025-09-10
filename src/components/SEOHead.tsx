@@ -192,20 +192,12 @@ const SEOHead = ({
             ? adsCode.split('<!--AD_SPLIT-->').map(s => s.trim()).filter(Boolean)
             : []);
       
-      // Usar requestIdleCallback para no bloquear la interacción
+      // Inyectar anuncios directamente según las instrucciones
       const injectAds = () => {
-        // Evitar ejecutar durante interacciones recientes del usuario
-        const timeSinceLastInteraction = performance.now() - ((window as any).lastUserInteraction || 0);
-        if (timeSinceLastInteraction < 3000) {
-          // Retrasar si hubo interacción reciente
-          setTimeout(injectAds, 1000);
-          return;
-        }
-
         // Eliminar cualquier script previo inyectado
         document.querySelectorAll('[data-ads-injected="true"]').forEach((el) => el.remove());
 
-        // Procesar cada script de anuncios
+        // Procesar cada script de anuncios siguiendo las instrucciones de instalación
         adsArray.forEach((adCode, index) => {
           if (!adCode) return;
           
@@ -215,24 +207,25 @@ const SEOHead = ({
             const scripts = Array.from(parsed.querySelectorAll('script')) as HTMLScriptElement[];
             const hasScriptTags = scripts.length > 0;
 
-            // Insertar elementos no-script (por si incluyen contenedores)
+            // Insertar elementos no-script (contenedores, divs, etc.)
             Array.from(parsed.body.children).forEach((child) => {
               if (child.tagName.toLowerCase() !== 'script') {
                 const clone = child.cloneNode(true) as HTMLElement;
                 clone.setAttribute('data-ads-injected', 'true');
                 clone.setAttribute('data-ads-index', index.toString());
-                (document.body || document.documentElement).appendChild(clone);
+                document.body.appendChild(clone);
               }
             });
 
-            // Reinsertar los <script> de forma no bloqueante
+            // Inyectar scripts en el <head> sin async/defer para ejecutar inmediatamente
             scripts.forEach((scr, scriptIndex) => {
               const s = document.createElement('script');
-              // Copiar atributos y forzar async/defer
-              Array.from(scr.attributes).forEach((attr) => s.setAttribute(attr.name, attr.value));
-              s.async = true;
-              s.defer = true;
+              // Copiar todos los atributos originales
+              Array.from(scr.attributes).forEach((attr) => {
+                s.setAttribute(attr.name, attr.value);
+              });
               
+              // NO forzar async/defer - permitir ejecución síncrona según instrucciones
               if (scr.src) {
                 s.src = scr.src;
               } else if (scr.text || scr.textContent) {
@@ -241,49 +234,36 @@ const SEOHead = ({
               s.setAttribute('data-ads-injected', 'true');
               s.setAttribute('data-ads-index', index.toString());
               s.setAttribute('data-script-index', scriptIndex.toString());
+              
+              // Insertar justo antes del </head> según instrucciones
               document.head.appendChild(s);
             });
 
-            // Si no había <script>, interpretar el texto completo como JS de forma no bloqueante
+            // Si no había <script>, interpretar como JS directo
             if (!hasScriptTags) {
               const s = document.createElement('script');
               s.type = 'text/javascript';
-              s.async = true;
-              s.defer = true;
               s.setAttribute('data-ads-injected', 'true');
               s.setAttribute('data-ads-index', index.toString());
               s.text = adCode;
-              (document.body || document.head).appendChild(s);
+              document.head.appendChild(s);
             }
           } catch (e) {
-            // Fallback: inyectar como script de texto no bloqueante
+            console.warn('Error procesando anuncio:', e);
+            // Fallback: inyectar como script directo en head
             const s = document.createElement('script');
             s.type = 'text/javascript';
-            s.async = true;
-            s.defer = true;
             s.setAttribute('data-ads-injected', 'true');
             s.setAttribute('data-ads-index', index.toString());
             s.text = adCode;
-            (document.body || document.head).appendChild(s);
+            document.head.appendChild(s);
           }
         });
       };
 
-      // Rastrear interacciones del usuario para evitar conflictos
-      const trackUserInteraction = () => {
-        (window as any).lastUserInteraction = performance.now();
-      };
-
-      ['click', 'keydown', 'touchstart'].forEach(event => {
-        document.addEventListener(event, trackUserInteraction, { passive: true, once: false });
-      });
-
-      // Usar requestIdleCallback o setTimeout como fallback
-      if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(injectAds, { timeout: 5000 });
-      } else {
-        setTimeout(injectAds, 2000);
-      }
+      // Ejecutar inmediatamente para asegurar que todos los scripts se carguen
+      // Sin demoras para cumplir con las instrucciones de instalación
+      injectAds();
     }
 
     // Add JSON-LD schema for better SEO
