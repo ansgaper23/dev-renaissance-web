@@ -98,6 +98,46 @@ const SeriesVideoPlayer = ({
   const getVideoElement = (url: string) => {
     if (!url) return null;
 
+    // YouTube - clean embed without recommendations
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      let videoId = '';
+      if (url.includes('watch?v=')) {
+        videoId = url.split('watch?v=')[1].split('&')[0];
+      } else if (url.includes('youtu.be/')) {
+        videoId = url.split('youtu.be/')[1].split('?')[0];
+      } else if (url.includes('embed/')) {
+        videoId = url.split('embed/')[1].split('?')[0];
+      }
+      
+      const cleanEmbedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&showinfo=0&controls=1&autoplay=0&fs=1&cc_load_policy=0&iv_load_policy=3&autohide=1`;
+      return (
+        <iframe
+          key={url}
+          src={cleanEmbedUrl}
+          title={`${series.title} - T${selectedSeason}E${selectedEpisode}`}
+          className="w-full h-full border-0"
+          allowFullScreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          referrerPolicy="no-referrer-when-downgrade"
+        />
+      );
+    }
+
+    // Archive.org URLs - use custom player for clean experience
+    if (url.includes('archive.org')) {
+      return (
+        <iframe
+          key={url}
+          src={url}
+          title={`${series.title} - T${selectedSeason}E${selectedEpisode}`}
+          className="w-full h-full border-0"
+          allowFullScreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          referrerPolicy="no-referrer-when-downgrade"
+        />
+      );
+    }
+
     // Check for iframe-compatible URLs (embed URLs)
     if (url.includes('embed') || 
         url.includes('swiftplayers.com') || 
@@ -108,8 +148,7 @@ const SeriesVideoPlayer = ({
         url.includes('jilliandescribecompany.com') ||
         url.includes('xupalace.org') ||
         url.includes('/e/') ||
-        url.includes('player') ||
-        url.includes('embed')) {
+        url.includes('player')) {
       return (
         <iframe
           key={url}
@@ -119,21 +158,6 @@ const SeriesVideoPlayer = ({
           allowFullScreen
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           referrerPolicy="no-referrer-when-downgrade"
-        />
-      );
-    }
-
-    // Check if it's a YouTube URL
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
-      const embedUrl = url.includes('watch?v=') ? url.replace('watch?v=', 'embed/') : url;
-      return (
-        <iframe
-          key={url}
-          src={embedUrl}
-          title={`${series.title} - T${selectedSeason}E${selectedEpisode}`}
-          className="w-full h-full border-0"
-          allowFullScreen
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         />
       );
     }
