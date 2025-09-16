@@ -181,9 +181,68 @@ const VideoPlayer = ({
       return <iframe key={url} src={cleanEmbedUrl} title={title} className="w-full h-full border-0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerPolicy="no-referrer-when-downgrade" />;
     }
     
-    // Archive.org URLs - extract direct video URL
+    // Archive.org URLs - extract direct video URL for clean playback
     if (url.includes('archive.org')) {
-      return <CustomVideoPlayer src={url} title={title} />;
+      let directVideoUrl = url;
+      
+      // Extract the direct video URL from archive.org
+      if (url.includes('/details/')) {
+        // Extract identifier from details URL
+        const identifier = url.split('/details/')[1].split('/')[0];
+        // Construct direct video URL (most common formats)
+        directVideoUrl = `https://archive.org/download/${identifier}/${identifier}.mp4`;
+        
+        // Fallback formats to try
+        const fallbackFormats = ['.mkv', '.avi', '.webm'];
+        
+        return (
+          <video
+            key={url}
+            controls
+            className="w-full h-full bg-black"
+            preload="metadata"
+            controlsList="nodownload"
+            onError={(e) => {
+              console.log('Primary format failed, trying fallbacks...');
+              // Try fallback formats
+              const video = e.currentTarget;
+              const currentIndex = fallbackFormats.findIndex(format => 
+                video.src.includes(format)
+              );
+              
+              if (currentIndex < fallbackFormats.length - 1) {
+                const nextFormat = fallbackFormats[currentIndex + 1];
+                video.src = `https://archive.org/download/${identifier}/${identifier}${nextFormat}`;
+              }
+            }}
+          >
+            <source src={directVideoUrl} type="video/mp4" />
+            {fallbackFormats.map(format => (
+              <source 
+                key={format}
+                src={`https://archive.org/download/${identifier}/${identifier}${format}`} 
+                type={`video/${format.slice(1)}`} 
+              />
+            ))}
+            Tu navegador no soporta el elemento de video.
+          </video>
+        );
+      }
+      
+      // If it's already a direct link, use it directly
+      return (
+        <video
+          key={url}
+          controls
+          className="w-full h-full bg-black"
+          preload="metadata"
+          controlsList="nodownload"
+        >
+          <source src={directVideoUrl} type="video/mp4" />
+          <source src={directVideoUrl} type="video/webm" />
+          Tu navegador no soporta el elemento de video.
+        </video>
+      );
     }
     
     // Check for iframe-compatible URLs

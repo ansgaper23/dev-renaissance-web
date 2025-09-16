@@ -160,7 +160,7 @@ const FeaturedCarouselUnified = () => {
     const item: any = currentItem as any;
     return currentItem.type === 'movie'
       ? `/movie/${item.slug || item.id}`
-      : `/series/${item.id || item.slug}`;
+      : `/series/${(item.slug && item.slug.trim() !== '') ? item.slug : item.id}`;
   };
   const linkPath = getLinkPath();
 

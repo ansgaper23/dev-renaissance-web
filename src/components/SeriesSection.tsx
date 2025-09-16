@@ -67,7 +67,7 @@ const SeriesSection = ({ title, series, isLoading, viewAllLink }: SeriesSectionP
           const genres = Array.isArray(serie.genres) ? serie.genres.slice(0, 2).join(', ') : 'Sin género';
 
           // Use slug if available, otherwise fallback to id
-          const linkPath = serie.slug ? `/series/${serie.slug}` : `/series/${serie.id}`;
+          const linkPath = serie.slug && serie.slug.trim() !== '' ? `/series/${serie.slug}` : `/series/${serie.id}`;
 
           return (
             <Link key={serie.id} to={linkPath} className="group">
