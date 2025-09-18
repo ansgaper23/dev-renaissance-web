@@ -2,6 +2,15 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Series } from "@/services/seriesService";
 
+// Helper function to convert database row to Series
+const convertToSeries = (row: any): Series => {
+  return {
+    ...row,
+    stream_servers: Array.isArray(row.stream_servers) ? row.stream_servers : [],
+    seasons: Array.isArray(row.seasons) ? row.seasons : []
+  };
+};
+
 // Función para registrar una vista de serie
 export const recordSeriesView = async (seriesId: string): Promise<void> => {
   try {
@@ -24,9 +33,7 @@ export const recordSeriesView = async (seriesId: string): Promise<void> => {
 // Función para obtener series más vistas
 export const fetchMostViewedSeries = async (): Promise<Series[]> => {
   const { data, error } = await supabase
-    .from('most_viewed_series')
-    .select('*')
-    .limit(20);
+    .rpc('get_most_viewed_series', { limit_count: 20 });
 
   if (error) {
     console.warn('Error fetching most viewed series, falling back to recent:', error);
@@ -37,18 +44,10 @@ export const fetchMostViewedSeries = async (): Promise<Series[]> => {
       .order('created_at', { ascending: false })
       .limit(20);
     
-    return (fallbackData || []).map(series => ({
-      ...series,
-      stream_servers: Array.isArray(series.stream_servers) ? series.stream_servers as { name: string; url: string; quality?: string; language?: string; }[] : [],
-      seasons: Array.isArray(series.seasons) ? series.seasons as any[] : []
-    })) as Series[];
+    return (fallbackData || []).map(convertToSeries);
   }
 
-  return (data || []).map(series => ({
-    ...series,
-    stream_servers: Array.isArray(series.stream_servers) ? series.stream_servers as { name: string; url: string; quality?: string; language?: string; }[] : [],
-    seasons: Array.isArray(series.seasons) ? series.seasons as any[] : []
-  })) as Series[];
+  return (data || []).map(convertToSeries);
 };
 
 // Función para obtener series relacionadas por género
@@ -76,18 +75,10 @@ export const fetchRelatedSeries = async (seriesId: string, genres: string[] = []
         .order('created_at', { ascending: false })
         .limit(6);
       
-      return (fallbackData || []).map(series => ({
-        ...series,
-        stream_servers: Array.isArray(series.stream_servers) ? series.stream_servers as { name: string; url: string; quality?: string; language?: string; }[] : [],
-        seasons: Array.isArray(series.seasons) ? series.seasons as any[] : []
-      })) as Series[];
+      return (fallbackData || []).map(convertToSeries);
     }
 
-    return data.map(series => ({
-      ...series,
-      stream_servers: Array.isArray(series.stream_servers) ? series.stream_servers as { name: string; url: string; quality?: string; language?: string; }[] : [],
-      seasons: Array.isArray(series.seasons) ? series.seasons as any[] : []
-    })) as Series[];
+    return data.map(convertToSeries);
   } catch (error) {
     console.warn('Error fetching related series:', error);
     return [];

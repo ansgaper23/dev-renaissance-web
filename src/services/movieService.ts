@@ -172,10 +172,7 @@ export const fetchMoviesByReleaseDate = async (limit: number = 20): Promise<Movi
 
 export const fetchMostViewedMovies = async (): Promise<Movie[]> => {
   const { data, error } = await supabase
-    .from('most_viewed_movies')
-    .select('*')
-    .order('view_count', { ascending: false })
-    .limit(20);
+    .rpc('get_most_viewed_movies', { limit_count: 20 });
     
   if (error) {
     throw new Error(error.message);
