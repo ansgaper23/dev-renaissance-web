@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import FeaturedContentManager from './FeaturedContentManager';
 import SiteSettings from './SiteSettings';
 import FixMissingGenres from './FixMissingGenres';
+import FixMissingSlugs from './FixMissingSlugs';
 import ManualAddMovieDialogButton from "./ManualAddMovieDialogButton";
 
 const AdminDashboard = () => {
@@ -71,6 +72,9 @@ const AdminDashboard = () => {
 
       {/* Fix Missing Genres button */}
       <FixMissingGenres />
+
+      {/* Fix Missing Slugs button */}
+      <FixMissingSlugs />
 
       {/* Site Settings */}
       <SiteSettings />

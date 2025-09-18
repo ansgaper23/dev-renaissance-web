@@ -313,6 +313,12 @@ export const addMovie = async (movie: MovieCreate): Promise<Movie> => {
 };
 
 export const updateMovie = async (id: string, updates: Partial<Movie>): Promise<Movie> => {
+  // Generate slug if title is being updated and no slug is provided
+  if (updates.title && !updates.slug) {
+    const year = updates.release_date ? new Date(updates.release_date).getFullYear().toString() : undefined;
+    updates.slug = generateSlug(updates.title, year);
+  }
+  
   const updateData = {
     ...updates,
     updated_at: new Date().toISOString()

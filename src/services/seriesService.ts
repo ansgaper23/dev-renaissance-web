@@ -181,6 +181,11 @@ export const addSeries = async (series: SeriesCreate): Promise<Series> => {
 };
 
 export const updateSeries = async (id: string, updates: Partial<Series>): Promise<Series> => {
+  // Generate slug if title is being updated and no slug is provided
+  if (updates.title && !updates.slug) {
+    updates.slug = generateSlug(updates.title);
+  }
+  
   const dbData = convertToDbFormat({ ...updates, updated_at: new Date().toISOString() });
   
   const { data, error } = await supabase
