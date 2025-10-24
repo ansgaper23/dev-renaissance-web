@@ -17,6 +17,7 @@ const MovieDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [selectedServer, setSelectedServer] = useState(0);
+  const [isOverviewExpanded, setIsOverviewExpanded] = useState(false);
   const { data: settings } = useSettings();
 
   const { data: movie, isLoading, error } = useQuery({
@@ -99,9 +100,17 @@ const MovieDetail = () => {
   const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : 'Sin fecha';
   const genres = Array.isArray(movie.genres) ? movie.genres.join(', ') : 'Sin género';
 
-  // Calculate dynamic spacing based on synopsis length - increased spacing
+  // Calculate if overview needs "Read more" functionality
+  const overviewLength = movie.overview ? movie.overview.length : 0;
+  const shouldShowReadMore = overviewLength > 200;
+  const shortOverview = shouldShowReadMore && !isOverviewExpanded 
+    ? movie.overview?.substring(0, 200) + '...' 
+    : movie.overview;
+
+  // Calculate dynamic spacing based on synopsis length
   const synopsisLength = movie.overview ? movie.overview.length : 0;
-  const mobileSpacingClass = synopsisLength > 300 ? 'h-60' : synopsisLength > 200 ? 'h-48' : synopsisLength > 100 ? 'h-40' : 'h-32';
+  const baseMobileSpacing = synopsisLength > 300 ? 'h-60' : synopsisLength > 200 ? 'h-48' : synopsisLength > 100 ? 'h-40' : 'h-32';
+  const mobileSpacingClass = isOverviewExpanded && shouldShowReadMore ? 'h-auto' : baseMobileSpacing;
 
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
@@ -187,7 +196,17 @@ const MovieDetail = () => {
             </div>
           </div>
           {movie.overview && (
-            <div className="mt-3 text-cuevana-white/90 text-sm">{movie.overview}</div>
+            <div className="mt-3">
+              <div className="text-cuevana-white/90 text-sm">{shortOverview}</div>
+              {shouldShowReadMore && (
+                <button
+                  onClick={() => setIsOverviewExpanded(!isOverviewExpanded)}
+                  className="text-cuevana-blue hover:text-cuevana-blue/80 text-sm font-semibold mt-2"
+                >
+                  {isOverviewExpanded ? 'Leer menos' : 'Leer más'}
+                </button>
+              )}
+            </div>
           )}
           <div className="mt-2">
             <span className="font-semibold text-cuevana-white/80 text-sm">Género: </span>
@@ -224,8 +243,18 @@ const MovieDetail = () => {
                 )}
                 {/* Overview */}
                 {movie.overview && (
-                  <div className="text-cuevana-white/90 text-base leading-relaxed mb-3">
-                    {movie.overview}
+                  <div className="mb-3">
+                    <div className="text-cuevana-white/90 text-base leading-relaxed">
+                      {shortOverview}
+                    </div>
+                    {shouldShowReadMore && (
+                      <button
+                        onClick={() => setIsOverviewExpanded(!isOverviewExpanded)}
+                        className="text-cuevana-blue hover:text-cuevana-blue/80 text-base font-semibold mt-2"
+                      >
+                        {isOverviewExpanded ? 'Leer menos' : 'Leer más'}
+                      </button>
+                    )}
                   </div>
                 )}
                 {/* Géneros */}
@@ -283,7 +312,10 @@ const MovieDetail = () => {
         </div>
 
         {/* Spacer for desktop to push content below the overlay */}
-        <div className="hidden md:block" style={{ height: '25vh' }} />
+        <div 
+          className="hidden md:block" 
+          style={{ height: isOverviewExpanded && shouldShowReadMore ? '35vh' : '25vh' }} 
+        />
 
         {/* Video Player y servidores */}
         <div className="mt-8 md:mt-8">
