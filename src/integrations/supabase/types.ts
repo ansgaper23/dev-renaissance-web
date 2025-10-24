@@ -91,21 +91,21 @@ export type Database = {
       movie_views: {
         Row: {
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           movie_id: string
           user_agent: string | null
           viewed_at: string
         }
         Insert: {
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           movie_id: string
           user_agent?: string | null
           viewed_at?: string
         }
         Update: {
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           movie_id?: string
           user_agent?: string | null
           viewed_at?: string
@@ -270,21 +270,21 @@ export type Database = {
       series_views: {
         Row: {
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           series_id: string
           user_agent: string | null
           viewed_at: string
         }
         Insert: {
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           series_id: string
           user_agent?: string | null
           viewed_at?: string
         }
         Update: {
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           series_id?: string
           user_agent?: string | null
           viewed_at?: string
@@ -395,42 +395,9 @@ export type Database = {
           view_count: number
         }[]
       }
-      get_site_settings: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      gtrgm_compress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_decompress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_in: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_options: {
-        Args: { "": unknown }
-        Returns: undefined
-      }
-      gtrgm_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      set_limit: {
-        Args: { "": number }
-        Returns: number
-      }
-      show_limit: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      show_trgm: {
-        Args: { "": string }
-        Returns: string[]
-      }
+      get_site_settings: { Args: never; Returns: Json }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       update_site_settings: {
         Args: {
           ads_code_input?: string
