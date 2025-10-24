@@ -110,7 +110,9 @@ const MovieDetail = () => {
   // Calculate dynamic spacing based on synopsis length
   const synopsisLength = movie.overview ? movie.overview.length : 0;
   const baseMobileSpacing = synopsisLength > 300 ? 'h-60' : synopsisLength > 200 ? 'h-48' : synopsisLength > 100 ? 'h-40' : 'h-32';
-  const mobileSpacingClass = isOverviewExpanded && shouldShowReadMore ? 'h-auto' : baseMobileSpacing;
+  // When expanded, add extra space based on full text length
+  const expandedSpacing = synopsisLength > 500 ? 'min-h-[600px]' : synopsisLength > 300 ? 'min-h-[500px]' : 'min-h-[400px]';
+  const mobileSpacingClass = isOverviewExpanded && shouldShowReadMore ? expandedSpacing : baseMobileSpacing;
 
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white">
