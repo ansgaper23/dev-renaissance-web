@@ -30,6 +30,7 @@ const Index = () => {
         type="website"
         siteName={settings?.site_name || "Cuevana3"}
         logoUrl={settings?.logo_url}
+        adsCode={settings?.ads_code}
       />
       <Navbar />
       

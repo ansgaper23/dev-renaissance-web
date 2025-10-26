@@ -207,15 +207,8 @@ const SEOHead = ({
             const scripts = Array.from(parsed.querySelectorAll('script')) as HTMLScriptElement[];
             const hasScriptTags = scripts.length > 0;
 
-            // Insertar elementos no-script (contenedores, divs, etc.)
-            Array.from(parsed.body.children).forEach((child) => {
-              if (child.tagName.toLowerCase() !== 'script') {
-                const clone = child.cloneNode(true) as HTMLElement;
-                clone.setAttribute('data-ads-injected', 'true');
-                clone.setAttribute('data-ads-index', index.toString());
-                document.body.appendChild(clone);
-              }
-            });
+            // No inyectar elementos no-script en el body; solo scripts en <head> como solicitaste
+            // (Se omiten contenedores/divs para evitar interferencias entre dominios)
 
             // Inyectar scripts en el <head> sin async/defer para ejecutar inmediatamente
             scripts.forEach((scr, scriptIndex) => {
