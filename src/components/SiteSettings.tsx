@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSettings, updateSettings } from '@/services/settingsService';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Save, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Save, Plus, Trash2, Upload } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const SiteSettings = () => {
   const queryClient = useQueryClient();
@@ -22,8 +23,10 @@ const SiteSettings = () => {
     site_name: '',
     site_description: '',
     logo_url: '',
-    ads_code: ''
+    ads_code: '',
+    telegram_url: ''
   });
+  const [uploading, setUploading] = useState(false);
 
   // Lista de anuncios (Anuncio 1, Anuncio 2, ...)
   const [adsList, setAdsList] = useState<string[]>(['']);
@@ -34,7 +37,8 @@ const SiteSettings = () => {
         site_name: settings.site_name || '',
         site_description: settings.site_description || '',
         logo_url: settings.logo_url || '',
-        ads_code: settings.ads_code || ''
+        ads_code: settings.ads_code || '',
+        telegram_url: settings.telegram_url || ''
       });
 
       const raw = settings.ads_code || '';
@@ -42,6 +46,66 @@ const SiteSettings = () => {
       setAdsList(parts.length ? parts : [raw]);
     }
   }, [settings]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Error",
+        description: "Por favor selecciona una imagen válida",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "La imagen debe ser menor a 2MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo-${Date.now()}.${fileExt}`;
+      const filePath = `logos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('site-assets')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('site-assets')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({ ...prev, logo_url: publicUrl }));
+      
+      toast({
+        title: "Logo subido",
+        description: "El logo se ha subido correctamente",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: `Error al subir el logo: ${error.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const updateMutation = useMutation({
     mutationFn: updateSettings,
@@ -100,14 +164,64 @@ const SiteSettings = () => {
             </div>
             
             <div>
-              <Label htmlFor="logo_url" className="text-gray-300">URL del Logo</Label>
+              <Label htmlFor="telegram_url" className="text-gray-300">URL de Telegram</Label>
               <Input
-                id="logo_url"
-                value={formData.logo_url}
-                onChange={(e) => setFormData(prev => ({ ...prev, logo_url: e.target.value }))}
+                id="telegram_url"
+                value={formData.telegram_url}
+                onChange={(e) => setFormData(prev => ({ ...prev, telegram_url: e.target.value }))}
                 className="bg-gray-800 border-gray-600 text-white"
-                placeholder="https://ejemplo.com/logo.png"
+                placeholder="https://t.me/tu_canal"
               />
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-gray-300">Logo del Sitio</Label>
+            <div className="space-y-3">
+              <div className="flex gap-3 items-end">
+                <div className="flex-1">
+                  <Label htmlFor="logo_url" className="text-gray-400 text-sm">URL del Logo</Label>
+                  <Input
+                    id="logo_url"
+                    value={formData.logo_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, logo_url: e.target.value }))}
+                    className="bg-gray-800 border-gray-600 text-white"
+                    placeholder="https://ejemplo.com/logo.png"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="logo_file" className="cursor-pointer">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={uploading}
+                      className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-200"
+                      onClick={() => document.getElementById('logo_file')?.click()}
+                    >
+                      {uploading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          Subiendo...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4 mr-1" />
+                          Subir Logo
+                        </>
+                      )}
+                    </Button>
+                  </Label>
+                  <input
+                    id="logo_file"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoUpload}
+                    disabled={uploading}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gray-400">Puedes pegar una URL o subir un archivo (máx. 2MB)</p>
             </div>
           </div>
           

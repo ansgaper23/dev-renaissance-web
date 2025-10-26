@@ -7,6 +7,7 @@ import LazySection from '@/components/LazySection';
 import { useSettings } from '@/hooks/useSettings';
 import { usePerformance } from '@/hooks/usePerformance';
 import Footer from '@/components/Footer';
+import TelegramButton from '@/components/TelegramButton';
 
 // Lazy load non-critical sections for better INP
 const MostViewedMoviesSection = lazy(() => import('@/components/MostViewedMoviesSection'));
@@ -80,6 +81,7 @@ const Index = () => {
           />
         </LazySection>
       </div>
+      <TelegramButton />
       <Footer />
     </div>
   );

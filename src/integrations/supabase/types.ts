@@ -306,6 +306,7 @@ export type Database = {
           logo_url: string | null
           site_description: string | null
           site_name: string | null
+          telegram_url: string | null
           updated_at: string | null
         }
         Insert: {
@@ -314,6 +315,7 @@ export type Database = {
           logo_url?: string | null
           site_description?: string | null
           site_name?: string | null
+          telegram_url?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -322,6 +324,7 @@ export type Database = {
           logo_url?: string | null
           site_description?: string | null
           site_name?: string | null
+          telegram_url?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -404,6 +407,7 @@ export type Database = {
           logo_url_input?: string
           site_description_input?: string
           site_name_input?: string
+          telegram_url_input?: string
         }
         Returns: Json
       }

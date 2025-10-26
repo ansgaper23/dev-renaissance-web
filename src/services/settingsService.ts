@@ -7,6 +7,7 @@ export interface Settings {
   site_description?: string;
   logo_url?: string;
   ads_code?: string;
+  telegram_url?: string;
   updated_at?: string;
 }
 
@@ -52,7 +53,8 @@ export const updateSettings = async (settings: Partial<Settings>): Promise<Setti
       site_name_input: settings.site_name || null,
       site_description_input: settings.site_description || null,
       logo_url_input: settings.logo_url || null,
-      ads_code_input: settings.ads_code || null
+      ads_code_input: settings.ads_code || null,
+      telegram_url_input: settings.telegram_url || null
     });
 
     if (error) {
