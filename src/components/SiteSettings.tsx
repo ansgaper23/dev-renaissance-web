@@ -92,9 +92,12 @@ const SiteSettings = () => {
 
       setFormData(prev => ({ ...prev, logo_url: publicUrl }));
       
+      // Auto-save the logo URL to the database
+      updateMutation.mutate({ ...formData, logo_url: publicUrl });
+      
       toast({
-        title: "Logo subido",
-        description: "El logo se ha subido correctamente",
+        title: "Logo subido y guardado",
+        description: "El logo se ha subido y guardado correctamente",
       });
     } catch (error: any) {
       toast({
