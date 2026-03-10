@@ -102,15 +102,15 @@ const FeaturedContentManager = () => {
     mutationFn: async ({ itemId, itemType }: { itemId: string; itemType: 'movie' | 'series' }) => {
       const nextOrder = Math.max(...featuredItems.map(item => item.display_order), 0) + 1;
       
-      const { error } = await supabase
-        .from('featured_items')
-        .insert({
+      await adminApi({
+        action: 'insert',
+        table: 'featured_items',
+        data: [{
           item_id: itemId,
           item_type: itemType,
           display_order: nextOrder
-        });
-      
-      if (error) throw error;
+        }],
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['featuredItems'] });
