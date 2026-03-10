@@ -14,6 +14,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { Search, Download, Plus, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getAdminSession } from '@/services/movieService';
 import { useQuery, useMutation } from '@tanstack/react-query';
 
 const ImportFromTMDB = () => {
