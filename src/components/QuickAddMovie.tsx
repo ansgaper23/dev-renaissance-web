@@ -155,8 +155,10 @@ const QuickAddMovie = () => {
     
     // Get detailed movie info including runtime
     try {
+      const session = getAdminSession();
       const { data: detailedMovie, error } = await supabase.functions.invoke('tmdb-import', {
-        body: { tmdb_id: movie.id }
+        body: { tmdb_id: movie.id },
+        headers: { 'x-admin-token': session?.session_token || '' },
       });
       
       if (error) {
