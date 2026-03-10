@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import SeriesVideoPlayer from '@/components/SeriesVideoPlayer';
 import SeriesEpisodeSelector from '@/components/SeriesEpisodeSelector';
 import SEOHead from '@/components/SEOHead';
+import AdInjector from '@/components/AdInjector';
 import { Button } from '@/components/ui/button';
 import ShareButton from '@/components/ShareButton';
 import SeriesSection from '@/components/SeriesSection';
