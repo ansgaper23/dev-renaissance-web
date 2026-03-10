@@ -119,6 +119,7 @@ const SeriesVideoPlayer = ({
           allowFullScreen
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           referrerPolicy="no-referrer-when-downgrade"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
         />
       );
     }
@@ -149,15 +150,19 @@ const SeriesVideoPlayer = ({
         url.includes('/e/') ||
         url.includes('player')) {
       return (
-        <iframe
-          key={url}
-          src={url}
-          title={`${series.title} - T${selectedSeason}E${selectedEpisode}`}
-          className="w-full h-full border-0"
-          allowFullScreen
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerPolicy="no-referrer-when-downgrade"
-        />
+        <div className="relative w-full h-full">
+          <iframe
+            key={url}
+            src={url}
+            title={`${series.title} - T${selectedSeason}E${selectedEpisode}`}
+            className="w-full h-full border-0"
+            allowFullScreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="no-referrer-when-downgrade"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+          />
+          <div className="absolute inset-0 pointer-events-none" />
+        </div>
       );
     }
 

@@ -178,7 +178,7 @@ const VideoPlayer = ({
       }
       
       const cleanEmbedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&showinfo=0&controls=1&autoplay=0&fs=1&cc_load_policy=0&iv_load_policy=3&autohide=1`;
-      return <iframe key={url} src={cleanEmbedUrl} title={title} className="w-full h-full border-0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerPolicy="no-referrer-when-downgrade" />;
+      return <iframe key={url} src={cleanEmbedUrl} title={title} className="w-full h-full border-0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerPolicy="no-referrer-when-downgrade" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" />;
     }
     
     // Archive.org URLs - use custom player to avoid native controls in fullscreen
@@ -197,7 +197,12 @@ const VideoPlayer = ({
     
     // Check for iframe-compatible URLs
     if (url.includes('embed') || url.includes('swiftplayers.com') || url.includes('streamtape.com') || url.includes('doodstream.com') || url.includes('mixdrop.co') || url.includes('fembed.com') || url.includes('jilliandescribecompany.com') || url.includes('xupalace.org') || url.includes('/e/') || url.includes('player') || url.includes('iframe')) {
-      return <iframe key={url} src={url} title={title} className="w-full h-full border-0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerPolicy="no-referrer-when-downgrade" />;
+      return (
+        <div className="relative w-full h-full">
+          <iframe key={url} src={url} title={title} className="w-full h-full border-0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="no-referrer-when-downgrade" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" />
+          <div className="absolute inset-0 pointer-events-none" />
+        </div>
+      );
     }
     
     // Direct video fallback
