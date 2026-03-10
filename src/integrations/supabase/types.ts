@@ -35,6 +35,42 @@ export type Database = {
         }
         Relationships: []
       }
+      domain_ads: {
+        Row: {
+          ad_code: string
+          ad_name: string
+          created_at: string
+          display_order: number
+          domain: string
+          id: string
+          is_active: boolean
+          scope: string
+          updated_at: string
+        }
+        Insert: {
+          ad_code?: string
+          ad_name?: string
+          created_at?: string
+          display_order?: number
+          domain: string
+          id?: string
+          is_active?: boolean
+          scope?: string
+          updated_at?: string
+        }
+        Update: {
+          ad_code?: string
+          ad_name?: string
+          created_at?: string
+          display_order?: number
+          domain?: string
+          id?: string
+          is_active?: boolean
+          scope?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       featured_items: {
         Row: {
           created_at: string
