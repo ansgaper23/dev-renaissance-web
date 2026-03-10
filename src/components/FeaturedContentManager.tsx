@@ -131,12 +131,7 @@ const FeaturedContentManager = () => {
   // Remove from featured
   const removeFromFeaturedMutation = useMutation({
     mutationFn: async (featuredId: string) => {
-      const { error } = await supabase
-        .from('featured_items')
-        .delete()
-        .eq('id', featuredId);
-      
-      if (error) throw error;
+      await adminApi({ action: 'delete', table: 'featured_items', id: featuredId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['featuredItems'] });

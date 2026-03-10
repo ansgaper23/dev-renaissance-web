@@ -93,12 +93,7 @@ const FeaturedMoviesManager = () => {
   // Remove movie from featured
   const removeFromFeaturedMutation = useMutation({
     mutationFn: async (featuredId: string) => {
-      const { error } = await supabase
-        .from('featured_movies')
-        .delete()
-        .eq('id', featuredId);
-        
-      if (error) throw new Error(error.message);
+      await adminApi({ action: 'delete', table: 'featured_movies', id: featuredId });
     },
     onSuccess: () => {
       toast({
