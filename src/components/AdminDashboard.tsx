@@ -6,6 +6,7 @@ import { getTotalSeriesCount } from '@/services/seriesService';
 import { Loader2 } from 'lucide-react';
 import FeaturedContentManager from './FeaturedContentManager';
 import SiteSettings from './SiteSettings';
+import DomainAdsManager from './DomainAdsManager';
 import FixMissingGenres from './FixMissingGenres';
 import FixMissingSlugs from './FixMissingSlugs';
 import ManualAddMovieDialogButton from "./ManualAddMovieDialogButton";
@@ -78,6 +79,9 @@ const AdminDashboard = () => {
 
       {/* Site Settings */}
       <SiteSettings />
+
+      {/* Domain Ads Manager */}
+      <DomainAdsManager />
 
       {/* Featured Content Manager */}
       <FeaturedContentManager />

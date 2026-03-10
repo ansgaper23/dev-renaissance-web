@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import VideoPlayer from '@/components/VideoPlayer';
 import SEOHead from '@/components/SEOHead';
+import AdInjector from '@/components/AdInjector';
 import { Button } from '@/components/ui/button';
 import { Play, Star, Calendar, Clock, Tag, Heart, ArrowLeft } from 'lucide-react';
 import ShareButton from '@/components/ShareButton';
@@ -124,8 +125,8 @@ const MovieDetail = () => {
         type="movie"
         siteName={settings?.site_name}
         logoUrl={settings?.logo_url}
-        adsCode={settings?.ads_code}
       />
+      <AdInjector scope="playback" />
 
       <div className="relative">
         {/* Backdrop */}

@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import SeriesVideoPlayer from '@/components/SeriesVideoPlayer';
 import SeriesEpisodeSelector from '@/components/SeriesEpisodeSelector';
 import SEOHead from '@/components/SEOHead';
+import AdInjector from '@/components/AdInjector';
 import { Button } from '@/components/ui/button';
 import ShareButton from '@/components/ShareButton';
 import SeriesSection from '@/components/SeriesSection';
@@ -101,8 +102,8 @@ const SeriesDetail = () => {
         type="series"
         siteName={settings?.site_name}
         logoUrl={settings?.logo_url}
-        adsCode={settings?.ads_code}
       />
+      <AdInjector scope="playback" />
       
       <div className="container mx-auto px-4 py-8">
         {/* Series Header */}
