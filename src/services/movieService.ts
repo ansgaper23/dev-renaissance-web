@@ -278,7 +278,6 @@ export const addMovie = async (movie: MovieCreate): Promise<Movie> => {
   const year = movie.release_date ? new Date(movie.release_date).getFullYear().toString() : undefined;
   const slug = movie.slug || generateSlug(movie.title, year);
   
-  // Create a simple object with only the fields we need
   const movieData = {
     title: movie.title,
     slug: slug,
@@ -297,17 +296,8 @@ export const addMovie = async (movie: MovieCreate): Promise<Movie> => {
     stream_servers: movie.stream_servers || []
   };
   
-  const { data, error } = await supabase
-    .from('movies')
-    .insert(movieData)
-    .select()
-    .single();
-    
-  if (error) {
-    throw new Error(error.message);
-  }
-  
-  return convertToMovie(data);
+  const result = await adminApi({ action: 'insert', table: 'movies', data: [movieData] });
+  return convertToMovie(result[0]);
 };
 
 export const updateMovie = async (id: string, updates: Partial<Movie>): Promise<Movie> => {
