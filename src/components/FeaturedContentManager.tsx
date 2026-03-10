@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { adminApi } from '@/services/adminApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -101,15 +102,15 @@ const FeaturedContentManager = () => {
     mutationFn: async ({ itemId, itemType }: { itemId: string; itemType: 'movie' | 'series' }) => {
       const nextOrder = Math.max(...featuredItems.map(item => item.display_order), 0) + 1;
       
-      const { error } = await supabase
-        .from('featured_items')
-        .insert({
+      await adminApi({
+        action: 'insert',
+        table: 'featured_items',
+        data: [{
           item_id: itemId,
           item_type: itemType,
           display_order: nextOrder
-        });
-      
-      if (error) throw error;
+        }],
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['featuredItems'] });
@@ -130,12 +131,7 @@ const FeaturedContentManager = () => {
   // Remove from featured
   const removeFromFeaturedMutation = useMutation({
     mutationFn: async (featuredId: string) => {
-      const { error } = await supabase
-        .from('featured_items')
-        .delete()
-        .eq('id', featuredId);
-      
-      if (error) throw error;
+      await adminApi({ action: 'delete', table: 'featured_items', id: featuredId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['featuredItems'] });

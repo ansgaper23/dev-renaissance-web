@@ -9,6 +9,7 @@ import { importMovieFromTMDB, importMovieFromIMDBWithOMDb } from '@/services/mov
 import { toast } from '@/hooks/use-toast';
 import { Search, Download, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getAdminSession } from '@/services/movieService';
 
 interface ServerEntry {
   name: string;
@@ -154,8 +155,10 @@ const QuickAddMovie = () => {
     
     // Get detailed movie info including runtime
     try {
+      const session = getAdminSession();
       const { data: detailedMovie, error } = await supabase.functions.invoke('tmdb-import', {
-        body: { tmdb_id: movie.id }
+        body: { tmdb_id: movie.id },
+        headers: { 'x-admin-token': session?.session_token || '' },
       });
       
       if (error) {

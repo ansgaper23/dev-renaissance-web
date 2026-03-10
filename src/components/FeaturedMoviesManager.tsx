@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchMovies } from '@/services/movieService';
 import { supabase } from '@/integrations/supabase/client';
+import { adminApi } from '@/services/adminApi';
 import { toast } from '@/hooks/use-toast';
 import { Search, Plus, X, Star } from 'lucide-react';
 
@@ -62,17 +63,15 @@ const FeaturedMoviesManager = () => {
     mutationFn: async (movieId: string) => {
       const nextOrder = Math.max(...featuredMovies.map(f => f.display_order), 0) + 1;
       
-      const { data, error } = await supabase
-        .from('featured_movies')
-        .insert({
+      const result = await adminApi({
+        action: 'insert',
+        table: 'featured_movies',
+        data: [{
           movie_id: movieId,
           display_order: nextOrder
-        })
-        .select()
-        .single();
-        
-      if (error) throw new Error(error.message);
-      return data;
+        }],
+      });
+      return result[0];
     },
     onSuccess: () => {
       toast({
@@ -94,12 +93,7 @@ const FeaturedMoviesManager = () => {
   // Remove movie from featured
   const removeFromFeaturedMutation = useMutation({
     mutationFn: async (featuredId: string) => {
-      const { error } = await supabase
-        .from('featured_movies')
-        .delete()
-        .eq('id', featuredId);
-        
-      if (error) throw new Error(error.message);
+      await adminApi({ action: 'delete', table: 'featured_movies', id: featuredId });
     },
     onSuccess: () => {
       toast({

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { getAdminSession } from '@/services/movieService';
 import { toast } from 'sonner';
 import { Loader2, RefreshCw } from 'lucide-react';
 
@@ -14,7 +15,10 @@ const FixMissingGenres = () => {
     setResult(null);
     
     try {
-      const { data, error } = await supabase.functions.invoke('fix-missing-genres');
+      const session = getAdminSession();
+      const { data, error } = await supabase.functions.invoke('fix-missing-genres', {
+        headers: { 'x-admin-token': session?.session_token || '' },
+      });
       
       if (error) {
         console.error('Error fixing genres:', error);

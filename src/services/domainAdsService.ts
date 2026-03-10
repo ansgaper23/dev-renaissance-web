@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { adminApi } from "./adminApi";
 
 export interface DomainAd {
   id: string;
@@ -41,30 +42,20 @@ export const fetchAdsForCurrentDomain = async (scope?: 'global' | 'playback'): P
 };
 
 export const createDomainAd = async (ad: Partial<DomainAd>): Promise<DomainAd> => {
-  const { data, error } = await supabase
-    .from('domain_ads')
-    .insert([ad as any])
-    .select()
-    .single();
-  if (error) throw error;
-  return data as unknown as DomainAd;
+  const result = await adminApi({ action: 'insert', table: 'domain_ads', data: [ad] });
+  return result?.[0] as unknown as DomainAd;
 };
 
 export const updateDomainAd = async (id: string, updates: Partial<DomainAd>): Promise<DomainAd> => {
-  const { data, error } = await supabase
-    .from('domain_ads')
-    .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single();
-  if (error) throw error;
-  return data as unknown as DomainAd;
+  const result = await adminApi({
+    action: 'update',
+    table: 'domain_ads',
+    id,
+    data: { ...updates, updated_at: new Date().toISOString() },
+  });
+  return result?.[0] as unknown as DomainAd;
 };
 
 export const deleteDomainAd = async (id: string): Promise<void> => {
-  const { error } = await supabase
-    .from('domain_ads')
-    .delete()
-    .eq('id', id);
-  if (error) throw error;
+  await adminApi({ action: 'delete', table: 'domain_ads', id });
 };

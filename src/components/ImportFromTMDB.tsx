@@ -14,6 +14,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { Search, Download, Plus, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getAdminSession } from '@/services/movieService';
 import { useQuery, useMutation } from '@tanstack/react-query';
 
 const ImportFromTMDB = () => {
@@ -67,8 +68,10 @@ const ImportFromTMDB = () => {
   const importMoviesMutation = useMutation({
     mutationFn: async (movieIds: number[]) => {
       setIsImporting(true);
+      const session = getAdminSession();
       const { data, error } = await supabase.functions.invoke('tmdb-import', {
-        body: { movieIds }
+        body: { movieIds },
+        headers: { 'x-admin-token': session?.session_token || '' },
       });
       
       if (error) {

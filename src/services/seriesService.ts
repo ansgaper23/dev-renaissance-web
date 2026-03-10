@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { adminApi } from "./adminApi";
 
 export interface SeriesEpisode {
   episode_number: number;
@@ -166,52 +167,22 @@ export const fetchSeriesBySlug = async (slug: string): Promise<Series> => {
 
 export const addSeries = async (series: SeriesCreate): Promise<Series> => {
   const dbData = convertToDbFormat(series);
-  
-  const { data, error } = await supabase
-    .from('series')
-    .insert(dbData)
-    .select()
-    .single();
-    
-  if (error) {
-    throw new Error(error.message);
-  }
-  
-  return convertToSeries(data);
+  const result = await adminApi({ action: 'insert', table: 'series', data: [dbData] });
+  return convertToSeries(result[0]);
 };
 
 export const updateSeries = async (id: string, updates: Partial<Series>): Promise<Series> => {
-  // Generate slug if title is being updated and no slug is provided
   if (updates.title && !updates.slug) {
     updates.slug = generateSlug(updates.title);
   }
   
   const dbData = convertToDbFormat({ ...updates, updated_at: new Date().toISOString() });
-  
-  const { data, error } = await supabase
-    .from('series')
-    .update(dbData)
-    .eq('id', id)
-    .select()
-    .single();
-    
-  if (error) {
-    throw new Error(error.message);
-  }
-  
-  return convertToSeries(data);
+  const result = await adminApi({ action: 'update', table: 'series', id, data: dbData });
+  return convertToSeries(result[0]);
 };
 
 export const deleteSeries = async (id: string): Promise<boolean> => {
-  const { error } = await supabase
-    .from('series')
-    .delete()
-    .eq('id', id);
-    
-  if (error) {
-    throw new Error(error.message);
-  }
-  
+  await adminApi({ action: 'delete', table: 'series', id });
   return true;
 };
 
