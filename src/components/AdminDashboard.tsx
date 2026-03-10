@@ -80,6 +80,9 @@ const AdminDashboard = () => {
       {/* Site Settings */}
       <SiteSettings />
 
+      {/* Domain Ads Manager */}
+      <DomainAdsManager />
+
       {/* Featured Content Manager */}
       <FeaturedContentManager />
     </div>
