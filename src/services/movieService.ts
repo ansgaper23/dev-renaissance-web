@@ -301,7 +301,6 @@ export const addMovie = async (movie: MovieCreate): Promise<Movie> => {
 };
 
 export const updateMovie = async (id: string, updates: Partial<Movie>): Promise<Movie> => {
-  // Generate slug if title is being updated and no slug is provided
   if (updates.title && !updates.slug) {
     const year = updates.release_date ? new Date(updates.release_date).getFullYear().toString() : undefined;
     updates.slug = generateSlug(updates.title, year);
@@ -312,18 +311,8 @@ export const updateMovie = async (id: string, updates: Partial<Movie>): Promise<
     updated_at: new Date().toISOString()
   };
   
-  const { data, error } = await supabase
-    .from('movies')
-    .update(updateData)
-    .eq('id', id)
-    .select()
-    .single();
-    
-  if (error) {
-    throw new Error(error.message);
-  }
-  
-  return convertToMovie(data);
+  const result = await adminApi({ action: 'update', table: 'movies', id, data: updateData });
+  return convertToMovie(result[0]);
 };
 
 export const deleteMovie = async (id: string): Promise<boolean> => {
