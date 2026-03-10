@@ -316,15 +316,7 @@ export const updateMovie = async (id: string, updates: Partial<Movie>): Promise<
 };
 
 export const deleteMovie = async (id: string): Promise<boolean> => {
-  const { error } = await supabase
-    .from('movies')
-    .delete()
-    .eq('id', id);
-    
-  if (error) {
-    throw new Error(error.message);
-  }
-  
+  await adminApi({ action: 'delete', table: 'movies', id });
   return true;
 };
 

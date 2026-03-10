@@ -182,15 +182,7 @@ export const updateSeries = async (id: string, updates: Partial<Series>): Promis
 };
 
 export const deleteSeries = async (id: string): Promise<boolean> => {
-  const { error } = await supabase
-    .from('series')
-    .delete()
-    .eq('id', id);
-    
-  if (error) {
-    throw new Error(error.message);
-  }
-  
+  await adminApi({ action: 'delete', table: 'series', id });
   return true;
 };
 
