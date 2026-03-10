@@ -63,17 +63,15 @@ const FeaturedMoviesManager = () => {
     mutationFn: async (movieId: string) => {
       const nextOrder = Math.max(...featuredMovies.map(f => f.display_order), 0) + 1;
       
-      const { data, error } = await supabase
-        .from('featured_movies')
-        .insert({
+      const result = await adminApi({
+        action: 'insert',
+        table: 'featured_movies',
+        data: [{
           movie_id: movieId,
           display_order: nextOrder
-        })
-        .select()
-        .single();
-        
-      if (error) throw new Error(error.message);
-      return data;
+        }],
+      });
+      return result[0];
     },
     onSuccess: () => {
       toast({
