@@ -125,8 +125,8 @@ const MovieDetail = () => {
         type="movie"
         siteName={settings?.site_name}
         logoUrl={settings?.logo_url}
-        adsCode={settings?.ads_code}
       />
+      <AdInjector scope="playback" />
 
       <div className="relative">
         {/* Backdrop */}
