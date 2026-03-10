@@ -42,6 +42,23 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+
+    // Validate admin session
+    const sessionToken = req.headers.get('x-admin-token');
+    if (!sessionToken) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: No session token" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
+    const { data: adminId, error: authError } = await supabaseClient.rpc('validate_admin_session', { token: sessionToken });
+    if (authError || !adminId) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: Invalid or expired session" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
     
     // Get API key from database
     const { data: secretsData, error: secretsError } = await supabaseClient
