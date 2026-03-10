@@ -102,8 +102,8 @@ const SeriesDetail = () => {
         type="series"
         siteName={settings?.site_name}
         logoUrl={settings?.logo_url}
-        adsCode={settings?.ads_code}
       />
+      <AdInjector scope="playback" />
       
       <div className="container mx-auto px-4 py-8">
         {/* Series Header */}
