@@ -43,7 +43,7 @@ export const fetchAdsForCurrentDomain = async (scope?: 'global' | 'playback'): P
 export const createDomainAd = async (ad: Partial<DomainAd>): Promise<DomainAd> => {
   const { data, error } = await supabase
     .from('domain_ads')
-    .insert(ad)
+    .insert([ad as any])
     .select()
     .single();
   if (error) throw error;
