@@ -167,18 +167,8 @@ export const fetchSeriesBySlug = async (slug: string): Promise<Series> => {
 
 export const addSeries = async (series: SeriesCreate): Promise<Series> => {
   const dbData = convertToDbFormat(series);
-  
-  const { data, error } = await supabase
-    .from('series')
-    .insert(dbData)
-    .select()
-    .single();
-    
-  if (error) {
-    throw new Error(error.message);
-  }
-  
-  return convertToSeries(data);
+  const result = await adminApi({ action: 'insert', table: 'series', data: [dbData] });
+  return convertToSeries(result[0]);
 };
 
 export const updateSeries = async (id: string, updates: Partial<Series>): Promise<Series> => {
