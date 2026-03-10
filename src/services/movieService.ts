@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { adminApi } from "./adminApi";
 
 export interface Movie {
   id: string;
