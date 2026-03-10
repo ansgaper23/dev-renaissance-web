@@ -9,6 +9,7 @@ import { importMovieFromTMDB, importMovieFromIMDBWithOMDb } from '@/services/mov
 import { toast } from '@/hooks/use-toast';
 import { Search, Download, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getAdminSession } from '@/services/movieService';
 
 interface ServerEntry {
   name: string;
