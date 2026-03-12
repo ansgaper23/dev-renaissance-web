@@ -95,31 +95,10 @@ const SeriesVideoPlayer = ({
   };
 
   // Function to determine if URL needs iframe or video tag
-  const ANTI_SANDBOX_HOSTS = ['xupalace.org', 'jilliandescribecompany.com'];
-
   const getVideoElement = (url: string) => {
     if (!url) return null;
 
     const normalizedUrl = url.trim();
-    const isEmbeddedContext = typeof window !== 'undefined' && window.self !== window.top;
-    const isAntiSandboxProvider = ANTI_SANDBOX_HOSTS.some(host => normalizedUrl.includes(host));
-
-    if (isEmbeddedContext && isAntiSandboxProvider) {
-      return (
-        <div className="flex h-full w-full items-center justify-center bg-cuevana-gray-100 px-4 text-center">
-          <div className="space-y-3">
-            <p className="text-sm text-cuevana-white/80">
-              Este proveedor bloquea el reproductor dentro del preview.
-            </p>
-            <Button asChild className="bg-cuevana-blue text-cuevana-white hover:bg-cuevana-blue/90">
-              <a href={normalizedUrl} target="_blank" rel="noopener noreferrer">
-                Abrir reproductor
-              </a>
-            </Button>
-          </div>
-        </div>
-      );
-    }
 
     // YouTube - clean embed without recommendations
     if (normalizedUrl.includes('youtube.com') || normalizedUrl.includes('youtu.be')) {

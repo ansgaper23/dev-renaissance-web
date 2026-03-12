@@ -37,22 +37,22 @@ const SEOHead = ({
     const currentUrl = url || window.location.href;
 
     // Fallbacks con "ver película online"
-    const extraKeyword = "ver película online";
+    const extraKeyword = "ver película online gratis";
     const defaultDescription =
       (description && description.length > 30 
         ? description
-        : "Ver películas y series online gratis en HD. Estrenos, clásicos y contenido exclusivo en Cuevana3. Sin registro, sin límites."
+        : "Cuevana 3 es la web para ver películas, series y anime online gratis en HD en español. Estrenos sin registro. ¡Disfruta sin límites!"
       ) + " | " + siteName;
     const metaDescription = defaultDescription.length > 210 
       ? defaultDescription.substring(0, 210) + "..."
       : defaultDescription;
     const defaultKeywords = (
       (keywords ? keywords + ", " : "") +
-      "películas online, series gratis, ver peliculas, streaming gratis, cuevana3, ver película online, cine online, estrenos, HD, sin registro"
+      "cuevana 3, cuevana3, ver películas online gratis, series online gratis, anime online, ver peliculas gratis HD, streaming gratis, cine online, estrenos 2026, películas en español, series en español, sin registro, cuevana pro, películas completas, ver series gratis, anime gratis"
     );
 
     // Título
-    const fullTitle = title ? `${title} - ${siteName}` : `${siteName} - Películas y Series Online Gratis HD`;
+    const fullTitle = title ? `${title} | ${siteName}` : `${siteName} | Películas, Series y Anime Online Gratis HD`;
 
     // Update document title
     document.title = fullTitle;
