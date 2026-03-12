@@ -24,11 +24,11 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-cuevana-bg text-cuevana-white flex flex-col">
       <SEOHead 
-        title="Ver Películas y Series Online Gratis en HD"
-        description={settings?.site_description || "Disfruta de miles de películas y series online gratis en HD. Estrenos 2024, clásicos del cine y series populares. Sin registro, sin límites en Cuevana3."}
-        keywords="cuevana3, películas online gratis, series online, ver peliculas gratis, streaming, cine online, estrenos 2024, películas HD, series HD"
+        title="Ver Películas, Series y Anime Online Gratis en HD"
+        description={settings?.site_description || "Cuevana 3 es la web para ver películas, series y anime online gratis en HD en español. Estrenos, clásicos y contenido exclusivo sin registro. ¡Disfruta sin límites!"}
+        keywords="cuevana 3, cuevana3, ver películas online gratis, series online gratis, anime online, streaming gratis HD, estrenos 2026, películas en español, sin registro, cuevana pro"
         type="website"
-        siteName={settings?.site_name || "Cuevana3"}
+        siteName={settings?.site_name || "Cuevana 3"}
         logoUrl={settings?.logo_url}
         adsCode={settings?.ads_code}
       />
