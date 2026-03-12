@@ -158,31 +158,55 @@ const VideoPlayer = ({
     </div>;
 
   // Renderiza el video/iframe basado en la URL
+  const ANTI_SANDBOX_HOSTS = ['xupalace.org', 'jilliandescribecompany.com'];
+
   const getVideoElement = (url: string) => {
     if (!url) return null;
+
+    const normalizedUrl = url.trim();
+    const isEmbeddedContext = typeof window !== 'undefined' && window.self !== window.top;
+    const isAntiSandboxProvider = ANTI_SANDBOX_HOSTS.some(host => normalizedUrl.includes(host));
+
+    if (isEmbeddedContext && isAntiSandboxProvider) {
+      return (
+        <div className="flex h-full w-full items-center justify-center bg-cuevana-gray-100 px-4 text-center">
+          <div className="space-y-3">
+            <p className="text-sm text-cuevana-white/80">
+              Este proveedor bloquea el reproductor dentro del preview.
+            </p>
+            <Button asChild className="bg-cuevana-blue text-cuevana-white hover:bg-cuevana-blue/90">
+              <a href={normalizedUrl} target="_blank" rel="noopener noreferrer">
+                <Download className="mr-2 h-4 w-4" />
+                Abrir reproductor
+              </a>
+            </Button>
+          </div>
+        </div>
+      );
+    }
     
     // Si es un archivo MP4 directo, usar el reproductor personalizado
-    if (url.toLowerCase().includes('.mp4')) {
-      return <CustomVideoPlayer src={url} title={title} />;
+    if (normalizedUrl.toLowerCase().includes('.mp4')) {
+      return <CustomVideoPlayer src={normalizedUrl} title={title} />;
     }
     
     // YouTube - clean embed without recommendations
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    if (normalizedUrl.includes('youtube.com') || normalizedUrl.includes('youtu.be')) {
       let videoId = '';
-      if (url.includes('watch?v=')) {
-        videoId = url.split('watch?v=')[1].split('&')[0];
-      } else if (url.includes('youtu.be/')) {
-        videoId = url.split('youtu.be/')[1].split('?')[0];
-      } else if (url.includes('embed/')) {
-        videoId = url.split('embed/')[1].split('?')[0];
+      if (normalizedUrl.includes('watch?v=')) {
+        videoId = normalizedUrl.split('watch?v=')[1].split('&')[0];
+      } else if (normalizedUrl.includes('youtu.be/')) {
+        videoId = normalizedUrl.split('youtu.be/')[1].split('?')[0];
+      } else if (normalizedUrl.includes('embed/')) {
+        videoId = normalizedUrl.split('embed/')[1].split('?')[0];
       }
       
       const cleanEmbedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&showinfo=0&controls=1&autoplay=0&fs=1&cc_load_policy=0&iv_load_policy=3&autohide=1`;
-      return <iframe key={url} src={cleanEmbedUrl} title={title} className="w-full h-full border-0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerPolicy="no-referrer-when-downgrade" />;
+      return <iframe key={normalizedUrl} src={cleanEmbedUrl} title={title} className="w-full h-full border-0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerPolicy="no-referrer-when-downgrade" />;
     }
     
     // Archive.org URLs - use custom player to avoid native controls in fullscreen
-    if (url.includes('archive.org')) {
+    if (normalizedUrl.includes('archive.org')) {
       const ArchiveVideoPlayer = React.lazy(() => import('./ArchiveVideoPlayer'));
       return (
         <React.Suspense fallback={
@@ -190,26 +214,26 @@ const VideoPlayer = ({
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
           </div>
         }>
-          <ArchiveVideoPlayer src={url} title={title} />
+          <ArchiveVideoPlayer src={normalizedUrl} title={title} />
         </React.Suspense>
       );
     }
     
     // Check for iframe-compatible URLs
-    if (url.includes('embed') || url.includes('swiftplayers.com') || url.includes('streamtape.com') || url.includes('doodstream.com') || url.includes('mixdrop.co') || url.includes('fembed.com') || url.includes('jilliandescribecompany.com') || url.includes('xupalace.org') || url.includes('/e/') || url.includes('player') || url.includes('iframe')) {
+    if (normalizedUrl.includes('embed') || normalizedUrl.includes('swiftplayers.com') || normalizedUrl.includes('streamtape.com') || normalizedUrl.includes('doodstream.com') || normalizedUrl.includes('mixdrop.co') || normalizedUrl.includes('fembed.com') || normalizedUrl.includes('jilliandescribecompany.com') || normalizedUrl.includes('xupalace.org') || normalizedUrl.includes('/e/') || normalizedUrl.includes('player') || normalizedUrl.includes('iframe')) {
       return (
         <div className="relative w-full h-full">
-          <iframe key={url} src={url} title={title} className="w-full h-full border-0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="no-referrer-when-downgrade" />
+          <iframe key={normalizedUrl} src={normalizedUrl} title={title} className="w-full h-full border-0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="no-referrer-when-downgrade" />
           <div className="absolute inset-0 pointer-events-none" />
         </div>
       );
     }
     
     // Direct video fallback
-    return <video key={url} controls className="w-full h-full" preload="metadata">
-        <source src={url} type="video/mp4" />
-        <source src={url} type="video/webm" />
-        <source src={url} type="video/ogg" />
+    return <video key={normalizedUrl} controls className="w-full h-full" preload="metadata">
+        <source src={normalizedUrl} type="video/mp4" />
+        <source src={normalizedUrl} type="video/webm" />
+        <source src={normalizedUrl} type="video/ogg" />
         Tu navegador no soporta el elemento de video.
       </video>;
   };
