@@ -119,7 +119,6 @@ const SeriesVideoPlayer = ({
           allowFullScreen
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           referrerPolicy="no-referrer-when-downgrade"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
         />
       );
     }
