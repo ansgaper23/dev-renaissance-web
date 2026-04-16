@@ -1,8 +1,8 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, List } from 'lucide-react';
-import { Series, SeriesEpisode } from '@/services/seriesService';
+import { ChevronLeft, ChevronRight, List } from 'lucide-react';
+import { Series } from '@/services/seriesService';
+import LanguageServerTabs from './LanguageServerTabs';
 
 interface SeriesVideoPlayerProps {
   series: Series;
@@ -12,55 +12,26 @@ interface SeriesVideoPlayerProps {
   onEpisodeChange: (episode: number) => void;
 }
 
-const SeriesVideoPlayer = ({ 
-  series, 
-  selectedSeason, 
-  selectedEpisode, 
-  onSeasonChange, 
-  onEpisodeChange 
-}: SeriesVideoPlayerProps) => {
-  const [selectedServer, setSelectedServer] = useState(0);
-  const [expandedLanguages, setExpandedLanguages] = useState<{ [key: string]: boolean }>({});
+const SeriesVideoPlayer = ({ series, selectedSeason, selectedEpisode, onSeasonChange, onEpisodeChange }: SeriesVideoPlayerProps) => {
   const [showEpisodeList, setShowEpisodeList] = useState(false);
 
   const seasons = series.seasons || [];
   const currentSeason = seasons.find(s => s.season_number === selectedSeason);
   const currentEpisode = currentSeason?.episodes?.find(e => e.episode_number === selectedEpisode);
-  
-  // Get stream servers for current episode or fallback to series servers
-  const availableServers = currentEpisode?.stream_servers && currentEpisode.stream_servers.length > 0 
-    ? currentEpisode.stream_servers 
-    : series.stream_servers && series.stream_servers.length > 0 
-      ? series.stream_servers 
-      : [{ name: 'Servidor Demo', url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", language: 'Español Latino' }];
 
-  // Group servers by language
-  const serversByLanguage = React.useMemo(() => {
-    const grouped: { [key: string]: typeof availableServers } = {};
-    
-    availableServers.forEach(server => {
-      const language = server.language || 'Español Latino';
-      if (!grouped[language]) {
-        grouped[language] = [];
-      }
-      grouped[language].push(server);
-    });
-    
-    return grouped;
-  }, [availableServers]);
+  const availableServers = currentEpisode?.stream_servers && currentEpisode.stream_servers.length > 0
+    ? currentEpisode.stream_servers
+    : series.stream_servers && series.stream_servers.length > 0
+      ? series.stream_servers
+      : [{ name: 'Servidor Demo', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', language: 'Español Latino' }];
 
-  const currentStreamUrl = availableServers[selectedServer]?.url || availableServers[0]?.url;
+  const [currentServer, setCurrentServer] = useState(availableServers[0]);
+  const currentStreamUrl = currentServer?.url || availableServers[0]?.url;
 
-  const toggleLanguage = (language: string) => {
-    setExpandedLanguages(prev => ({
-      ...prev,
-      [language]: !prev[language]
-    }));
-  };
-
-  const handleServerChange = (index: number) => {
-    setSelectedServer(index);
-  };
+  // Reset server when episode changes
+  React.useEffect(() => {
+    setCurrentServer(availableServers[0]);
+  }, [selectedSeason, selectedEpisode]);
 
   const goToPreviousEpisode = () => {
     if (currentSeason && selectedEpisode > 1) {
@@ -86,143 +57,52 @@ const SeriesVideoPlayer = ({
     }
   };
 
-  const canGoPrevious = () => {
-    return selectedEpisode > 1 || selectedSeason > 1;
-  };
+  const canGoPrevious = () => selectedEpisode > 1 || selectedSeason > 1;
+  const canGoNext = () => (currentSeason && selectedEpisode < currentSeason.episodes.length) || selectedSeason < seasons.length;
 
-  const canGoNext = () => {
-    return (currentSeason && selectedEpisode < currentSeason.episodes.length) || selectedSeason < seasons.length;
-  };
-
-  // Function to determine if URL needs iframe or video tag
   const getVideoElement = (url: string) => {
     if (!url) return null;
+    const n = url.trim();
 
-    const normalizedUrl = url.trim();
-
-    // YouTube - clean embed without recommendations
-    if (normalizedUrl.includes('youtube.com') || normalizedUrl.includes('youtu.be')) {
+    if (n.includes('youtube.com') || n.includes('youtu.be')) {
       let videoId = '';
-      if (normalizedUrl.includes('watch?v=')) {
-        videoId = normalizedUrl.split('watch?v=')[1].split('&')[0];
-      } else if (normalizedUrl.includes('youtu.be/')) {
-        videoId = normalizedUrl.split('youtu.be/')[1].split('?')[0];
-      } else if (normalizedUrl.includes('embed/')) {
-        videoId = normalizedUrl.split('embed/')[1].split('?')[0];
-      }
-      
-      const cleanEmbedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&showinfo=0&controls=1&autoplay=0&fs=1&cc_load_policy=0&iv_load_policy=3&autohide=1`;
-      return (
-        <iframe
-          key={normalizedUrl}
-          src={cleanEmbedUrl}
-          title={`${series.title} - T${selectedSeason}E${selectedEpisode}`}
-          className="w-full h-full border-0"
-          allowFullScreen
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          referrerPolicy="no-referrer-when-downgrade"
-        />
-      );
+      if (n.includes('watch?v=')) videoId = n.split('watch?v=')[1].split('&')[0];
+      else if (n.includes('youtu.be/')) videoId = n.split('youtu.be/')[1].split('?')[0];
+      else if (n.includes('embed/')) videoId = n.split('embed/')[1].split('?')[0];
+      return <iframe key={n} src={`https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0`} title={`${series.title} T${selectedSeason}E${selectedEpisode}`} className="w-full h-full border-0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />;
     }
 
-    // Archive.org URLs - use custom player to avoid native controls in fullscreen
-    if (normalizedUrl.includes('archive.org')) {
+    if (n.includes('archive.org')) {
       const ArchiveVideoPlayer = React.lazy(() => import('./ArchiveVideoPlayer'));
-      return (
-        <React.Suspense fallback={
-          <div className="w-full h-full bg-black flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-          </div>
-        }>
-          <ArchiveVideoPlayer src={normalizedUrl} title={`${series.title} - T${selectedSeason}E${selectedEpisode}`} />
-        </React.Suspense>
-      );
+      return <React.Suspense fallback={<div className="w-full h-full bg-black flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" /></div>}><ArchiveVideoPlayer src={n} title={`${series.title} T${selectedSeason}E${selectedEpisode}`} /></React.Suspense>;
     }
 
-    // Check for iframe-compatible URLs (embed URLs)
-    if (normalizedUrl.includes('embed') || 
-        normalizedUrl.includes('swiftplayers.com') || 
-        normalizedUrl.includes('streamtape.com') || 
-        normalizedUrl.includes('doodstream.com') || 
-        normalizedUrl.includes('mixdrop.co') || 
-        normalizedUrl.includes('fembed.com') ||
-        normalizedUrl.includes('jilliandescribecompany.com') ||
-        normalizedUrl.includes('xupalace.org') ||
-        normalizedUrl.includes('/e/') ||
-        normalizedUrl.includes('player')) {
-      return (
-        <div className="relative w-full h-full">
-          <iframe
-            key={normalizedUrl}
-            src={normalizedUrl}
-            title={`${series.title} - T${selectedSeason}E${selectedEpisode}`}
-            className="w-full h-full border-0"
-            allowFullScreen
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-          <div className="absolute inset-0 pointer-events-none" />
-        </div>
-      );
+    if (n.includes('embed') || n.includes('/e/') || n.includes('player') || n.includes('iframe') || n.includes('streamwish') || n.includes('vidhide') || n.includes('swiftplayers') || n.includes('streamtape') || n.includes('doodstream') || n.includes('mixdrop') || n.includes('fembed') || n.includes('xupalace')) {
+      return <div className="relative w-full h-full"><iframe key={n} src={n} title={`${series.title} T${selectedSeason}E${selectedEpisode}`} className="w-full h-full border-0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="no-referrer-when-downgrade" /></div>;
     }
 
-    // For direct video URLs
-    return (
-      <video
-        key={normalizedUrl}
-        controls
-        className="w-full h-full"
-        preload="metadata"
-      >
-        <source src={normalizedUrl} type="video/mp4" />
-        <source src={normalizedUrl} type="video/webm" />
-        <source src={normalizedUrl} type="video/ogg" />
-        Tu navegador no soporta el elemento de video.
-      </video>
-    );
+    return <video key={n} controls className="w-full h-full" preload="metadata"><source src={n} type="video/mp4" />Tu navegador no soporta el elemento de video.</video>;
   };
 
   return (
     <div className="w-full space-y-4">
-      {/* Episode Navigation Controls */}
+      {/* Episode Navigation */}
       <div className="flex items-center justify-between bg-cuevana-gray-100 rounded-lg p-4">
-        <Button
-          onClick={goToPreviousEpisode}
-          disabled={!canGoPrevious()}
-          variant="outline"
-          className="border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue disabled:opacity-50"
-        >
-          <ChevronLeft className="h-4 w-4 mr-2" />
-          Anterior
+        <Button onClick={goToPreviousEpisode} disabled={!canGoPrevious()} variant="outline" className="border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue disabled:opacity-50">
+          <ChevronLeft className="h-4 w-4 mr-2" />Anterior
         </Button>
-
         <div className="text-center">
-          <h3 className="text-cuevana-white font-medium">
-            {currentEpisode?.title || `Episodio ${selectedEpisode}`}
-          </h3>
-          <p className="text-cuevana-white/70 text-sm">
-            Temporada {selectedSeason} - Episodio {selectedEpisode}
-          </p>
+          <h3 className="text-cuevana-white font-medium">{currentEpisode?.title || `Episodio ${selectedEpisode}`}</h3>
+          <p className="text-cuevana-white/70 text-sm">Temporada {selectedSeason} - Episodio {selectedEpisode}</p>
         </div>
-
-        <Button
-          onClick={() => setShowEpisodeList(!showEpisodeList)}
-          variant="outline"
-          className="border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue mr-2"
-        >
-          <List className="h-4 w-4 mr-2" />
-          Todo
-        </Button>
-
-        <Button
-          onClick={goToNextEpisode}
-          disabled={!canGoNext()}
-          variant="outline"
-          className="border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue disabled:opacity-50"
-        >
-          Siguiente
-          <ChevronRight className="h-4 w-4 ml-2" />
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setShowEpisodeList(!showEpisodeList)} variant="outline" className="border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue">
+            <List className="h-4 w-4 mr-2" />Todo
+          </Button>
+          <Button onClick={goToNextEpisode} disabled={!canGoNext()} variant="outline" className="border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue disabled:opacity-50">
+            Siguiente<ChevronRight className="h-4 w-4 ml-2" />
+          </Button>
+        </div>
       </div>
 
       {/* Episode List */}
@@ -231,30 +111,13 @@ const SeriesVideoPlayer = ({
           <h4 className="text-cuevana-white font-medium mb-4">Temporadas y episodios</h4>
           {seasons.map((season) => (
             <div key={season.season_number} className="mb-4">
-              <div className="bg-cuevana-blue text-white p-2 rounded mb-2">
-                <span className="font-medium">Temporada {season.season_number}</span>
-              </div>
+              <div className="bg-cuevana-blue text-white p-2 rounded mb-2"><span className="font-medium">Temporada {season.season_number}</span></div>
               <div className="grid grid-cols-1 gap-2">
                 {season.episodes.map((episode) => (
-                  <button
-                    key={episode.episode_number}
-                    onClick={() => {
-                      onSeasonChange(season.season_number);
-                      onEpisodeChange(episode.episode_number);
-                      setShowEpisodeList(false);
-                    }}
-                    className={`text-left p-3 rounded border transition-colors ${
-                      selectedSeason === season.season_number && selectedEpisode === episode.episode_number
-                        ? 'bg-cuevana-blue border-cuevana-blue text-white'
-                        : 'bg-cuevana-gray-200 border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue'
-                    }`}
-                  >
-                    <div className="flex items-center">
-                      <span className="font-medium mr-3">
-                        {season.season_number} - {episode.episode_number}
-                      </span>
-                      <span>{episode.title}</span>
-                    </div>
+                  <button key={episode.episode_number} onClick={() => { onSeasonChange(season.season_number); onEpisodeChange(episode.episode_number); setShowEpisodeList(false); }}
+                    className={`text-left p-3 rounded border transition-colors ${selectedSeason === season.season_number && selectedEpisode === episode.episode_number ? 'bg-cuevana-blue border-cuevana-blue text-white' : 'bg-cuevana-gray-200 border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue'}`}>
+                    <span className="font-medium mr-3">{season.season_number}-{episode.episode_number}</span>
+                    <span>{episode.title}</span>
                   </button>
                 ))}
               </div>
@@ -263,57 +126,16 @@ const SeriesVideoPlayer = ({
         </div>
       )}
 
-      {/* Server Options by Language */}
-      <div className="bg-cuevana-gray-100 rounded-lg p-4">
-        <h4 className="text-cuevana-white font-medium mb-3">Servidores Disponibles:</h4>
-        
-        {Object.entries(serversByLanguage).map(([language, servers]) => (
-          <div key={language} className="mb-3">
-            <Button
-              onClick={() => toggleLanguage(language)}
-              variant="outline"
-              className="w-full justify-between border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue mb-2"
-            >
-              <span className="flex items-center">
-                <span className="text-sm font-medium">{language}</span>
-                <span className="ml-2 text-xs opacity-75">({servers.length} servidor{servers.length !== 1 ? 'es' : ''})</span>
-              </span>
-              {expandedLanguages[language] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
-            
-            {expandedLanguages[language] && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 ml-4">
-                {servers.map((server, serverIndex) => {
-                  const globalIndex = availableServers.findIndex(s => s === server);
-                  return (
-                    <Button
-                      key={serverIndex}
-                      onClick={() => handleServerChange(globalIndex)}
-                      variant={selectedServer === globalIndex ? "default" : "outline"}
-                      size="sm"
-                      className={selectedServer === globalIndex
-                        ? "bg-cuevana-blue text-white"
-                        : "border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue"
-                      }
-                    >
-                      {server.name}
-                    </Button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+      {/* Language/Server Tabs */}
+      <LanguageServerTabs
+        servers={availableServers}
+        onServerSelect={setCurrentServer}
+        selectedServerUrl={currentStreamUrl}
+      />
 
       {/* Video Player */}
       <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
         {getVideoElement(currentStreamUrl)}
-        
-        {/* Custom overlay for branding */}
-        <div className="absolute top-4 left-4 bg-cuevana-bg/80 text-cuevana-white text-sm px-3 py-1 rounded">
-          Cuevana3
-        </div>
       </div>
     </div>
   );
