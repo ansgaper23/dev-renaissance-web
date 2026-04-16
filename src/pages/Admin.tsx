@@ -8,6 +8,7 @@ import MovieTableConnector from '@/components/MovieTableConnector';
 import AdminHeader from '@/components/AdminHeader';
 import AdminDashboard from '@/components/AdminDashboard';
 import ImportFromTMDB from '@/components/ImportFromTMDB';
+import BulkApiImport from '@/components/BulkApiImport';
 import QuickAddMovie from '@/components/QuickAddMovie';
 import QuickAddSeries from '@/components/QuickAddSeries';
 import ManualAddMovie from '@/components/ManualAddMovie';
@@ -41,6 +42,9 @@ const Admin = () => {
             </TabsTrigger>
             <TabsTrigger value="import" className="data-[state=active]:bg-gray-800">
               Importar TMDB
+            </TabsTrigger>
+            <TabsTrigger value="bulk-api" className="data-[state=active]:bg-gray-800">
+              Importar API
             </TabsTrigger>
           </TabsList>
           
@@ -102,6 +106,11 @@ const Admin = () => {
           {/* Import Tab */}
           <TabsContent value="import">
             <ImportFromTMDB />
+          </TabsContent>
+          
+          {/* Bulk API Import Tab */}
+          <TabsContent value="bulk-api">
+            <BulkApiImport />
           </TabsContent>
         </Tabs>
       </div>

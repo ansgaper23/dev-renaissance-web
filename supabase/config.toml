@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.admin-api]
 verify_jwt = false
+
+[functions.bulk-import-api]
+verify_jwt = false
