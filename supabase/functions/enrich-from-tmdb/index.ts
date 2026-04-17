@@ -73,8 +73,8 @@ serve(async (req) => {
     if (type === 'movie') {
       const { data: movies } = await supabase
         .from("movies")
-        .select("id, title, tmdb_id, overview, genres, rating")
-        .or("overview.is.null,overview.eq.,genres.is.null,rating.is.null")
+        .select("id, title, tmdb_id, overview, genres, rating, release_date")
+        .or("overview.is.null,overview.eq.,genres.is.null,rating.is.null,release_date.is.null")
         .limit(safeLimit);
 
       if (!movies || movies.length === 0) {
@@ -135,7 +135,7 @@ serve(async (req) => {
 
       const { count: remaining } = await supabase
         .from("movies").select("id", { count: 'exact', head: true })
-        .or("overview.is.null,overview.eq.,genres.is.null,rating.is.null");
+        .or("overview.is.null,overview.eq.,genres.is.null,rating.is.null,release_date.is.null");
 
       return new Response(JSON.stringify({ success: true, updated, errors, remaining: remaining || 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -143,8 +143,8 @@ serve(async (req) => {
     } else {
       const { data: seriesList } = await supabase
         .from("series")
-        .select("id, title, tmdb_id, overview, genres, rating")
-        .or("overview.is.null,overview.eq.,genres.is.null,rating.is.null")
+        .select("id, title, tmdb_id, overview, genres, rating, first_air_date")
+        .or("overview.is.null,overview.eq.,genres.is.null,rating.is.null,first_air_date.is.null")
         .limit(safeLimit);
 
       if (!seriesList || seriesList.length === 0) {
@@ -201,7 +201,7 @@ serve(async (req) => {
 
       const { count: remaining } = await supabase
         .from("series").select("id", { count: 'exact', head: true })
-        .or("overview.is.null,overview.eq.,genres.is.null,rating.is.null");
+        .or("overview.is.null,overview.eq.,genres.is.null,rating.is.null,first_air_date.is.null");
 
       return new Response(JSON.stringify({ success: true, updated, errors, remaining: remaining || 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
