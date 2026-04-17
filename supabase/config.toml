@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.bulk-import-api]
 verify_jwt = false
+
+[functions.enrich-from-tmdb]
+verify_jwt = false
