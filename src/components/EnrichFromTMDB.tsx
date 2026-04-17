@@ -24,10 +24,10 @@ const EnrichFromTMDB = () => {
   const fetchCounts = async () => {
     const { count: m } = await supabase
       .from("movies").select("id", { count: 'exact', head: true })
-      .or("overview.is.null,overview.eq.,genres.is.null,rating.is.null");
+      .or("overview.is.null,overview.eq.,genres.is.null,rating.is.null,release_date.is.null");
     const { count: s } = await supabase
       .from("series").select("id", { count: 'exact', head: true })
-      .or("overview.is.null,overview.eq.,genres.is.null,rating.is.null");
+      .or("overview.is.null,overview.eq.,genres.is.null,rating.is.null,first_air_date.is.null");
     setMovieRemaining(m || 0);
     setSeriesRemaining(s || 0);
   };
