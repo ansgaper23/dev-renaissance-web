@@ -10,6 +10,7 @@ import DomainAdsManager from './DomainAdsManager';
 import FixMissingGenres from './FixMissingGenres';
 import FixMissingSlugs from './FixMissingSlugs';
 import ManualAddMovieDialogButton from "./ManualAddMovieDialogButton";
+import EnrichFromTMDB from './EnrichFromTMDB';
 
 const AdminDashboard = () => {
   const { data: totalMovies, isLoading } = useQuery({
@@ -76,6 +77,9 @@ const AdminDashboard = () => {
 
       {/* Fix Missing Slugs button */}
       <FixMissingSlugs />
+
+      {/* Enrich content from TMDB */}
+      <EnrichFromTMDB />
 
       {/* Site Settings */}
       <SiteSettings />
