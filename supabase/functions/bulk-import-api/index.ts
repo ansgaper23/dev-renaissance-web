@@ -306,10 +306,14 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
-      total: items.length,
+      batchProcessed: items.length,
       imported: totalImported,
       skipped: totalSkipped,
       failed: totalFailed,
+      offset,
+      nextOffset,
+      totalToProcess,
+      done,
       errors: errors.slice(0, 30),
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
