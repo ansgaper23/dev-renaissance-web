@@ -19,8 +19,8 @@ const BulkApiImport = () => {
       toast({ title: "Error", description: "Ingresa una URL válida (http/https)", variant: "destructive" });
       return;
     }
-    if (limit < 1 || limit > 100) {
-      toast({ title: "Error", description: "El límite debe estar entre 1 y 100", variant: "destructive" });
+    if (limit < 1) {
+      toast({ title: "Error", description: "El límite debe ser mayor a 0", variant: "destructive" });
       return;
     }
 
@@ -99,14 +99,13 @@ const BulkApiImport = () => {
             <Input
               type="number"
               min={1}
-              max={100}
               value={limit}
               onChange={(e) => setLimit(Number(e.target.value))}
               className="bg-gray-800 border-gray-700 w-32"
             />
           </div>
           <p className="text-xs text-gray-500 pb-2">
-            Se procesa de a 1 con pausas para no saturar TMDB. Recomendado: 10-30.
+            Sin límite máximo. Se procesa de a 2 con pausas para no saturar el sistema. Para catálogos grandes (1000+) puede tardar varios minutos.
           </p>
         </div>
 
