@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, List } from 'lucide-react';
 import { Series } from '@/services/seriesService';
 import LanguageServerTabs from './LanguageServerTabs';
 
@@ -13,8 +11,6 @@ interface SeriesVideoPlayerProps {
 }
 
 const SeriesVideoPlayer = ({ series, selectedSeason, selectedEpisode, onSeasonChange, onEpisodeChange }: SeriesVideoPlayerProps) => {
-  const [showEpisodeList, setShowEpisodeList] = useState(false);
-
   const seasons = series.seasons || [];
   const currentSeason = seasons.find(s => s.season_number === selectedSeason);
   const currentEpisode = currentSeason?.episodes?.find(e => e.episode_number === selectedEpisode);
@@ -86,46 +82,6 @@ const SeriesVideoPlayer = ({ series, selectedSeason, selectedEpisode, onSeasonCh
 
   return (
     <div className="w-full space-y-4">
-      {/* Episode Navigation */}
-      <div className="flex items-center justify-between bg-cuevana-gray-100 rounded-lg p-4">
-        <Button onClick={goToPreviousEpisode} disabled={!canGoPrevious()} variant="outline" className="border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue disabled:opacity-50">
-          <ChevronLeft className="h-4 w-4 mr-2" />Anterior
-        </Button>
-        <div className="text-center">
-          <h3 className="text-cuevana-white font-medium">{currentEpisode?.title || `Episodio ${selectedEpisode}`}</h3>
-          <p className="text-cuevana-white/70 text-sm">Temporada {selectedSeason} - Episodio {selectedEpisode}</p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={() => setShowEpisodeList(!showEpisodeList)} variant="outline" className="border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue">
-            <List className="h-4 w-4 mr-2" />Todo
-          </Button>
-          <Button onClick={goToNextEpisode} disabled={!canGoNext()} variant="outline" className="border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue hover:border-cuevana-blue disabled:opacity-50">
-            Siguiente<ChevronRight className="h-4 w-4 ml-2" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Episode List */}
-      {showEpisodeList && (
-        <div className="bg-cuevana-gray-100 rounded-lg p-4 max-h-96 overflow-y-auto">
-          <h4 className="text-cuevana-white font-medium mb-4">Temporadas y episodios</h4>
-          {seasons.map((season) => (
-            <div key={season.season_number} className="mb-4">
-              <div className="bg-cuevana-blue text-white p-2 rounded mb-2"><span className="font-medium">Temporada {season.season_number}</span></div>
-              <div className="grid grid-cols-1 gap-2">
-                {season.episodes.map((episode) => (
-                  <button key={episode.episode_number} onClick={() => { onSeasonChange(season.season_number); onEpisodeChange(episode.episode_number); setShowEpisodeList(false); }}
-                    className={`text-left p-3 rounded border transition-colors ${selectedSeason === season.season_number && selectedEpisode === episode.episode_number ? 'bg-cuevana-blue border-cuevana-blue text-white' : 'bg-cuevana-gray-200 border-cuevana-gray-300 text-cuevana-white hover:bg-cuevana-blue'}`}>
-                    <span className="font-medium mr-3">{season.season_number}-{episode.episode_number}</span>
-                    <span>{episode.title}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Language/Server Tabs */}
       <LanguageServerTabs
         servers={availableServers}
