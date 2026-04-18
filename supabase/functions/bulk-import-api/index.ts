@@ -163,7 +163,7 @@ serve(async (req) => {
 
           // Look up TMDB to get tmdb_id + metadata
           const tmdbMatch = await searchTMDB(tmdbApiKey, title, year, 'movie');
-          await sleep(250); // pace TMDB calls
+          await sleep(150); // pace TMDB calls
 
           const tmdbId = tmdbMatch?.id || item.id || null;
 
@@ -181,7 +181,7 @@ serve(async (req) => {
           let details: any = null;
           if (tmdbMatch?.id) {
             details = await fetchTMDBDetails(tmdbApiKey, tmdbMatch.id, 'movie');
-            await sleep(250);
+            await sleep(150);
           }
 
           const releaseDate = details?.release_date || tmdbMatch?.release_date ||
@@ -228,7 +228,7 @@ serve(async (req) => {
           if (!title) { totalSkipped++; continue; }
 
           const tmdbMatch = await searchTMDB(tmdbApiKey, title, year, 'tv');
-          await sleep(250);
+          await sleep(150);
 
           const tmdbId = tmdbMatch?.id || item.id || null;
 
@@ -244,7 +244,7 @@ serve(async (req) => {
           let details: any = null;
           if (tmdbMatch?.id) {
             details = await fetchTMDBDetails(tmdbApiKey, tmdbMatch.id, 'tv');
-            await sleep(250);
+            await sleep(150);
           }
 
           // Transform Spanish seasons format -> internal format
