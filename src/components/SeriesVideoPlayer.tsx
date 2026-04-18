@@ -11,8 +11,6 @@ interface SeriesVideoPlayerProps {
 }
 
 const SeriesVideoPlayer = ({ series, selectedSeason, selectedEpisode, onSeasonChange, onEpisodeChange }: SeriesVideoPlayerProps) => {
-  const [showEpisodeList, setShowEpisodeList] = useState(false);
-
   const seasons = series.seasons || [];
   const currentSeason = seasons.find(s => s.season_number === selectedSeason);
   const currentEpisode = currentSeason?.episodes?.find(e => e.episode_number === selectedEpisode);
