@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, List } from 'lucide-react';
 import { Series } from '@/services/seriesService';
 import LanguageServerTabs from './LanguageServerTabs';
 
