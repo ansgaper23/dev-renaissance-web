@@ -6,8 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-admin-token',
 };
 
-const EXTERNAL_API_BASE = "https://rmfgwrmmmmjpiebzfrri.supabase.co/functions/v1/content-api";
-
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
@@ -24,6 +22,51 @@ function buildPosterUrl(path: string | null): string | null {
   if (path.startsWith('http')) return path;
   return `https://image.tmdb.org/t/p/w500${path}`;
 }
+
+// Normalize servers from Spanish format to internal format
+function normalizeServers(servers: any[]): any[] {
+  if (!Array.isArray(servers)) return [];
+  return servers.map((s: any) => ({
+    name: s.nombre || s.name || 'Servidor',
+    url: s.url || '',
+    quality: s.calidad || s.quality || 'HD',
+    lang: s.idioma || s.lang || s.language || 'Latino',
+  })).filter((s: any) => s.url);
+}
+
+// Search TMDB by title+year to enrich
+async function searchTMDB(tmdbApiKey: string, title: string, year: string | number | null, type: 'movie' | 'tv') {
+  try {
+    const params = new URLSearchParams({
+      api_key: tmdbApiKey,
+      query: title,
+      language: 'es-ES',
+    });
+    if (year) {
+      params.set(type === 'movie' ? 'year' : 'first_air_date_year', String(year));
+    }
+    const res = await fetch(`https://api.themoviedb.org/3/search/${type}?${params}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.results?.[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchTMDBDetails(tmdbApiKey: string, tmdbId: number, type: 'movie' | 'tv') {
+  try {
+    const res = await fetch(
+      `https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${tmdbApiKey}&language=es-ES`
+    );
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -51,7 +94,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { type, startPage = 1, endPage = 1 } = body;
+    const { type, url, limit } = body as { type: 'movies' | 'series'; url: string; limit?: number };
 
     if (!type || !['movies', 'series'].includes(type)) {
       return new Response(JSON.stringify({ error: 'type must be movies or series' }), {
@@ -59,129 +102,211 @@ serve(async (req) => {
       });
     }
 
+    if (!url || !/^https?:\/\//i.test(url)) {
+      return new Response(JSON.stringify({ error: 'Debes proporcionar una URL válida (http/https)' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Fetch TMDB key
+    const { data: secretsRow } = await supabase.from('secrets').select('tmdb_api_key').eq('id', 1).maybeSingle();
+    const tmdbApiKey = secretsRow?.tmdb_api_key || Deno.env.get('TMDB_API_KEY') || '';
+    if (!tmdbApiKey) {
+      return new Response(JSON.stringify({ error: 'TMDB API key no configurada' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Fetch external JSON
+    const extRes = await fetch(url);
+    if (!extRes.ok) {
+      return new Response(JSON.stringify({ error: `No se pudo obtener la URL: HTTP ${extRes.status}` }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const raw = await extRes.json();
+    // Accept either an array directly, or { movies: [...] } / { series: [...] } / { data: [...] }
+    let items: any[] = [];
+    if (Array.isArray(raw)) items = raw;
+    else if (Array.isArray(raw?.movies)) items = raw.movies;
+    else if (Array.isArray(raw?.series)) items = raw.series;
+    else if (Array.isArray(raw?.data)) items = raw.data;
+    else if (Array.isArray(raw?.results)) items = raw.results;
+    else {
+      return new Response(JSON.stringify({ error: 'Formato JSON no reconocido. Se espera un array.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (limit && limit > 0) items = items.slice(0, limit);
+
     let totalImported = 0;
     let totalSkipped = 0;
     let totalFailed = 0;
     const errors: string[] = [];
 
-    for (let page = startPage; page <= endPage; page++) {
-      const url = `${EXTERNAL_API_BASE}?path=${type}&page=${page}&limit=20`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        errors.push(`Page ${page}: HTTP ${res.status}`);
-        totalFailed++;
-        continue;
-      }
+    if (type === 'movies') {
+      for (const item of items) {
+        try {
+          const title: string = item.nombre || item.title || '';
+          const year: string | number | null = item.año || item.year || item.anio || null;
+          if (!title) { totalSkipped++; continue; }
 
-      const data = await res.json();
-      if (!data.success) {
-        errors.push(`Page ${page}: API returned success=false`);
-        continue;
-      }
+          // Look up TMDB to get tmdb_id + metadata
+          const tmdbMatch = await searchTMDB(tmdbApiKey, title, year, 'movie');
+          await sleep(250); // pace TMDB calls
 
-      const items = type === 'movies' ? (data.movies || []) : (data.series || []);
+          const tmdbId = tmdbMatch?.id || item.id || null;
 
-      if (type === 'movies') {
-        for (const movie of items) {
-          if (!movie.tmdb_id) { totalSkipped++; continue; }
+          // Skip duplicates
+          if (tmdbId) {
+            const { data: existing } = await supabase
+              .from('movies')
+              .select('id')
+              .eq('tmdb_id', tmdbId)
+              .maybeSingle();
+            if (existing) { totalSkipped++; continue; }
+          }
 
-          // Check if exists
-          const { data: existing } = await supabase
-            .from('movies')
-            .select('id')
-            .eq('tmdb_id', movie.tmdb_id)
-            .maybeSingle();
+          // Fetch full TMDB details (genres, runtime, etc.)
+          let details: any = null;
+          if (tmdbMatch?.id) {
+            details = await fetchTMDBDetails(tmdbApiKey, tmdbMatch.id, 'movie');
+            await sleep(250);
+          }
 
-          if (existing) { totalSkipped++; continue; }
+          const releaseDate = details?.release_date || tmdbMatch?.release_date ||
+            (year ? `${year}-01-01` : null);
 
-          const slug = generateSlug(movie.title);
-          const { error: insertErr } = await supabase.from('movies').insert({
-            tmdb_id: movie.tmdb_id,
-            title: movie.title,
-            poster_path: buildPosterUrl(movie.poster),
-            backdrop_path: movie.banner || null,
-            overview: movie.description || null,
-            rating: movie.rating || null,
-            stream_servers: movie.servers || [],
-            slug,
-          });
+          const insertData: any = {
+            tmdb_id: tmdbId,
+            title: details?.title || tmdbMatch?.title || title,
+            original_title: details?.original_title || tmdbMatch?.original_title || null,
+            poster_path: details?.poster_path
+              ? buildPosterUrl(details.poster_path)
+              : buildPosterUrl(item.poster),
+            backdrop_path: details?.backdrop_path
+              ? buildPosterUrl(details.backdrop_path)
+              : (item.banner || null),
+            overview: details?.overview || tmdbMatch?.overview || null,
+            rating: details?.vote_average ?? (item.rating ? parseFloat(item.rating) : null),
+            release_date: releaseDate || null,
+            runtime: details?.runtime || null,
+            genres: details?.genres?.map((g: any) => g.name) || null,
+            genre_ids: details?.genres?.map((g: any) => g.id) || tmdbMatch?.genre_ids || null,
+            stream_servers: normalizeServers(item.servidores || item.servers || []),
+            slug: generateSlug(details?.title || title),
+          };
 
+          const { error: insertErr } = await supabase.from('movies').insert(insertData);
           if (insertErr) {
-            errors.push(`Movie ${movie.title}: ${insertErr.message}`);
+            errors.push(`Movie "${title}": ${insertErr.message}`);
             totalFailed++;
           } else {
             totalImported++;
           }
+        } catch (err: any) {
+          errors.push(`Movie error: ${err.message}`);
+          totalFailed++;
         }
-      } else {
-        // Series
-        for (const serie of items) {
-          if (!serie.tmdb_id) { totalSkipped++; continue; }
+      }
+    } else {
+      // SERIES
+      for (const item of items) {
+        try {
+          const title: string = item.nombre || item.title || '';
+          const year: string | number | null = item.año || item.year || item.anio || null;
+          if (!title) { totalSkipped++; continue; }
 
-          const { data: existing } = await supabase
-            .from('series')
-            .select('id')
-            .eq('tmdb_id', serie.tmdb_id)
-            .maybeSingle();
+          const tmdbMatch = await searchTMDB(tmdbApiKey, title, year, 'tv');
+          await sleep(250);
 
-          if (existing) { totalSkipped++; continue; }
+          const tmdbId = tmdbMatch?.id || item.id || null;
 
-          const slug = generateSlug(serie.title);
-
-          // Transform seasons from { "1": [...], "2": [...] } to array format
-          let seasonsData: any[] = [];
-          if (serie.seasons && typeof serie.seasons === 'object') {
-            seasonsData = Object.entries(serie.seasons).map(([seasonNum, episodes]: [string, any]) => ({
-              season_number: parseInt(seasonNum),
-              episodes: Array.isArray(episodes) ? episodes.map((ep: any) => ({
-                episode_number: ep.episode_num || 0,
-                name: ep.title || `Episodio ${ep.episode_num}`,
-                servers: (ep.servers || []).map((s: any) => ({
-                  name: s.name,
-                  quality: s.quality,
-                  lang: s.lang,
-                  url: s.url,
-                })),
-              })) : [],
-            }));
+          if (tmdbId) {
+            const { data: existing } = await supabase
+              .from('series')
+              .select('id')
+              .eq('tmdb_id', tmdbId)
+              .maybeSingle();
+            if (existing) { totalSkipped++; continue; }
           }
 
-          const numberOfSeasons = seasonsData.length;
-          const numberOfEpisodes = seasonsData.reduce((sum, s) => sum + (s.episodes?.length || 0), 0);
+          let details: any = null;
+          if (tmdbMatch?.id) {
+            details = await fetchTMDBDetails(tmdbApiKey, tmdbMatch.id, 'tv');
+            await sleep(250);
+          }
 
-          const { error: insertErr } = await supabase.from('series').insert({
-            tmdb_id: serie.tmdb_id,
-            title: serie.title,
-            poster_path: buildPosterUrl(serie.poster),
-            backdrop_path: serie.banner || null,
-            overview: serie.description || null,
-            rating: serie.rating || null,
+          // Transform Spanish seasons format -> internal format
+          const seasonsRaw = item.temporadas || item.seasons || [];
+          const seasonsData = Array.isArray(seasonsRaw)
+            ? seasonsRaw.map((s: any) => ({
+                season_number: parseInt(s.numero ?? s.season_number ?? 0),
+                episodes: Array.isArray(s.capitulos || s.episodes)
+                  ? (s.capitulos || s.episodes).map((ep: any) => ({
+                      episode_number: parseInt(ep.numero ?? ep.episode_number ?? 0),
+                      name: ep.titulo || ep.name || `Episodio ${ep.numero ?? ''}`,
+                      servers: normalizeServers(ep.servidores || ep.servers || []),
+                    }))
+                  : [],
+              }))
+            : [];
+
+          const numberOfSeasons = details?.number_of_seasons || seasonsData.length;
+          const numberOfEpisodes = details?.number_of_episodes ||
+            seasonsData.reduce((sum, s) => sum + (s.episodes?.length || 0), 0);
+
+          const firstAirDate = details?.first_air_date || tmdbMatch?.first_air_date ||
+            (year ? `${year}-01-01` : null);
+
+          const insertData: any = {
+            tmdb_id: tmdbId,
+            title: details?.name || tmdbMatch?.name || title,
+            original_title: details?.original_name || tmdbMatch?.original_name || null,
+            poster_path: details?.poster_path
+              ? buildPosterUrl(details.poster_path)
+              : buildPosterUrl(item.poster),
+            backdrop_path: details?.backdrop_path
+              ? buildPosterUrl(details.backdrop_path)
+              : (item.banner || null),
+            overview: details?.overview || tmdbMatch?.overview || null,
+            rating: details?.vote_average ?? (item.rating ? parseFloat(item.rating) : null),
+            first_air_date: firstAirDate || null,
+            genres: details?.genres?.map((g: any) => g.name) || null,
+            status: details?.status || null,
             seasons: seasonsData,
             number_of_seasons: numberOfSeasons,
             number_of_episodes: numberOfEpisodes,
-            slug,
-          });
+            slug: generateSlug(details?.name || title),
+          };
 
+          const { error: insertErr } = await supabase.from('series').insert(insertData);
           if (insertErr) {
-            errors.push(`Series ${serie.title}: ${insertErr.message}`);
+            errors.push(`Series "${title}": ${insertErr.message}`);
             totalFailed++;
           } else {
             totalImported++;
           }
+        } catch (err: any) {
+          errors.push(`Series error: ${err.message}`);
+          totalFailed++;
         }
       }
     }
 
     return new Response(JSON.stringify({
       success: true,
+      total: items.length,
       imported: totalImported,
       skipped: totalSkipped,
       failed: totalFailed,
-      errors: errors.slice(0, 20),
+      errors: errors.slice(0, 30),
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Bulk import error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

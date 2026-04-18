@@ -9,18 +9,18 @@ import { getAdminSession } from '@/services/movieService';
 
 const BulkApiImport = () => {
   const [type, setType] = useState<'movies' | 'series'>('movies');
-  const [startPage, setStartPage] = useState(1);
-  const [endPage, setEndPage] = useState(5);
+  const [url, setUrl] = useState('');
+  const [limit, setLimit] = useState<number>(20);
   const [isImporting, setIsImporting] = useState(false);
   const [result, setResult] = useState<any>(null);
 
   const handleImport = async () => {
-    if (endPage < startPage) {
-      toast({ title: "Error", description: "La página final debe ser mayor o igual a la inicial", variant: "destructive" });
+    if (!url.trim() || !/^https?:\/\//i.test(url.trim())) {
+      toast({ title: "Error", description: "Ingresa una URL válida (http/https)", variant: "destructive" });
       return;
     }
-    if (endPage - startPage > 49) {
-      toast({ title: "Error", description: "Máximo 50 páginas por importación", variant: "destructive" });
+    if (limit < 1 || limit > 100) {
+      toast({ title: "Error", description: "El límite debe estar entre 1 y 100", variant: "destructive" });
       return;
     }
 
@@ -30,16 +30,17 @@ const BulkApiImport = () => {
     try {
       const session = getAdminSession();
       const { data, error } = await supabase.functions.invoke('bulk-import-api', {
-        body: { type, startPage, endPage },
+        body: { type, url: url.trim(), limit },
         headers: { 'x-admin-token': session?.session_token || '' },
       });
 
       if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
 
       setResult(data);
       toast({
         title: "Importación completada",
-        description: `${data.imported} ${type === 'movies' ? 'películas' : 'series'} importadas, ${data.skipped} duplicadas ignoradas`,
+        description: `${data.imported} ${type === 'movies' ? 'películas' : 'series'} importadas, ${data.skipped} duplicadas/ignoradas`,
       });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -52,9 +53,9 @@ const BulkApiImport = () => {
     <Card className="bg-gray-900 border-gray-800">
       <CardContent className="p-6 space-y-6">
         <div>
-          <h3 className="text-xl font-medium mb-2">Importar desde API Externa</h3>
+          <h3 className="text-xl font-medium mb-2">Importar desde URL JSON</h3>
           <p className="text-gray-400 text-sm">
-            Importa películas y series automáticamente. Los duplicados (por tmdb_id) se ignoran.
+            Ingresa una URL que devuelva un JSON con películas o series. Los datos adicionales (género, sinopsis, fecha, rating) se obtienen automáticamente de TMDB. Los duplicados (por tmdb_id) se ignoran.
           </p>
         </div>
 
@@ -76,31 +77,37 @@ const BulkApiImport = () => {
           </Button>
         </div>
 
-        {/* Page range */}
-        <div className="flex items-center gap-4 flex-wrap">
+        {/* URL input */}
+        <div className="space-y-1">
+          <label className="text-sm text-gray-400">URL del JSON</label>
+          <Input
+            type="url"
+            placeholder="https://ejemplo.com/peliculas.json"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            className="bg-gray-800 border-gray-700"
+          />
+          <p className="text-xs text-gray-500">
+            Acepta arrays directos o estructuras como {`{ movies: [...] }`} / {`{ data: [...] }`}.
+          </p>
+        </div>
+
+        {/* Limit */}
+        <div className="flex items-end gap-4 flex-wrap">
           <div className="space-y-1">
-            <label className="text-sm text-gray-400">Página inicio</label>
+            <label className="text-sm text-gray-400">Límite de items por importación</label>
             <Input
               type="number"
               min={1}
-              value={startPage}
-              onChange={(e) => setStartPage(Number(e.target.value))}
-              className="bg-gray-800 border-gray-700 w-28"
+              max={100}
+              value={limit}
+              onChange={(e) => setLimit(Number(e.target.value))}
+              className="bg-gray-800 border-gray-700 w-32"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-sm text-gray-400">Página fin</label>
-            <Input
-              type="number"
-              min={1}
-              value={endPage}
-              onChange={(e) => setEndPage(Number(e.target.value))}
-              className="bg-gray-800 border-gray-700 w-28"
-            />
-          </div>
-          <div className="text-sm text-gray-500 self-end pb-2">
-            ≈ {(endPage - startPage + 1) * 20} items ({endPage - startPage + 1} páginas)
-          </div>
+          <p className="text-xs text-gray-500 pb-2">
+            Se procesa de a 1 con pausas para no saturar TMDB. Recomendado: 10-30.
+          </p>
         </div>
 
         <Button
@@ -124,7 +131,11 @@ const BulkApiImport = () => {
         {result && (
           <div className="bg-gray-800 rounded-lg p-4 space-y-2">
             <h4 className="font-medium text-green-400">Resultado:</h4>
-            <div className="grid grid-cols-3 gap-4 text-sm">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="text-gray-400">Total:</span>
+                <span className="ml-2 text-white font-bold">{result.total}</span>
+              </div>
               <div>
                 <span className="text-gray-400">Importadas:</span>
                 <span className="ml-2 text-green-400 font-bold">{result.imported}</span>
@@ -139,9 +150,9 @@ const BulkApiImport = () => {
               </div>
             </div>
             {result.errors?.length > 0 && (
-              <div className="mt-2 text-xs text-red-400 max-h-32 overflow-auto">
+              <div className="mt-2 text-xs text-red-400 max-h-40 overflow-auto space-y-1">
                 {result.errors.map((e: string, i: number) => (
-                  <div key={i}>{e}</div>
+                  <div key={i}>• {e}</div>
                 ))}
               </div>
             )}
