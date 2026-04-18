@@ -94,7 +94,13 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { type, url, limit } = body as { type: 'movies' | 'series'; url: string; limit?: number };
+    const { type, url, limit, offset = 0, batchSize = 5 } = body as {
+      type: 'movies' | 'series';
+      url: string;
+      limit?: number;
+      offset?: number;
+      batchSize?: number;
+    };
 
     if (!type || !['movies', 'series'].includes(type)) {
       return new Response(JSON.stringify({ error: 'type must be movies or series' }), {
@@ -108,7 +114,6 @@ serve(async (req) => {
       });
     }
 
-    // Fetch TMDB key
     const { data: secretsRow } = await supabase.from('secrets').select('tmdb_api_key').eq('id', 1).maybeSingle();
     const tmdbApiKey = secretsRow?.tmdb_api_key || Deno.env.get('TMDB_API_KEY') || '';
     if (!tmdbApiKey) {
@@ -117,7 +122,6 @@ serve(async (req) => {
       });
     }
 
-    // Fetch external JSON
     const extRes = await fetch(url);
     if (!extRes.ok) {
       return new Response(JSON.stringify({ error: `No se pudo obtener la URL: HTTP ${extRes.status}` }), {
@@ -126,20 +130,24 @@ serve(async (req) => {
     }
 
     const raw = await extRes.json();
-    // Accept either an array directly, or { movies: [...] } / { series: [...] } / { data: [...] }
-    let items: any[] = [];
-    if (Array.isArray(raw)) items = raw;
-    else if (Array.isArray(raw?.movies)) items = raw.movies;
-    else if (Array.isArray(raw?.series)) items = raw.series;
-    else if (Array.isArray(raw?.data)) items = raw.data;
-    else if (Array.isArray(raw?.results)) items = raw.results;
+    let allItems: any[] = [];
+    if (Array.isArray(raw)) allItems = raw;
+    else if (Array.isArray(raw?.movies)) allItems = raw.movies;
+    else if (Array.isArray(raw?.series)) allItems = raw.series;
+    else if (Array.isArray(raw?.data)) allItems = raw.data;
+    else if (Array.isArray(raw?.results)) allItems = raw.results;
     else {
       return new Response(JSON.stringify({ error: 'Formato JSON no reconocido. Se espera un array.' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    if (limit && limit > 0) items = items.slice(0, limit);
+    if (limit && limit > 0) allItems = allItems.slice(0, limit);
+    const totalToProcess = allItems.length;
+    const safeBatch = Math.max(1, Math.min(batchSize, 10));
+    const items = allItems.slice(offset, offset + safeBatch);
+    const nextOffset = offset + items.length;
+    const done = nextOffset >= totalToProcess;
 
     let totalImported = 0;
     let totalSkipped = 0;
