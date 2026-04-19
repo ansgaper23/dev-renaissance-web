@@ -51,8 +51,17 @@ const BulkApiImport = () => {
           headers: { 'x-admin-token': session?.session_token || '' },
         });
 
-        if (error) throw new Error(error.message);
-        if (data?.error) throw new Error(data.error);
+        // Try to extract real server error (FunctionsHttpError hides body in error.context)
+        let serverMsg: string | null = (data as any)?.error || null;
+        if (!serverMsg && error) {
+          try {
+            const ctx: any = (error as any).context;
+            if (ctx?.json) serverMsg = (await ctx.json())?.error;
+            else if (ctx?.text) serverMsg = await ctx.text();
+          } catch { /* ignore */ }
+          if (!serverMsg) serverMsg = error.message;
+        }
+        if (serverMsg) throw new Error(serverMsg);
 
         totals.imported += data.imported || 0;
         totals.skipped += data.skipped || 0;

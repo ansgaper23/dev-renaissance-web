@@ -122,22 +122,43 @@ serve(async (req) => {
       });
     }
 
-    const extRes = await fetch(url);
+    let extRes: Response;
+    try {
+      extRes = await fetch(url, { headers: { 'Accept': 'application/json, text/plain, */*' } });
+    } catch (e: any) {
+      return new Response(JSON.stringify({ error: `No se pudo conectar a la URL: ${e.message}` }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     if (!extRes.ok) {
-      return new Response(JSON.stringify({ error: `No se pudo obtener la URL: HTTP ${extRes.status}` }), {
+      const bodySnippet = (await extRes.text()).slice(0, 200);
+      return new Response(JSON.stringify({ error: `No se pudo obtener la URL: HTTP ${extRes.status}. ${bodySnippet}` }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const raw = await extRes.json();
+    const rawText = await extRes.text();
+    let raw: any;
+    try {
+      raw = JSON.parse(rawText);
+    } catch (e: any) {
+      return new Response(JSON.stringify({ error: `JSON inválido: ${e.message}. Inicio: ${rawText.slice(0, 150)}` }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     let allItems: any[] = [];
     if (Array.isArray(raw)) allItems = raw;
-    else if (Array.isArray(raw?.movies)) allItems = raw.movies;
+    else if (Array.isArray(raw?.peliculas)) allItems = raw.peliculas;
+    else if (Array.isArray(raw?.Peliculas)) allItems = raw.Peliculas;
     else if (Array.isArray(raw?.series)) allItems = raw.series;
+    else if (Array.isArray(raw?.Series)) allItems = raw.Series;
+    else if (Array.isArray(raw?.movies)) allItems = raw.movies;
     else if (Array.isArray(raw?.data)) allItems = raw.data;
     else if (Array.isArray(raw?.results)) allItems = raw.results;
     else {
-      return new Response(JSON.stringify({ error: 'Formato JSON no reconocido. Se espera un array.' }), {
+      const keys = raw && typeof raw === 'object' ? Object.keys(raw).join(', ') : typeof raw;
+      return new Response(JSON.stringify({ error: `Formato JSON no reconocido. Claves encontradas: [${keys}]. Se esperaba un array o {peliculas/series/movies/data: [...]}` }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
