@@ -23,7 +23,6 @@ function buildPosterUrl(path: string | null): string | null {
   return `https://image.tmdb.org/t/p/w500${path}`;
 }
 
-// Normalize servers from Spanish format to internal format
 function normalizeServers(servers: any[]): any[] {
   if (!Array.isArray(servers)) return [];
   return servers.map((s: any) => ({
@@ -34,7 +33,6 @@ function normalizeServers(servers: any[]): any[] {
   })).filter((s: any) => s.url);
 }
 
-// Search TMDB by title+year to enrich
 async function searchTMDB(tmdbApiKey: string, title: string, year: string | number | null, type: 'movie' | 'tv') {
   try {
     const params = new URLSearchParams({
@@ -66,6 +64,68 @@ async function fetchTMDBDetails(tmdbApiKey: string, tmdbId: number, type: 'movie
   }
 }
 
+function preferYearMatches<T extends { first_air_date?: string | null }>(rows: T[], year: string | number | null): T[] {
+  if (!year) return rows;
+  const yearStr = String(year);
+  const exactMatches = rows.filter((row) => typeof row.first_air_date === 'string' && row.first_air_date.startsWith(yearStr));
+  return exactMatches.length > 0 ? exactMatches : rows;
+}
+
+async function findExistingSeries(
+  supabase: any,
+  tmdbId: number | null,
+  slug: string,
+  canonicalTitle: string,
+  sourceTitle: string,
+  year: string | number | null,
+) {
+  const collected = new Map<string, any>();
+
+  const addRows = (rows?: any[] | null) => {
+    for (const row of rows || []) {
+      collected.set(row.id, row);
+    }
+  };
+
+  if (tmdbId) {
+    const { data } = await supabase
+      .from('series')
+      .select('id, created_at, title, slug, tmdb_id, first_air_date')
+      .eq('tmdb_id', tmdbId)
+      .order('created_at', { ascending: true });
+    addRows(data);
+  }
+
+  if (!collected.size && slug) {
+    const { data } = await supabase
+      .from('series')
+      .select('id, created_at, title, slug, tmdb_id, first_air_date')
+      .eq('slug', slug)
+      .order('created_at', { ascending: true });
+    addRows(preferYearMatches(data || [], year));
+  }
+
+  if (!collected.size) {
+    for (const title of Array.from(new Set([canonicalTitle, sourceTitle].filter(Boolean)))) {
+      const { data } = await supabase
+        .from('series')
+        .select('id, created_at, title, slug, tmdb_id, first_air_date')
+        .eq('title', title)
+        .order('created_at', { ascending: true });
+
+      const matches = preferYearMatches(data || [], year);
+      addRows(matches);
+      if (collected.size) break;
+    }
+  }
+
+  return Array.from(collected.values()).sort((a, b) => {
+    const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return aTime - bTime;
+  });
+}
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 serve(async (req) => {
@@ -79,7 +139,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Validate admin
     const sessionToken = req.headers.get('x-admin-token');
     if (!sessionToken) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -182,13 +241,11 @@ serve(async (req) => {
           const year: string | number | null = item.año || item.year || item.anio || null;
           if (!title) { totalSkipped++; continue; }
 
-          // Look up TMDB to get tmdb_id + metadata
           const tmdbMatch = await searchTMDB(tmdbApiKey, title, year, 'movie');
-          await sleep(150); // pace TMDB calls
+          await sleep(150);
 
           const tmdbId = tmdbMatch?.id || item.id || null;
 
-          // Skip duplicates
           if (tmdbId) {
             const { data: existing } = await supabase
               .from('movies')
@@ -198,7 +255,6 @@ serve(async (req) => {
             if (existing) { totalSkipped++; continue; }
           }
 
-          // Fetch full TMDB details (genres, runtime, etc.)
           let details: any = null;
           if (tmdbMatch?.id) {
             details = await fetchTMDBDetails(tmdbApiKey, tmdbMatch.id, 'movie');
@@ -241,7 +297,6 @@ serve(async (req) => {
         }
       }
     } else {
-      // SERIES
       for (const item of items) {
         try {
           const title: string = item.nombre || item.title || '';
@@ -251,16 +306,7 @@ serve(async (req) => {
           const tmdbMatch = await searchTMDB(tmdbApiKey, title, year, 'tv');
           await sleep(150);
 
-          const tmdbId = tmdbMatch?.id || item.id || null;
-
-          if (tmdbId) {
-            const { data: existing } = await supabase
-              .from('series')
-              .select('id')
-              .eq('tmdb_id', tmdbId)
-              .maybeSingle();
-            if (existing) { totalSkipped++; continue; }
-          }
+          const tmdbId = tmdbMatch?.id ?? null;
 
           let details: any = null;
           if (tmdbMatch?.id) {
@@ -268,7 +314,9 @@ serve(async (req) => {
             await sleep(150);
           }
 
-          // Transform Spanish seasons format -> internal format
+          const canonicalTitle = details?.name || tmdbMatch?.name || title;
+          const canonicalSlug = generateSlug(canonicalTitle);
+
           const seasonsRaw = item.temporadas || item.seasons || [];
           const seasonsData = Array.isArray(seasonsRaw)
             ? seasonsRaw.map((s: any) => ({
@@ -290,9 +338,9 @@ serve(async (req) => {
           const firstAirDate = details?.first_air_date || tmdbMatch?.first_air_date ||
             (year ? `${year}-01-01` : null);
 
-          const insertData: any = {
+          const upsertData: any = {
             tmdb_id: tmdbId,
-            title: details?.name || tmdbMatch?.name || title,
+            title: canonicalTitle,
             original_title: details?.original_name || tmdbMatch?.original_name || null,
             poster_path: details?.poster_path
               ? buildPosterUrl(details.poster_path)
@@ -308,12 +356,57 @@ serve(async (req) => {
             seasons: seasonsData,
             number_of_seasons: numberOfSeasons,
             number_of_episodes: numberOfEpisodes,
-            slug: generateSlug(details?.name || title),
+            slug: canonicalSlug,
+            updated_at: new Date().toISOString(),
+          };
+
+          const existingRows = await findExistingSeries(
+            supabase,
+            tmdbId,
+            canonicalSlug,
+            canonicalTitle,
+            title,
+            year,
+          );
+
+          const primaryExisting = existingRows[0] || null;
+          const duplicateIds = existingRows.slice(1).map((row) => row.id);
+
+          if (primaryExisting) {
+            const { error: updateErr } = await supabase
+              .from('series')
+              .update(upsertData)
+              .eq('id', primaryExisting.id);
+
+            if (updateErr) {
+              errors.push(`Series "${canonicalTitle}": ${updateErr.message}`);
+              totalFailed++;
+              continue;
+            }
+
+            if (duplicateIds.length > 0) {
+              const { error: deleteErr } = await supabase
+                .from('series')
+                .delete()
+                .in('id', duplicateIds);
+
+              if (deleteErr) {
+                errors.push(`Series "${canonicalTitle}": se actualizó pero no se pudieron limpiar ${duplicateIds.length} duplicadas (${deleteErr.message})`);
+              }
+            }
+
+            totalImported++;
+            continue;
+          }
+
+          const insertData = {
+            ...upsertData,
+            updated_at: undefined,
           };
 
           const { error: insertErr } = await supabase.from('series').insert(insertData);
           if (insertErr) {
-            errors.push(`Series "${title}": ${insertErr.message}`);
+            errors.push(`Series "${canonicalTitle}": ${insertErr.message}`);
             totalFailed++;
           } else {
             totalImported++;

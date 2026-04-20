@@ -106,7 +106,7 @@ const BulkApiImport = () => {
         <div>
           <h3 className="text-xl font-medium mb-2">Importar desde URL JSON</h3>
           <p className="text-gray-400 text-sm">
-            Procesamiento por lotes para evitar timeouts. El frontend invoca el edge function múltiples veces hasta completar todos los items. Datos enriquecidos con TMDB. Duplicados (por tmdb_id) se ignoran.
+            Procesamiento por lotes para evitar timeouts. El frontend invoca el edge function múltiples veces hasta completar todos los items. Las series existentes se actualizan al reimportar y, si encuentra duplicadas coincidentes, las limpia automáticamente.
           </p>
         </div>
 
