@@ -276,8 +276,8 @@ serve(async (req) => {
                 episodes: Array.isArray(s.capitulos || s.episodes)
                   ? (s.capitulos || s.episodes).map((ep: any) => ({
                       episode_number: parseInt(ep.numero ?? ep.episode_number ?? 0),
-                      name: ep.titulo || ep.name || `Episodio ${ep.numero ?? ''}`,
-                      servers: normalizeServers(ep.servidores || ep.servers || []),
+                      title: ep.titulo || ep.title || ep.name || `Episodio ${ep.numero ?? ''}`,
+                      stream_servers: normalizeServers(ep.servidores || ep.stream_servers || ep.servers || []),
                     }))
                   : [],
               }))
