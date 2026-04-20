@@ -30,7 +30,7 @@ function normalizeServers(servers: any[]): any[] {
     name: s.nombre || s.name || 'Servidor',
     url: s.url || '',
     quality: s.calidad || s.quality || 'HD',
-    lang: s.idioma || s.lang || s.language || 'Latino',
+    language: s.idioma || s.language || s.lang || 'Latino',
   })).filter((s: any) => s.url);
 }
 
