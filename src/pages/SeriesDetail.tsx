@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchSeriesById, fetchSeriesBySlug } from '@/services/seriesService';
@@ -19,6 +19,14 @@ const SeriesDetail = () => {
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
   const { data: settings } = useSettings();
+  const playerRef = useRef<HTMLDivElement>(null);
+
+  const handleEpisodeSelect = (episode: number) => {
+    setSelectedEpisode(episode);
+    setTimeout(() => {
+      playerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
 
   const isUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
@@ -135,14 +143,14 @@ const SeriesDetail = () => {
           </div>
         </div>
 
-        {/* Episode Selector */}
-        <div className="mt-8 mb-4">
-          <SeriesEpisodeSelector series={series} selectedSeason={selectedSeason} selectedEpisode={selectedEpisode} onSeasonChange={setSelectedSeason} onEpisodeChange={setSelectedEpisode} />
+        {/* Video Player with language tabs */}
+        <div ref={playerRef} className="mt-8 mb-6 scroll-mt-20">
+          <SeriesVideoPlayer series={series} selectedSeason={selectedSeason} selectedEpisode={selectedEpisode} onSeasonChange={setSelectedSeason} onEpisodeChange={handleEpisodeSelect} />
         </div>
 
-        {/* Video Player with language tabs */}
+        {/* Episode Selector (below player) */}
         <div className="mb-8">
-          <SeriesVideoPlayer series={series} selectedSeason={selectedSeason} selectedEpisode={selectedEpisode} onSeasonChange={setSelectedSeason} onEpisodeChange={setSelectedEpisode} />
+          <SeriesEpisodeSelector series={series} selectedSeason={selectedSeason} selectedEpisode={selectedEpisode} onSeasonChange={setSelectedSeason} onEpisodeChange={handleEpisodeSelect} />
         </div>
 
         {/* Related Series */}
