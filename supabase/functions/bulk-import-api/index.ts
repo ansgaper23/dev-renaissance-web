@@ -64,6 +64,18 @@ async function fetchTMDBDetails(tmdbApiKey: string, tmdbId: number, type: 'movie
   }
 }
 
+async function fetchTMDBSeason(tmdbApiKey: string, tmdbId: number, seasonNumber: number) {
+  try {
+    const res = await fetch(
+      `https://api.themoviedb.org/3/tv/${tmdbId}/season/${seasonNumber}?api_key=${tmdbApiKey}&language=es-ES`
+    );
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
 function preferYearMatches<T extends { first_air_date?: string | null }>(rows: T[], year: string | number | null): T[] {
   if (!year) return rows;
   const yearStr = String(year);
