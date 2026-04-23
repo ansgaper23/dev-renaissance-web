@@ -32,6 +32,16 @@ const SeriesEpisodeSelector = ({
   const episodes = currentSeason?.episodes || [];
   const currentEpisode = episodes.find((e) => e.episode_number === selectedEpisode);
 
+  const fallbackBackdrop = series.backdrop_path
+    ? (series.backdrop_path.startsWith('http')
+        ? series.backdrop_path
+        : `https://image.tmdb.org/t/p/w500${series.backdrop_path}`)
+    : series.poster_path
+      ? (series.poster_path.startsWith('http')
+          ? series.poster_path
+          : `https://image.tmdb.org/t/p/w500${series.poster_path}`)
+      : null;
+
   return (
     <div className="space-y-4">
       {/* Now playing banner */}
@@ -68,7 +78,10 @@ const SeriesEpisodeSelector = ({
       <div className="space-y-3">
         {episodes.map((episode) => {
           const isActive = selectedEpisode === episode.episode_number;
-          const still = episode.still_path;
+          const stillRaw = episode.still_path;
+          const still = stillRaw
+            ? (stillRaw.startsWith('http') ? stillRaw : `https://image.tmdb.org/t/p/w500${stillRaw}`)
+            : fallbackBackdrop;
           return (
             <button
               key={episode.episode_number}
