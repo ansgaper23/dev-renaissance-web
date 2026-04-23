@@ -4,6 +4,10 @@ import { adminApi } from "./adminApi";
 export interface SeriesEpisode {
   episode_number: number;
   title: string;
+  overview?: string | null;
+  still_path?: string | null;
+  air_date?: string | null;
+  runtime?: number | null;
   stream_servers?: Array<{
     name: string;
     url: string;
