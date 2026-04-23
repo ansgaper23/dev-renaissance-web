@@ -330,7 +330,7 @@ serve(async (req) => {
           const canonicalSlug = generateSlug(canonicalTitle);
 
           const seasonsRaw = item.temporadas || item.seasons || [];
-          const seasonsData = Array.isArray(seasonsRaw)
+          const baseSeasons = Array.isArray(seasonsRaw)
             ? seasonsRaw.map((s: any) => ({
                 season_number: parseInt(s.numero ?? s.season_number ?? 0),
                 episodes: Array.isArray(s.capitulos || s.episodes)
@@ -342,6 +342,31 @@ serve(async (req) => {
                   : [],
               }))
             : [];
+
+          // Enrich episodes with TMDB still_path / overview / air_date / runtime
+          const seasonsData = [];
+          for (const season of baseSeasons) {
+            let enrichedEpisodes = season.episodes;
+            if (tmdbMatch?.id && season.season_number > 0) {
+              const tmdbSeason = await fetchTMDBSeason(tmdbApiKey, tmdbMatch.id, season.season_number);
+              await sleep(120);
+              if (tmdbSeason?.episodes && Array.isArray(tmdbSeason.episodes)) {
+                enrichedEpisodes = season.episodes.map((ep: any) => {
+                  const tmdbEp = tmdbSeason.episodes.find((e: any) => e.episode_number === ep.episode_number);
+                  if (!tmdbEp) return ep;
+                  return {
+                    ...ep,
+                    title: tmdbEp.name || ep.title,
+                    overview: tmdbEp.overview || null,
+                    still_path: tmdbEp.still_path ? `https://image.tmdb.org/t/p/w300${tmdbEp.still_path}` : null,
+                    air_date: tmdbEp.air_date || null,
+                    runtime: tmdbEp.runtime || null,
+                  };
+                });
+              }
+            }
+            seasonsData.push({ ...season, episodes: enrichedEpisodes });
+          }
 
           const numberOfSeasons = details?.number_of_seasons || seasonsData.length;
           const numberOfEpisodes = details?.number_of_episodes ||
