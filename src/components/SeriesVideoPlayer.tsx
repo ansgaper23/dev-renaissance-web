@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Series } from '@/services/seriesService';
 import LanguageServerTabs from './LanguageServerTabs';
 
@@ -92,6 +93,37 @@ const SeriesVideoPlayer = ({ series, selectedSeason, selectedEpisode, onSeasonCh
       {/* Video Player */}
       <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
         {getVideoElement(currentStreamUrl)}
+      </div>
+
+      {/* Episode navigation bar */}
+      <div className="flex items-center justify-between gap-2 bg-cuevana-gray-100 border border-cuevana-gray-300 rounded-xl px-4 py-3">
+        <button
+          onClick={goToPreviousEpisode}
+          disabled={!canGoPrevious()}
+          className="flex items-center gap-2 text-cuevana-white font-medium hover:text-cuevana-blue transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-cuevana-white"
+          aria-label="Episodio anterior"
+        >
+          <ChevronLeft className="h-5 w-5" />
+          <span className="hidden sm:inline">Anterior</span>
+        </button>
+
+        <div className="text-center">
+          <div className="text-cuevana-white font-semibold text-sm md:text-base">
+            Episodio {selectedEpisode}
+            {currentEpisode?.title ? <span className="hidden md:inline"> — {currentEpisode.title}</span> : null}
+          </div>
+          <div className="text-cuevana-blue text-xs md:text-sm">Temporada {selectedSeason}</div>
+        </div>
+
+        <button
+          onClick={goToNextEpisode}
+          disabled={!canGoNext()}
+          className="flex items-center gap-2 text-cuevana-white font-medium hover:text-cuevana-blue transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-cuevana-white"
+          aria-label="Episodio siguiente"
+        >
+          <span className="hidden sm:inline">Siguiente</span>
+          <ChevronRight className="h-5 w-5" />
+        </button>
       </div>
     </div>
   );
